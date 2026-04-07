@@ -1,0 +1,80 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: huodeli_battle
+  m_Shader: {fileID: 4800000, guid: ed0c45eb1ee0616419e89d11b988533e, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords:
+  - DISSOLVE_ON
+  - GRAY_ON
+  - SELF_LIGHT_ON
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _BumpMap:
+        m_Texture: {fileID: 2800000, guid: e2562f80ff083ae4fa34fcf80a4c029e, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DissolveTex:
+        m_Texture: {fileID: 2800000, guid: 4d7d5aa30cec78e4987e24f701ea359b, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _EmissionMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MainTex:
+        m_Texture: {fileID: 2800000, guid: f451909067c0e644f8261ad8d8d52408, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _CenterOffset: 0
+    - _EmissionPower: 2
+    - _EnableDissolve: 1
+    - _EnableDissolveWorldPos: 0
+    - _EnableEmossion: 0
+    - _EnableGray: 1
+    - _EnableSelfLight: 1
+    - _Grayness: 0
+    - _LineWidth: 0.1
+    - _RimBias: 0
+    - _RimLightRotation: 0
+    - _RimLightSoft: 0
+    - _RimLightThreshold: 1
+    - _RimPower: 1
+    - _RimScale: 0
+    - _SelfLightness: 0
+    - _Shininess: 0.13
+    - _SliceAmount: 0
+    - _Stencil: 2
+    - _StencilComp: 3
+    - _StencilOp: 2
+    - _StencilOpFail: 0
+    - _StencilOpZFail: 0
+    - _StencilReadMask: 1
+    - _WorldDissolveAmount: 0
+    m_Colors:
+    - _DissolveFirstColor: {r: 0.9, g: 0.9, b: 0.9, a: 1}
+    - _DissolveSecondColor: {r: 1, g: 1.13, b: 1.13, a: 1}
+    - _GrayColor: {r: 0.145, g: 0.341, b: 0.023, a: 1}
+    - _GrayDotColor: {r: 0.227, g: 0, b: 0, a: 1}
+    - _RimColor: {r: 1, g: 1, b: 1, a: 1}
+    - _SelfLightColor: {r: 1.74, g: 2.8, b: 3.38, a: 1}
+    - _WorldDissolveDirection: {r: 0, g: 1, b: 0, a: 0}
+  m_BuildTextureStacks: []

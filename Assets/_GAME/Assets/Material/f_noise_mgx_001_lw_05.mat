@@ -1,0 +1,88 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 6
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: f_noise_mgx_001_lw_05
+  m_Shader: {fileID: 4800000, guid: 0621e67b5c4d01741ab20fb408c7cbfd, type: 3}
+  m_ShaderKeywords: _SMOKE_ON _SOFTCROSS_ON
+  m_LightmapFlags: 0
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+      _MainTex:
+        m_Texture: {fileID: 2800000, guid: 0403038d0c3302d4997911f112068117, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      _texcoord:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Floats:
+      _BumpScale: 1
+      _Cutoff: 0.5
+      _Depthpower: 0.2
+      _DetailNormalMapScale: 1
+      _Distortionpower: 0.2
+      _DstBlend: 0
+      _Emission: 2
+      _FireEdgeIn: 1.680977
+      _FireEdgeOut: 1.248434
+      _Float0: 0.02413
+      _Fresnelpower: 3
+      _Fresnelscale: 3
+      _GlossMapScale: 1
+      _Glossiness: 0.5
+      _GlossyReflections: 1
+      _InnerLight: 0.748
+      _Metallic: 0
+      _Mode: 0
+      _OcclusionStrength: 1
+      _Parallax: 0.02
+      _Progress: 0.6261891
+      _Smoke: 1
+      _SmoothnessTextureChannel: 0
+      _SoftCross: 1
+      _SpecularHighlights: 1
+      _Speed: 0.65
+      _SrcBlend: 1
+      _Stencil: 0
+      _StencilComp: 8
+      _StencilOp: 0
+      _StencilOpFail: 0
+      _StencilOpZFail: 0
+      _StencilReadMask: 255
+      _Tex_V_Speed: 0
+      _Tex_u_Speed: 0
+      _TilingNoise: 1
+      _TimeScale: 1
+      _U: 10
+      _UVSec: 0
+      _U_mask: 0
+      _Useonlycolor: 0
+      _V: 0
+      _V_mask: 0
+      _VertexOffset: 0.2
+      _ZWrite: 1
+      __dirty: 0
+    m_Colors:
+      _BlomeColor: {r: 0.1397059, g: 0.0260142, b: 0, a: 1}
+      _Color: {r: 0.39607844, g: 0.18921965, b: 0.07450981, a: 1}
+      _Color2: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+      _ColorOutside: {r: 2.4007065, g: 0.9625474, b: 1.4403863, a: 1}
+      _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+      _FlowSpeed: {r: -0.2, g: -0.3, b: -0.32, a: -0.15}
+      _InColor: {r: 0, g: 0, b: 0, a: 1}
+      _OutColor: {r: 0.8602941, g: 0.4425367, b: 0.06325693, a: 0}
+      _SmokeColor: {r: 0.2794118, g: 0.2794118, b: 0.2794118, a: 0}
+      _SpeedMainTexUVNoiseZW: {r: 0, g: 0, b: 0, a: 0}
+  m_BuildTextureStacks: []

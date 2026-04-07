@@ -1,0 +1,1242 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 1050189400, guid: 51e607f9471634896ae0a1e257c462d8, type: 3}
+  m_Name: emotion2
+  m_EditorClassIdentifier:
+  Id: 2
+  IsStatic: 0
+  TexSource: {fileID: 2800000, guid: 262a63eeca05deb4c94b28732fe3ee3a, type: 3}
+  Row: 8
+  Column: 8
+  PLeft: 0
+  PRight: 0
+  PTop: 0
+  PBottom: 0
+  frameNum: 4
+  Speed: 6
+  ListSpriteGroup:
+  - Tag: ej_0
+    ListSpriteInfor:
+    - Id: 0
+      Rect:
+        serializedVersion: 2
+        x: 0
+        y: 896
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0
+        y: 0.875
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0, y: 1}
+      - {x: 0.125, y: 1}
+      - {x: 0.125, y: 0.875}
+      - {x: 0, y: 0.875}
+    - Id: 1
+      Rect:
+        serializedVersion: 2
+        x: 128
+        y: 896
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.125
+        y: 0.875
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.125, y: 1}
+      - {x: 0.25, y: 1}
+      - {x: 0.25, y: 0.875}
+      - {x: 0.125, y: 0.875}
+    - Id: 2
+      Rect:
+        serializedVersion: 2
+        x: 256
+        y: 896
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.25
+        y: 0.875
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.25, y: 1}
+      - {x: 0.375, y: 1}
+      - {x: 0.375, y: 0.875}
+      - {x: 0.25, y: 0.875}
+    - Id: 3
+      Rect:
+        serializedVersion: 2
+        x: 384
+        y: 896
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.375
+        y: 0.875
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.375, y: 1}
+      - {x: 0.5, y: 1}
+      - {x: 0.5, y: 0.875}
+      - {x: 0.375, y: 0.875}
+    Width: 1
+    Size: 55
+  - Tag: ej_4
+    ListSpriteInfor:
+    - Id: 4
+      Rect:
+        serializedVersion: 2
+        x: 512
+        y: 896
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.5
+        y: 0.875
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.5, y: 1}
+      - {x: 0.625, y: 1}
+      - {x: 0.625, y: 0.875}
+      - {x: 0.5, y: 0.875}
+    - Id: 5
+      Rect:
+        serializedVersion: 2
+        x: 640
+        y: 896
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.625
+        y: 0.875
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.625, y: 1}
+      - {x: 0.75, y: 1}
+      - {x: 0.75, y: 0.875}
+      - {x: 0.625, y: 0.875}
+    - Id: 6
+      Rect:
+        serializedVersion: 2
+        x: 768
+        y: 896
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.75
+        y: 0.875
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.75, y: 1}
+      - {x: 0.875, y: 1}
+      - {x: 0.875, y: 0.875}
+      - {x: 0.75, y: 0.875}
+    - Id: 7
+      Rect:
+        serializedVersion: 2
+        x: 896
+        y: 896
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.875
+        y: 0.875
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.875, y: 1}
+      - {x: 1, y: 1}
+      - {x: 1, y: 0.875}
+      - {x: 0.875, y: 0.875}
+    Width: 1
+    Size: 55
+  - Tag: ej_8
+    ListSpriteInfor:
+    - Id: 8
+      Rect:
+        serializedVersion: 2
+        x: 0
+        y: 768
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0
+        y: 0.75
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0, y: 0.875}
+      - {x: 0.125, y: 0.875}
+      - {x: 0.125, y: 0.75}
+      - {x: 0, y: 0.75}
+    - Id: 9
+      Rect:
+        serializedVersion: 2
+        x: 128
+        y: 768
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.125
+        y: 0.75
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.125, y: 0.875}
+      - {x: 0.25, y: 0.875}
+      - {x: 0.25, y: 0.75}
+      - {x: 0.125, y: 0.75}
+    - Id: 10
+      Rect:
+        serializedVersion: 2
+        x: 256
+        y: 768
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.25
+        y: 0.75
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.25, y: 0.875}
+      - {x: 0.375, y: 0.875}
+      - {x: 0.375, y: 0.75}
+      - {x: 0.25, y: 0.75}
+    - Id: 11
+      Rect:
+        serializedVersion: 2
+        x: 384
+        y: 768
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.375
+        y: 0.75
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.375, y: 0.875}
+      - {x: 0.5, y: 0.875}
+      - {x: 0.5, y: 0.75}
+      - {x: 0.375, y: 0.75}
+    Width: 1
+    Size: 55
+  - Tag: ej_12
+    ListSpriteInfor:
+    - Id: 12
+      Rect:
+        serializedVersion: 2
+        x: 512
+        y: 768
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.5
+        y: 0.75
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.5, y: 0.875}
+      - {x: 0.625, y: 0.875}
+      - {x: 0.625, y: 0.75}
+      - {x: 0.5, y: 0.75}
+    - Id: 13
+      Rect:
+        serializedVersion: 2
+        x: 640
+        y: 768
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.625
+        y: 0.75
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.625, y: 0.875}
+      - {x: 0.75, y: 0.875}
+      - {x: 0.75, y: 0.75}
+      - {x: 0.625, y: 0.75}
+    - Id: 14
+      Rect:
+        serializedVersion: 2
+        x: 768
+        y: 768
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.75
+        y: 0.75
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.75, y: 0.875}
+      - {x: 0.875, y: 0.875}
+      - {x: 0.875, y: 0.75}
+      - {x: 0.75, y: 0.75}
+    - Id: 15
+      Rect:
+        serializedVersion: 2
+        x: 896
+        y: 768
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.875
+        y: 0.75
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.875, y: 0.875}
+      - {x: 1, y: 0.875}
+      - {x: 1, y: 0.75}
+      - {x: 0.875, y: 0.75}
+    Width: 1
+    Size: 55
+  - Tag: ej_16
+    ListSpriteInfor:
+    - Id: 16
+      Rect:
+        serializedVersion: 2
+        x: 0
+        y: 640
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0
+        y: 0.625
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0, y: 0.75}
+      - {x: 0.125, y: 0.75}
+      - {x: 0.125, y: 0.625}
+      - {x: 0, y: 0.625}
+    - Id: 17
+      Rect:
+        serializedVersion: 2
+        x: 128
+        y: 640
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.125
+        y: 0.625
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.125, y: 0.75}
+      - {x: 0.25, y: 0.75}
+      - {x: 0.25, y: 0.625}
+      - {x: 0.125, y: 0.625}
+    - Id: 18
+      Rect:
+        serializedVersion: 2
+        x: 256
+        y: 640
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.25
+        y: 0.625
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.25, y: 0.75}
+      - {x: 0.375, y: 0.75}
+      - {x: 0.375, y: 0.625}
+      - {x: 0.25, y: 0.625}
+    - Id: 19
+      Rect:
+        serializedVersion: 2
+        x: 384
+        y: 640
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.375
+        y: 0.625
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.375, y: 0.75}
+      - {x: 0.5, y: 0.75}
+      - {x: 0.5, y: 0.625}
+      - {x: 0.375, y: 0.625}
+    Width: 1
+    Size: 55
+  - Tag: ej_20
+    ListSpriteInfor:
+    - Id: 20
+      Rect:
+        serializedVersion: 2
+        x: 512
+        y: 640
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.5
+        y: 0.625
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.5, y: 0.75}
+      - {x: 0.625, y: 0.75}
+      - {x: 0.625, y: 0.625}
+      - {x: 0.5, y: 0.625}
+    - Id: 21
+      Rect:
+        serializedVersion: 2
+        x: 640
+        y: 640
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.625
+        y: 0.625
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.625, y: 0.75}
+      - {x: 0.75, y: 0.75}
+      - {x: 0.75, y: 0.625}
+      - {x: 0.625, y: 0.625}
+    - Id: 22
+      Rect:
+        serializedVersion: 2
+        x: 768
+        y: 640
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.75
+        y: 0.625
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.75, y: 0.75}
+      - {x: 0.875, y: 0.75}
+      - {x: 0.875, y: 0.625}
+      - {x: 0.75, y: 0.625}
+    - Id: 23
+      Rect:
+        serializedVersion: 2
+        x: 896
+        y: 640
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.875
+        y: 0.625
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.875, y: 0.75}
+      - {x: 1, y: 0.75}
+      - {x: 1, y: 0.625}
+      - {x: 0.875, y: 0.625}
+    Width: 1
+    Size: 55
+  - Tag: ej_24
+    ListSpriteInfor:
+    - Id: 24
+      Rect:
+        serializedVersion: 2
+        x: 0
+        y: 512
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0
+        y: 0.5
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0, y: 0.625}
+      - {x: 0.125, y: 0.625}
+      - {x: 0.125, y: 0.5}
+      - {x: 0, y: 0.5}
+    - Id: 25
+      Rect:
+        serializedVersion: 2
+        x: 128
+        y: 512
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.125
+        y: 0.5
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.125, y: 0.625}
+      - {x: 0.25, y: 0.625}
+      - {x: 0.25, y: 0.5}
+      - {x: 0.125, y: 0.5}
+    - Id: 26
+      Rect:
+        serializedVersion: 2
+        x: 256
+        y: 512
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.25
+        y: 0.5
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.25, y: 0.625}
+      - {x: 0.375, y: 0.625}
+      - {x: 0.375, y: 0.5}
+      - {x: 0.25, y: 0.5}
+    - Id: 27
+      Rect:
+        serializedVersion: 2
+        x: 384
+        y: 512
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.375
+        y: 0.5
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.375, y: 0.625}
+      - {x: 0.5, y: 0.625}
+      - {x: 0.5, y: 0.5}
+      - {x: 0.375, y: 0.5}
+    Width: 1
+    Size: 55
+  - Tag: ej_28
+    ListSpriteInfor:
+    - Id: 28
+      Rect:
+        serializedVersion: 2
+        x: 512
+        y: 512
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.5
+        y: 0.5
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.5, y: 0.625}
+      - {x: 0.625, y: 0.625}
+      - {x: 0.625, y: 0.5}
+      - {x: 0.5, y: 0.5}
+    - Id: 29
+      Rect:
+        serializedVersion: 2
+        x: 640
+        y: 512
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.625
+        y: 0.5
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.625, y: 0.625}
+      - {x: 0.75, y: 0.625}
+      - {x: 0.75, y: 0.5}
+      - {x: 0.625, y: 0.5}
+    - Id: 30
+      Rect:
+        serializedVersion: 2
+        x: 768
+        y: 512
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.75
+        y: 0.5
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.75, y: 0.625}
+      - {x: 0.875, y: 0.625}
+      - {x: 0.875, y: 0.5}
+      - {x: 0.75, y: 0.5}
+    - Id: 31
+      Rect:
+        serializedVersion: 2
+        x: 896
+        y: 512
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.875
+        y: 0.5
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.875, y: 0.625}
+      - {x: 1, y: 0.625}
+      - {x: 1, y: 0.5}
+      - {x: 0.875, y: 0.5}
+    Width: 1
+    Size: 55
+  - Tag: ej_32
+    ListSpriteInfor:
+    - Id: 32
+      Rect:
+        serializedVersion: 2
+        x: 0
+        y: 384
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0
+        y: 0.375
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0, y: 0.5}
+      - {x: 0.125, y: 0.5}
+      - {x: 0.125, y: 0.375}
+      - {x: 0, y: 0.375}
+    - Id: 33
+      Rect:
+        serializedVersion: 2
+        x: 128
+        y: 384
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.125
+        y: 0.375
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.125, y: 0.5}
+      - {x: 0.25, y: 0.5}
+      - {x: 0.25, y: 0.375}
+      - {x: 0.125, y: 0.375}
+    - Id: 34
+      Rect:
+        serializedVersion: 2
+        x: 256
+        y: 384
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.25
+        y: 0.375
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.25, y: 0.5}
+      - {x: 0.375, y: 0.5}
+      - {x: 0.375, y: 0.375}
+      - {x: 0.25, y: 0.375}
+    - Id: 35
+      Rect:
+        serializedVersion: 2
+        x: 384
+        y: 384
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.375
+        y: 0.375
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.375, y: 0.5}
+      - {x: 0.5, y: 0.5}
+      - {x: 0.5, y: 0.375}
+      - {x: 0.375, y: 0.375}
+    Width: 1
+    Size: 55
+  - Tag: ej_36
+    ListSpriteInfor:
+    - Id: 36
+      Rect:
+        serializedVersion: 2
+        x: 512
+        y: 384
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.5
+        y: 0.375
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.5, y: 0.5}
+      - {x: 0.625, y: 0.5}
+      - {x: 0.625, y: 0.375}
+      - {x: 0.5, y: 0.375}
+    - Id: 37
+      Rect:
+        serializedVersion: 2
+        x: 640
+        y: 384
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.625
+        y: 0.375
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.625, y: 0.5}
+      - {x: 0.75, y: 0.5}
+      - {x: 0.75, y: 0.375}
+      - {x: 0.625, y: 0.375}
+    - Id: 38
+      Rect:
+        serializedVersion: 2
+        x: 768
+        y: 384
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.75
+        y: 0.375
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.75, y: 0.5}
+      - {x: 0.875, y: 0.5}
+      - {x: 0.875, y: 0.375}
+      - {x: 0.75, y: 0.375}
+    - Id: 39
+      Rect:
+        serializedVersion: 2
+        x: 896
+        y: 384
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.875
+        y: 0.375
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.875, y: 0.5}
+      - {x: 1, y: 0.5}
+      - {x: 1, y: 0.375}
+      - {x: 0.875, y: 0.375}
+    Width: 1
+    Size: 55
+  - Tag: ej_40
+    ListSpriteInfor:
+    - Id: 40
+      Rect:
+        serializedVersion: 2
+        x: 0
+        y: 256
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0
+        y: 0.25
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0, y: 0.375}
+      - {x: 0.125, y: 0.375}
+      - {x: 0.125, y: 0.25}
+      - {x: 0, y: 0.25}
+    - Id: 41
+      Rect:
+        serializedVersion: 2
+        x: 128
+        y: 256
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.125
+        y: 0.25
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.125, y: 0.375}
+      - {x: 0.25, y: 0.375}
+      - {x: 0.25, y: 0.25}
+      - {x: 0.125, y: 0.25}
+    - Id: 42
+      Rect:
+        serializedVersion: 2
+        x: 256
+        y: 256
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.25
+        y: 0.25
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.25, y: 0.375}
+      - {x: 0.375, y: 0.375}
+      - {x: 0.375, y: 0.25}
+      - {x: 0.25, y: 0.25}
+    - Id: 43
+      Rect:
+        serializedVersion: 2
+        x: 384
+        y: 256
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.375
+        y: 0.25
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.375, y: 0.375}
+      - {x: 0.5, y: 0.375}
+      - {x: 0.5, y: 0.25}
+      - {x: 0.375, y: 0.25}
+    Width: 1
+    Size: 55
+  - Tag: ej_44
+    ListSpriteInfor:
+    - Id: 44
+      Rect:
+        serializedVersion: 2
+        x: 512
+        y: 256
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.5
+        y: 0.25
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.5, y: 0.375}
+      - {x: 0.625, y: 0.375}
+      - {x: 0.625, y: 0.25}
+      - {x: 0.5, y: 0.25}
+    - Id: 45
+      Rect:
+        serializedVersion: 2
+        x: 640
+        y: 256
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.625
+        y: 0.25
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.625, y: 0.375}
+      - {x: 0.75, y: 0.375}
+      - {x: 0.75, y: 0.25}
+      - {x: 0.625, y: 0.25}
+    - Id: 46
+      Rect:
+        serializedVersion: 2
+        x: 768
+        y: 256
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.75
+        y: 0.25
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.75, y: 0.375}
+      - {x: 0.875, y: 0.375}
+      - {x: 0.875, y: 0.25}
+      - {x: 0.75, y: 0.25}
+    - Id: 47
+      Rect:
+        serializedVersion: 2
+        x: 896
+        y: 256
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.875
+        y: 0.25
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.875, y: 0.375}
+      - {x: 1, y: 0.375}
+      - {x: 1, y: 0.25}
+      - {x: 0.875, y: 0.25}
+    Width: 1
+    Size: 55
+  - Tag:
+    ListSpriteInfor:
+    - Id: 48
+      Rect:
+        serializedVersion: 2
+        x: 0
+        y: 128
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0
+        y: 0.125
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0, y: 0.25}
+      - {x: 0.125, y: 0.25}
+      - {x: 0.125, y: 0.125}
+      - {x: 0, y: 0.125}
+    - Id: 49
+      Rect:
+        serializedVersion: 2
+        x: 128
+        y: 128
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.125
+        y: 0.125
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.125, y: 0.25}
+      - {x: 0.25, y: 0.25}
+      - {x: 0.25, y: 0.125}
+      - {x: 0.125, y: 0.125}
+    - Id: 50
+      Rect:
+        serializedVersion: 2
+        x: 256
+        y: 128
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.25
+        y: 0.125
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.25, y: 0.25}
+      - {x: 0.375, y: 0.25}
+      - {x: 0.375, y: 0.125}
+      - {x: 0.25, y: 0.125}
+    - Id: 51
+      Rect:
+        serializedVersion: 2
+        x: 384
+        y: 128
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.375
+        y: 0.125
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.375, y: 0.25}
+      - {x: 0.5, y: 0.25}
+      - {x: 0.5, y: 0.125}
+      - {x: 0.375, y: 0.125}
+    Width: 1
+    Size: 55
+  - Tag:
+    ListSpriteInfor:
+    - Id: 52
+      Rect:
+        serializedVersion: 2
+        x: 512
+        y: 128
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.5
+        y: 0.125
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.5, y: 0.25}
+      - {x: 0.625, y: 0.25}
+      - {x: 0.625, y: 0.125}
+      - {x: 0.5, y: 0.125}
+    - Id: 53
+      Rect:
+        serializedVersion: 2
+        x: 640
+        y: 128
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.625
+        y: 0.125
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.625, y: 0.25}
+      - {x: 0.75, y: 0.25}
+      - {x: 0.75, y: 0.125}
+      - {x: 0.625, y: 0.125}
+    - Id: 54
+      Rect:
+        serializedVersion: 2
+        x: 768
+        y: 128
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.75
+        y: 0.125
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.75, y: 0.25}
+      - {x: 0.875, y: 0.25}
+      - {x: 0.875, y: 0.125}
+      - {x: 0.75, y: 0.125}
+    - Id: 55
+      Rect:
+        serializedVersion: 2
+        x: 896
+        y: 128
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.875
+        y: 0.125
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.875, y: 0.25}
+      - {x: 1, y: 0.25}
+      - {x: 1, y: 0.125}
+      - {x: 0.875, y: 0.125}
+    Width: 1
+    Size: 55
+  - Tag:
+    ListSpriteInfor:
+    - Id: 56
+      Rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0, y: 0.125}
+      - {x: 0.125, y: 0.125}
+      - {x: 0.125, y: 0}
+      - {x: 0, y: 0}
+    - Id: 57
+      Rect:
+        serializedVersion: 2
+        x: 128
+        y: 0
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.125
+        y: 0
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.125, y: 0.125}
+      - {x: 0.25, y: 0.125}
+      - {x: 0.25, y: 0}
+      - {x: 0.125, y: 0}
+    - Id: 58
+      Rect:
+        serializedVersion: 2
+        x: 256
+        y: 0
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.25
+        y: 0
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.25, y: 0.125}
+      - {x: 0.375, y: 0.125}
+      - {x: 0.375, y: 0}
+      - {x: 0.25, y: 0}
+    - Id: 59
+      Rect:
+        serializedVersion: 2
+        x: 384
+        y: 0
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.375
+        y: 0
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.375, y: 0.125}
+      - {x: 0.5, y: 0.125}
+      - {x: 0.5, y: 0}
+      - {x: 0.375, y: 0}
+    Width: 1
+    Size: 55
+  - Tag: ej_60
+    ListSpriteInfor:
+    - Id: 60
+      Rect:
+        serializedVersion: 2
+        x: 512
+        y: 0
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.5
+        y: 0
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.5, y: 0.125}
+      - {x: 0.625, y: 0.125}
+      - {x: 0.625, y: 0}
+      - {x: 0.5, y: 0}
+    - Id: 61
+      Rect:
+        serializedVersion: 2
+        x: 640
+        y: 0
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.625
+        y: 0
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.625, y: 0.125}
+      - {x: 0.75, y: 0.125}
+      - {x: 0.75, y: 0}
+      - {x: 0.625, y: 0}
+    - Id: 62
+      Rect:
+        serializedVersion: 2
+        x: 768
+        y: 0
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.75
+        y: 0
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.75, y: 0.125}
+      - {x: 0.875, y: 0.125}
+      - {x: 0.875, y: 0}
+      - {x: 0.75, y: 0}
+    - Id: 63
+      Rect:
+        serializedVersion: 2
+        x: 896
+        y: 0
+        width: 128
+        height: 128
+      DrawTexCoord:
+        serializedVersion: 2
+        x: 0.875
+        y: 0
+        width: 0.125
+        height: 0.125
+      Uv:
+      - {x: 0.875, y: 0.125}
+      - {x: 1, y: 0.125}
+      - {x: 1, y: 0}
+      - {x: 0.875, y: 0}
+    Width: 1
+    Size: 55

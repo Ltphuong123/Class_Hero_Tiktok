@@ -1,0 +1,110 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 6
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: f_xulie_yg_020
+  m_Shader: {fileID: 4800000, guid: 19af4dbe7c622ad4398f68177630fc02, type: 3}
+  m_ShaderKeywords: _DISSOLVEWORLDPOS_NONE _DISSOLVE_NONE _DISSOLVE_SIMPLE_DATA _DISTORTION_NONE _DISTORTION_UV _MASK_ON _UVANIM_NONE
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: 3000
+  stringTagMap:
+    RenderType: Transparent
+  disabledShaderPasses: []
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+      _DissolveMap:
+        m_Texture: {fileID: 2800000, guid: 20c42e1a1b7f67140a03ef6fe2640cb7, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      _DistortionMap:
+        m_Texture: {fileID: 2800000, guid: b8c942b719934a94383896a199a161ef, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0.8, y: 0.6}
+      _FlowMapTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      _MainTex:
+        m_Texture: {fileID: 2800000, guid: 9568680673577894a948a11d0a33d5b4, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      _MaskMap:
+        m_Texture: {fileID: 2800000, guid: ac097ea0eea53e543bea041c32fd045b, type: 3}
+        m_Scale: {x: 2, y: 2}
+        m_Offset: {x: 0, y: 0}
+      _MaskMap2:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Floats:
+      _AlphaChannel: 0
+      _AlphaTest: 0
+      _BlendOp: 0
+      _Brightness: 2.5
+      _BumpScale: 1
+      _ClampUV: 0
+      _ColorMask: 15
+      _Cull: 0
+      _Cutoff: 0
+      _DetailNormalMapScale: 1
+      _Dissolve: 3
+      _DissolveAmount: 0.5
+      _DissolveHardness: 0.65
+      _DissolveLevel: 0
+      _DissolveLevelW: 0
+      _DissolveSpeedU: 0.2
+      _DissolveSpeedV: 0.1
+      _DissolveWorldPos: 0
+      _Distortion: 1
+      _DistortionSpeedX: 0.5
+      _DistortionSpeedY: 0.5
+      _DistortionStrengthX: 1
+      _DistortionStrengthY: 1
+      _DstBlend: 10
+      _EdgeIntensity: 2
+      _EdgeWidth: 0.55
+      _FlowMap: 0
+      _GlossMapScale: 1
+      _Glossiness: 0.5
+      _GlossyReflections: 1
+      _Mask: 1
+      _Mask2: 0
+      _Mask2U: 0
+      _Mask2V: 0
+      _MaskU: 0
+      _MaskV: 0
+      _Metallic: 0
+      _Mode: 0
+      _OcclusionStrength: 1
+      _Parallax: 0.02
+      _RotateAngle: 0
+      _RotateSpeed: 0
+      _SmoothnessTextureChannel: 0
+      _SpecularHighlights: 1
+      _SpeedU: 0
+      _SpeedV: 0
+      _SrcBlend: 1
+      _Stencil: 0
+      _StencilComp: 8
+      _StencilOp: 0
+      _StencilReadMask: 255
+      _StencilWriteMask: 255
+      _UVAnim: 0
+      _UVMaskAnim: 0
+      _UVSec: 0
+      _ZWrite: 0
+    m_Colors:
+      _ClipRect: {r: 0, g: 0, b: 1, a: 1}
+      _Color: {r: 1, g: 1, b: 1, a: 1}
+      _DissolveDirection: {r: 0, g: 1, b: 0, a: 0}
+      _EdgeColor: {r: 1, g: 1, b: 1, a: 1}
+      _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+  m_BuildTextureStacks: []
