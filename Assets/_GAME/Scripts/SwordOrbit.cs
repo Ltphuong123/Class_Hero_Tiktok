@@ -4,243 +4,190 @@ using DG.Tweening;
 
 public class SwordOrbit : MonoBehaviour
 {
-    [SerializeField] private float radius = 1f, rotateSpeed = 180f;
-
-    public float RotateSpeed => rotateSpeed;
-    [SerializeField] private float pickupStartRadius = 4f, pickupSpinDuration = 0.6f;
-    [SerializeField] private float redistributeDuration = 0.3f;
-    [SerializeField] private GameObject swordPrefab;
+    [SerializeField] private float radius = 1f;
+    [SerializeField] private float rotateSpeed = 180f;
+    [SerializeField] private float pickupStartRadius = 4f;
+    [SerializeField] private float pickupSpinDuration = 0.6f;
+    [SerializeField] private Sword swordPrefab;
     [SerializeField] private int initialSwordCount = 0;
 
-    private readonly List<Transform> swords = new();
+    private readonly List<Sword> swords = new();
     private readonly List<SpinData> spinList = new();
 
-    // Mỗi kiếm đã trong orbit có góc hiện tại (radian, local space)
-    // và có thể đang tween về góc target
-    private readonly Dictionary<Transform, float> currentAngles = new();
-    private readonly HashSet<Transform> tweening = new();
+    private float invPickupDuration;
+    private const float TWO_PI = Mathf.PI * 2f;
+    private const float RAD_TO_DEG = Mathf.Rad2Deg;
+    private const float PI = Mathf.PI;
 
-    private float angleStep;
-    private int count;
-
+    public float RotateSpeed => rotateSpeed;
     public bool IsPlayer { get; set; }
 
     private struct SpinData
     {
-        public Transform tf;
-        public float startAngle; // radian, góc ban đầu khi nhặt
+        public Sword sword;
+        public float startAngle;
         public float elapsed;
     }
 
     private void Start()
     {
+        invPickupDuration = 1f / pickupSpinDuration;
+        
+        if (initialSwordCount == 0) return;
+        
+        float stepRad = TWO_PI / initialSwordCount;
         for (int i = 0; i < initialSwordCount; i++)
         {
-            var s = Instantiate(swordPrefab, transform);
-            Setup(s);
-            s.GetComponent<Sword>()?.SetOrbiting();
-            swords.Add(s.transform);
-        }
-        if (swords.Count > 0)
-        {
-            Recalc();
-            PlaceImmediate();
-        }
-    }
-
-    private void Recalc()
-    {
-        count = swords.Count;
-        angleStep = count > 0 ? 360f / count : 360f;
-    }
-
-    private void PlaceImmediate()
-    {
-        float stepRad = angleStep * Mathf.Deg2Rad;
-        for (int i = 0; i < count; i++)
-        {
+            Sword sword = Instantiate(swordPrefab, transform);
+            sword.AttachToOrbit(this);
+            sword.SetOrbiting();
+            Transform t = sword.transform;
             float a = stepRad * i;
-            swords[i].localPosition = new Vector3(Mathf.Cos(a), Mathf.Sin(a), 0f) * radius;
-            swords[i].localRotation = Quaternion.Euler(0f, 0f, angleStep * i - 90f);
-            currentAngles[swords[i]] = a;
+            PlaceSwordAt(t, a);
+            sword.CurrentAngle = a;
+            swords.Add(sword);
         }
     }
 
-    public void AddSword(GameObject obj)
+    public void AddSword(Sword sword)
     {
-        Setup(obj);
-        obj.transform.SetParent(transform);
-        var t = obj.transform;
-        t.DOKill();
+        sword.AttachToOrbit(this);
+        Transform t = sword.transform;
+        t.SetParent(transform);
+        
+        Vector3 pos = t.localPosition;
+        pos.z = -0.1f;
+        t.localPosition = pos;
+        
         t.localScale = new Vector3(0.7f, 0.7f, 0.7f);
         t.DOScale(1f, pickupSpinDuration).SetEase(Ease.OutBack);
 
-        float startAngle = Mathf.Atan2(t.localPosition.y, t.localPosition.x);
         spinList.Add(new SpinData
         {
-            tf = t,
-            startAngle = startAngle,
+            sword = sword,
+            startAngle = Mathf.Atan2(pos.y, pos.x),
             elapsed = 0f
         });
     }
 
-    public void RemoveSword(Transform sword)
+    public void RemoveSword(Sword sword)
     {
-        sword.DOKill();
         swords.Remove(sword);
-        currentAngles.Remove(sword);
-        tweening.Remove(sword);
-        for (int i = spinList.Count - 1; i >= 0; i--)
-            if (spinList[i].tf == sword) { spinList.RemoveAt(i); break; }
-        Recalc();
+    }
+
+    private void FinishSpinIn(Sword sword, float currentAngle)
+    {
+        swords.Add(sword);
+        sword.CurrentAngle = currentAngle;
+        
+        Transform t = sword.transform;
+        Vector3 pos = t.localPosition;
+        pos.z = 0f;
+        t.localPosition = pos;
+        
+        sword.SetOrbiting();
         Redistribute();
     }
 
-    private void Setup(GameObject obj)
-    {
-        var s = obj.GetComponent<Sword>() ?? obj.AddComponent<Sword>();
-        s.AttachToOrbit(this);
-    }
-
-    /// <summary>
-    /// Sau khi kiếm mới vào orbit xong, chèn vào list rồi tween tất cả
-    /// kiếm về góc mới dọc theo quỹ đạo tròn.
-    /// </summary>
-    private void FinishSpinIn(Transform tf, float currentAngle)
-    {
-        // Chèn kiếm mới vào cuối, gán góc hiện tại
-        swords.Add(tf);
-        currentAngles[tf] = currentAngle;
-        Recalc();
-
-        // Snap kiếm mới vào đúng radius (vừa xong spin-in)
-        tf.localPosition = new Vector3(Mathf.Cos(currentAngle), Mathf.Sin(currentAngle), 0f) * radius;
-        tf.localRotation = Quaternion.Euler(0f, 0f, currentAngle * Mathf.Rad2Deg - 90f);
-
-        var sword = tf.GetComponent<Sword>();
-        if (sword != null) sword.SetOrbiting();
-
-        Redistribute();
-    }
-
-    /// <summary>
-    /// Tween tất cả kiếm trượt dọc quỹ đạo tròn về vị trí đều nhau.
-    /// Chọn hướng ngắn nhất (CW hoặc CCW) cho mỗi kiếm.
-    /// </summary>
     private void Redistribute()
     {
+        int count = swords.Count;
         if (count == 0) return;
 
-        // Sắp xếp swords theo góc hiện tại để giữ thứ tự tương đối
-        swords.Sort((a, b) =>
-        {
-            float aa = currentAngles.ContainsKey(a) ? currentAngles[a] : 0f;
-            float bb = currentAngles.ContainsKey(b) ? currentAngles[b] : 0f;
-            return aa.CompareTo(bb);
-        });
-        Recalc();
+        float newStepRad = TWO_PI / count;
 
-        float stepRad = angleStep * Mathf.Deg2Rad;
         for (int i = 0; i < count; i++)
         {
-            var sw = swords[i];
-            float targetAngle = stepRad * i;
-            float fromAngle = currentAngles.ContainsKey(sw) ? currentAngles[sw] : targetAngle;
+            Sword sword = swords[count - 1 - i];
+            Transform sw = sword.transform;
+            float targetAngle = newStepRad * i;
+            float fromAngle = sword.CurrentAngle;
 
-            // Nếu đã đúng vị trí thì skip
-            float delta = Mathf.DeltaAngle(fromAngle * Mathf.Rad2Deg, targetAngle * Mathf.Rad2Deg);
-            if (Mathf.Abs(delta) < 0.1f)
+            float diff = targetAngle - fromAngle;
+            while (diff < 0f) diff += TWO_PI;
+            while (diff >= TWO_PI) diff -= TWO_PI;
+
+            if (diff < 0.01f)
             {
-                currentAngles[sw] = targetAngle;
                 PlaceSwordAt(sw, targetAngle);
+                sword.CurrentAngle = targetAngle;
                 continue;
             }
 
-            // Kill tween cũ nếu đang chạy
-            if (tweening.Contains(sw))
-            {
-                sw.DOKill();
-                tweening.Remove(sw);
-            }
+            sw.DOKill();
 
-            TweenSwordToAngle(sw, fromAngle, targetAngle);
+            float duration = Mathf.Max(0.4f, diff * RAD_TO_DEG / 360f);
+
+            DOTween.To(
+                () => fromAngle,
+                angle =>
+                {
+                    sword.CurrentAngle = angle;
+                    PlaceSwordAt(sw, angle);
+                },
+                fromAngle + diff,
+                duration
+            )
+            .SetEase(Ease.InOutSine)
+            .SetTarget(sw)
+            .OnComplete(() =>
+            {
+                sword.CurrentAngle = targetAngle;
+                PlaceSwordAt(sw, targetAngle);
+            });
         }
-    }
-
-    private void TweenSwordToAngle(Transform sw, float fromAngle, float targetAngle)
-    {
-        tweening.Add(sw);
-        float fromDeg = fromAngle * Mathf.Rad2Deg;
-        float toDeg = targetAngle * Mathf.Rad2Deg;
-
-        // Dùng DOTween để tween góc, di chuyển dọc quỹ đạo tròn
-        DOTween.To(
-            () => fromDeg,
-            val =>
-            {
-                float rad = val * Mathf.Deg2Rad;
-                currentAngles[sw] = rad;
-                PlaceSwordAt(sw, rad);
-            },
-            toDeg,
-            redistributeDuration
-        )
-        .SetEase(Ease.InOutSine)
-        .SetTarget(sw)
-        .OnComplete(() => tweening.Remove(sw));
     }
 
     private void PlaceSwordAt(Transform sw, float angleRad)
     {
-        sw.localPosition = new Vector3(Mathf.Cos(angleRad), Mathf.Sin(angleRad), 0f) * radius;
-        sw.localRotation = Quaternion.Euler(0f, 0f, angleRad * Mathf.Rad2Deg - 90f);
+        float cos = Mathf.Cos(angleRad);
+        float sin = Mathf.Sin(angleRad);
+        sw.localPosition = new Vector3(cos * radius, sin * radius, 0f);
+        sw.localRotation = Quaternion.Euler(0f, 0f, angleRad * RAD_TO_DEG - 90f);
     }
 
     private void Update()
     {
+        transform.Rotate(0f, 0f, rotateSpeed * Time.deltaTime);
+
+        int spinCount = spinList.Count;
+        if (spinCount == 0) return;
+
         float dt = Time.deltaTime;
-        transform.Rotate(0f, 0f, rotateSpeed * dt);
 
-        // Xử lý spin-in cho kiếm mới
-        float inv = 1f / pickupSpinDuration;
-        float twoPi = Mathf.PI * 2f;
-
-        for (int i = spinList.Count - 1; i >= 0; i--)
+        for (int i = spinCount - 1; i >= 0; i--)
         {
-            var d = spinList[i];
+            SpinData d = spinList[i];
             d.elapsed += dt;
-            float progress = Mathf.Clamp01(d.elapsed * inv);
+            float progress = Mathf.Clamp01(d.elapsed * invPickupDuration);
 
             if (d.elapsed >= pickupSpinDuration)
             {
-                // Spin-in xong → chèn vào orbit và redistribute
                 spinList.RemoveAt(i);
-                float finalAngle = d.startAngle + twoPi; // đã xoay đủ 1 vòng
-                // Normalize về [0, 2PI)
-                finalAngle = finalAngle % twoPi;
-                if (finalAngle < 0f) finalAngle += twoPi;
-                FinishSpinIn(d.tf, finalAngle);
+                float finalAngle = (d.startAngle + TWO_PI) % TWO_PI;
+                if (finalAngle < 0f) finalAngle += TWO_PI;
+                FinishSpinIn(d.sword, finalAngle);
             }
             else
             {
-                // Xoay 1 vòng + thu bán kính từ pickupStartRadius → radius
-                float a = d.startAngle + twoPi * progress;
-
-                // Smoothstep cho bán kính
+                float a = d.startAngle + TWO_PI * progress;
                 float blend = progress * progress * (3f - 2f * progress);
                 float currentRadius = Mathf.Lerp(pickupStartRadius, radius, blend);
 
-                float rotZ = (a + Mathf.PI) * Mathf.Rad2Deg;
-                // Nửa sau: bắt đầu xoay hướng kiếm về hướng orbit (-90°)
+                float cos = Mathf.Cos(a);
+                float sin = Mathf.Sin(a);
+                float rotZ = (a + PI) * RAD_TO_DEG;
+                
                 if (progress > 0.5f)
                 {
-                    float orientBlend = (progress - 0.5f) / 0.5f;
+                    float orientBlend = (progress - 0.5f) * 2f;
                     orientBlend = orientBlend * orientBlend * (3f - 2f * orientBlend);
-                    rotZ = Mathf.LerpAngle(rotZ, a * Mathf.Rad2Deg - 90f, orientBlend);
+                    rotZ = Mathf.LerpAngle(rotZ, a * RAD_TO_DEG - 90f, orientBlend);
                 }
 
-                d.tf.localPosition = new Vector3(Mathf.Cos(a), Mathf.Sin(a), 0f) * currentRadius;
-                d.tf.localRotation = Quaternion.Euler(0f, 0f, rotZ);
+                Transform tf = d.sword.transform;
+                tf.localPosition = new Vector3(cos * currentRadius, sin * currentRadius, -0.1f);
+                tf.localRotation = Quaternion.Euler(0f, 0f, rotZ);
                 spinList[i] = d;
             }
         }
