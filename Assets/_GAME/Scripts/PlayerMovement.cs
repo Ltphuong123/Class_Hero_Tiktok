@@ -7,8 +7,12 @@ public class PlayerMovement : MonoBehaviour
 
     private Vector3 moveDirection;
 
+    private SwordType currentSwordType = SwordType.Default;
+    private int swordTypeCount;
+
     private void Start()
     {
+        swordTypeCount = System.Enum.GetValues(typeof(SwordType)).Length;
         if (swordOrbit != null) swordOrbit.IsPlayer = true;
     }
 
@@ -24,6 +28,15 @@ public class PlayerMovement : MonoBehaviour
 
         moveDirection = new Vector3(x, y, 0f).normalized;
         transform.position += moveDirection * moveSpeed * Time.deltaTime;
+
+        if (Input.GetKeyDown(KeyCode.Q) && swordOrbit != null)
+            swordOrbit.IncreaseRadius(0.5f);
+
+        if (Input.GetKeyDown(KeyCode.E) && swordOrbit != null)
+        {
+            currentSwordType = (SwordType)(((int)currentSwordType + 1) % swordTypeCount);
+            swordOrbit.SetSwordType(currentSwordType);
+        }
     }
 
     public SwordOrbit GetSwordOrbit() => swordOrbit;
