@@ -10,6 +10,7 @@ public class Sword : MonoBehaviour
     [SerializeField] private float fallDuration = 0.8f;
     [SerializeField] private GameObject collisionParticle;
     [SerializeField] private SwordDataSO swordData;
+    [SerializeField] private float damage = 10f;
 
     private SwordOrbit orbit;
     private SwordState state = SwordState.Dropped;
@@ -165,18 +166,39 @@ public class Sword : MonoBehaviour
 
         if (state == SwordState.Dropped)
         {
-            PlayerMovement player = other.GetComponent<PlayerMovement>();
+            Player player = other.GetComponent<Player>();
             if (player == null) return;
             state = SwordState.Animating;
             player.GetSwordOrbit().AddSword(this);
             return;
         }
 
-        if (state != SwordState.Orbiting || orbit == null || !orbit.IsPlayer) return;
+        if (state != SwordState.Orbiting && state != SwordState.Sliding) return;
+        if (orbit == null) return;
 
+        // kiếm đang xoay chạm vào Player khác (không phải chủ)
+        Player hitPlayer = other.GetComponent<Player>();
+        if (hitPlayer != null && hitPlayer.GetSwordOrbit() != orbit)
+        {
+            hitPlayer.TakeDamage(damage);
+            SpawnParticle(other.ClosestPoint(transform.position));
+            return;
+        }
+
+        // kiếm đang xoay chạm vào Dummy khác (không phải chủ)
+        Dummy hitDummy = other.GetComponent<Dummy>();
+        if (hitDummy != null && hitDummy.GetSwordOrbit() != orbit)
+        {
+            hitDummy.TakeDamage(damage);
+            SpawnParticle(other.ClosestPoint(transform.position));
+            return;
+        }
+
+        // kiếm chạm kiếm đối thủ → knock off cả hai
         Sword otherSword = other.GetComponent<Sword>();
-        if (otherSword == null || otherSword.state != SwordState.Orbiting) return;
-        if (otherSword.orbit == null || otherSword.orbit.IsPlayer) return;
+        if (otherSword == null) return;
+        if (otherSword.state != SwordState.Orbiting && otherSword.state != SwordState.Sliding) return;
+        if (otherSword.orbit == null || otherSword.orbit == orbit) return;
 
         SpawnParticle((transform.position + otherSword.transform.position) * 0.5f);
         KnockOff();
