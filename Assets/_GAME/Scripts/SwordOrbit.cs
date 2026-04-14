@@ -16,6 +16,7 @@ public class SwordOrbit : MonoBehaviour
 
     public float RotateSpeed => rotateSpeed;
     public float Radius => radius;
+    public int SwordCount => swords.Count;
 
     public void IncreaseRadius(float amount)
     {

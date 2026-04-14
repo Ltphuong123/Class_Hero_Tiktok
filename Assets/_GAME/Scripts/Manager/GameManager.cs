@@ -7,8 +7,10 @@ public enum GameState {MainMenu=1, GamePlay = 2, Win = 3, Lose = 4, Setting = 5,
 public class GameManager : Singleton<GameManager>
 {
     private static GameState gameState;
-    private void Awake()
+    protected override void Awake()
     {
+        base.Awake();
+
         //tranh viec nguoi choi cham da diem vao man hinh
         Input.multiTouchEnabled = false;
         //target frame rate ve 60 fps

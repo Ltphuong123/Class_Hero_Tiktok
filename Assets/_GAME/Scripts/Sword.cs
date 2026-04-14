@@ -3,7 +3,7 @@ using DG.Tweening;
 
 public enum SwordState { Dropped, Orbiting, Animating, FlyingIn, Sliding }
 
-public class Sword : MonoBehaviour
+public class Sword : MonoBehaviour, ICollectibleItem
 {
     [SerializeField] private SpriteRenderer spriteRenderer;
     [SerializeField] private float knockForce = 6f;
@@ -38,6 +38,25 @@ public class Sword : MonoBehaviour
     private const float TWO_PI = Mathf.PI * 2f;
     private const float PI = Mathf.PI;
     private const float RAD_TO_DEG = Mathf.Rad2Deg;
+
+    // ICollectibleItem implementation
+    public Vector3 Position => transform.position;
+    public bool IsActive => gameObject.activeSelf;
+    public new GameObject GameObject => gameObject;
+    public CollectibleItemType ItemType => CollectibleItemType.Sword;
+
+    public void OnSpawn(Vector3 position)
+    {
+        transform.position = position;
+        gameObject.SetActive(true);
+        state = SwordState.Dropped;
+        LogSwordCell("Spawned");
+    }
+
+    public void OnDespawn()
+    {
+        gameObject.SetActive(false);
+    }
 
     public SwordOrbit Orbit => orbit;
     public SwordState State => state;
@@ -166,9 +185,11 @@ public class Sword : MonoBehaviour
 
         if (state == SwordState.Dropped)
         {
-            Player player = other.GetComponent<Player>();
+            CharacterBase player = other.GetComponent<CharacterBase>();
             if (player == null) return;
             state = SwordState.Animating;
+            if (ItemManager.Instance != null)
+                ItemManager.Instance.DeregisterDroppedSword(this);
             player.GetSwordOrbit().AddSword(this);
             return;
         }
@@ -177,19 +198,10 @@ public class Sword : MonoBehaviour
         if (orbit == null) return;
 
         // kiếm đang xoay chạm vào Player khác (không phải chủ)
-        Player hitPlayer = other.GetComponent<Player>();
+        CharacterBase hitPlayer = other.GetComponent<CharacterBase>();
         if (hitPlayer != null && hitPlayer.GetSwordOrbit() != orbit)
         {
             hitPlayer.TakeDamage(damage);
-            SpawnParticle(other.ClosestPoint(transform.position));
-            return;
-        }
-
-        // kiếm đang xoay chạm vào Dummy khác (không phải chủ)
-        Dummy hitDummy = other.GetComponent<Dummy>();
-        if (hitDummy != null && hitDummy.GetSwordOrbit() != orbit)
-        {
-            hitDummy.TakeDamage(damage);
             SpawnParticle(other.ClosestPoint(transform.position));
             return;
         }
@@ -231,11 +243,25 @@ public class Sword : MonoBehaviour
         seq.Join(transform.DOMove(landPos, fallDuration).SetEase(Ease.OutQuad));
         seq.Join(transform.DOScale(0.7f, fallDuration).SetEase(Ease.InQuad));
         seq.Join(transform.DORotate(new Vector3(0f, 0f, Random.Range(0f, 360f)), fallDuration, RotateMode.FastBeyond360));
-        seq.OnComplete(() => state = SwordState.Dropped);
+        seq.OnComplete(() =>
+        {
+            state = SwordState.Dropped;
+            LogSwordCell("Dropped");
+            if (ItemManager.Instance != null)
+                ItemManager.Instance.RegisterDroppedSword(this);
+        });
     }
 
     private void SpawnParticle(Vector3 pos)
     {
         if (collisionParticle != null) Instantiate(collisionParticle, pos, Quaternion.identity);
+    }
+
+    private void LogSwordCell(string action)
+    {
+        MapManager map = MapManager.Instance;
+        if (map == null) return;
+        Vector2Int cell = map.WorldToCell(transform.position);
+        Debug.Log($"[Sword] {action} — {swordType} at row {cell.y}, col {cell.x} (world: {transform.position.x:F1}, {transform.position.y:F1})");
     }
 }

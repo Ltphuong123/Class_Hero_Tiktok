@@ -19,8 +19,10 @@ public class SoundManager : Singleton<SoundManager>
     private const string SOUND_KEY = "SoundEnabled";
     private const string MUSIC_KEY = "MusicEnabled";
 
-    private void Awake()
+    protected override void Awake()
     {
+        base.Awake();
+
         isSoundEnabled = PlayerPrefs.GetInt(SOUND_KEY, 1) == 1;
         isMusicEnabled = PlayerPrefs.GetInt(MUSIC_KEY, 1) == 1;
 

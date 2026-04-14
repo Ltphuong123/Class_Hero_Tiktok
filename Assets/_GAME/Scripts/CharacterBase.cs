@@ -1,9 +1,10 @@
 using UnityEngine;
 
-public class Player : MonoBehaviour
+public class CharacterBase : MonoBehaviour, IManagedUpdate
 {
     [SerializeField] private float moveSpeed = 5f;
     [SerializeField] private SwordOrbit swordOrbit;
+    [SerializeField] private bool isPlayerControlled = false;
 
     [Header("Character Info")]
     [SerializeField] private string characterName = "Player";
@@ -16,6 +17,12 @@ public class Player : MonoBehaviour
     private SwordType currentSwordType = SwordType.Default;
     private int swordTypeCount;
 
+    public Vector3 Position => transform.position;
+    public float CurrentHp => currentHp;
+    public float MaxHp => maxHp;
+    public float MoveSpeed => moveSpeed;
+    public bool IsPlayerControlled => isPlayerControlled;
+
     private void Start()
     {
         currentHp = maxHp;
@@ -24,8 +31,23 @@ public class Player : MonoBehaviour
         if (infoUI != null) infoUI.Init(characterName, avatar, currentHp, maxHp);
     }
 
-    private void Update()
+    private void OnEnable()
     {
+        if (CharacterManager.Instance != null)
+            CharacterManager.Instance.Register(this);
+    }
+
+    private void OnDisable()
+    {
+        if (CharacterManager.Instance != null)
+            CharacterManager.Instance.Deregister(this);
+    }
+
+    public void ManagedUpdate(float deltaTime)
+    {
+        // Only process keyboard input for player-controlled characters
+        if (!isPlayerControlled) return;
+
         float x = 0f;
         float y = 0f;
 
@@ -35,7 +57,7 @@ public class Player : MonoBehaviour
         if (Input.GetKey(KeyCode.S)) y = -1f;
 
         moveDirection = new Vector3(x, y, 0f).normalized;
-        transform.position += moveDirection * moveSpeed * Time.deltaTime;
+        transform.position += moveDirection * moveSpeed * deltaTime;
 
         if (Input.GetKeyDown(KeyCode.Q) && swordOrbit != null)
             swordOrbit.IncreaseRadius(0.5f);
