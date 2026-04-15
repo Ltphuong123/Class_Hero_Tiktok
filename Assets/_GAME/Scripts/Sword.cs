@@ -12,6 +12,10 @@ public class Sword : MonoBehaviour, ICollectibleItem
     [SerializeField] private SwordDataSO swordData;
     [SerializeField] private float damage = 10f;
 
+    [Header("Owner Knockback")]
+    [SerializeField] private float ownerKnockbackBase = 8f;
+    [SerializeField] private float ownerKnockbackWeakBonus = 6f;
+
     private SwordOrbit orbit;
     private SwordState state = SwordState.Dropped;
     private float currentAngle;
@@ -201,18 +205,49 @@ public class Sword : MonoBehaviour, ICollectibleItem
         CharacterBase hitPlayer = other.GetComponent<CharacterBase>();
         if (hitPlayer != null && hitPlayer.GetSwordOrbit() != orbit)
         {
-            hitPlayer.TakeDamage(damage);
+            CharacterBase attacker = orbit.GetComponentInParent<CharacterBase>();
+            hitPlayer.TakeDamage(damage, attacker);
             SpawnParticle(other.ClosestPoint(transform.position));
             return;
         }
 
-        // kiếm chạm kiếm đối thủ → knock off cả hai
+        // kiếm chạm kiếm đối thủ → knock off cả hai kiếm + đẩy văng cả hai chủ nhân
         Sword otherSword = other.GetComponent<Sword>();
         if (otherSword == null) return;
         if (otherSword.state != SwordState.Orbiting && otherSword.state != SwordState.Sliding) return;
         if (otherSword.orbit == null || otherSword.orbit == orbit) return;
 
         SpawnParticle((transform.position + otherSword.transform.position) * 0.5f);
+
+        // Tính knockback cho 2 chủ nhân
+        CharacterBase charA = orbit.GetComponentInParent<CharacterBase>();
+        CharacterBase charB = otherSword.orbit.GetComponentInParent<CharacterBase>();
+
+        if (charA != null && charB != null)
+        {
+            // Hướng đẩy: từ trung điểm va chạm ra 2 phía ngược nhau
+            Vector2 pushDir = ((Vector2)(charA.transform.position - charB.transform.position)).normalized;
+            if (pushDir == Vector2.zero) pushDir = Random.insideUnitCircle.normalized;
+
+            int swordsA = orbit.SwordCount;
+            int swordsB = otherSword.orbit.SwordCount;
+
+            // Bên yếu hơn (ít kiếm hơn) văng mạnh hơn
+            float strengthA = Mathf.Max(1f, swordsA);
+            float strengthB = Mathf.Max(1f, swordsB);
+            float total = strengthA + strengthB;
+
+            // Tỷ lệ nghịch: yếu hơn nhận lực nhiều hơn
+            float ratioA = strengthB / total; // A yếu → strengthB lớn → ratioA lớn → A văng mạnh
+            float ratioB = strengthA / total;
+
+            float forceA = ownerKnockbackBase + ownerKnockbackWeakBonus * ratioA;
+            float forceB = ownerKnockbackBase + ownerKnockbackWeakBonus * ratioB;
+
+            charA.ApplyKnockback(pushDir, forceA);
+            charB.ApplyKnockback(-pushDir, forceB);
+        }
+
         KnockOff();
         otherSword.KnockOff();
     }
@@ -238,6 +273,31 @@ public class Sword : MonoBehaviour, ICollectibleItem
         transform.SetParent(null);
         Vector3 landPos = worldPos + (Vector3)(dir.normalized * knockForce);
         landPos.z = 1f;
+
+        // Đảm bảo kiếm không văng vào ô có tường
+        MapManager map = MapManager.Instance;
+        if (map != null && map.IsWall(landPos))
+        {
+            // Thử giảm dần khoảng cách văng
+            bool found = false;
+            for (float t = 0.8f; t >= 0.1f; t -= 0.2f)
+            {
+                Vector3 candidate = worldPos + (Vector3)(dir.normalized * knockForce * t);
+                candidate.z = 1f;
+                if (!map.IsWall(candidate))
+                {
+                    landPos = candidate;
+                    found = true;
+                    break;
+                }
+            }
+            // Nếu tất cả đều trúng tường, rơi tại chỗ
+            if (!found)
+            {
+                landPos = worldPos;
+                landPos.z = 1f;
+            }
+        }
 
         var seq = DOTween.Sequence();
         seq.Join(transform.DOMove(landPos, fallDuration).SetEase(Ease.OutQuad));

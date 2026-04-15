@@ -32,11 +32,12 @@ public class LevelManager : Singleton<LevelManager>
 
         for (int i = 0; i < initialSwordCount; i++)
         {
-            Vector3 pos = new Vector3(
-                Random.Range(min.x + padding, max.x - padding),
-                Random.Range(min.y + padding, max.y - padding),
-                0f
-            );
+            Vector3 pos = FindOpenPosition(min, max, padding, map);
+            if (pos.z < 0f)
+            {
+                Debug.LogWarning($"[LevelManager] Could not find open position for sword {i}. Skipping.");
+                continue;
+            }
 
             ItemManager itemMgr = ItemManager.Instance;
             if (itemMgr != null)
@@ -45,7 +46,6 @@ public class LevelManager : Singleton<LevelManager>
             }
             else
             {
-                // Fallback: instantiate directly
                 GameObject go = Instantiate(swordPrefab, pos, Quaternion.identity);
                 Sword sword = go.GetComponent<Sword>();
                 if (sword != null) sword.OnSpawn(pos);
@@ -100,5 +100,24 @@ public class LevelManager : Singleton<LevelManager>
 
     private void OnDespawn()
     {
+    }
+
+    /// <summary>
+    /// Tìm vị trí ngẫu nhiên không trúng tường. Thử tối đa 30 lần.
+    /// Trả về z = -1 nếu không tìm được.
+    /// </summary>
+    private static Vector3 FindOpenPosition(Vector2 min, Vector2 max, float padding, MapManager map)
+    {
+        for (int attempt = 0; attempt < 30; attempt++)
+        {
+            Vector3 pos = new Vector3(
+                Random.Range(min.x + padding, max.x - padding),
+                Random.Range(min.y + padding, max.y - padding),
+                0f
+            );
+            if (!map.IsWall(pos))
+                return pos;
+        }
+        return new Vector3(0f, 0f, -1f);
     }
 }

@@ -18,6 +18,7 @@ public class SpatialGridDebug : MonoBehaviour
     [SerializeField] private Color boundsColor = new Color(1f, 0f, 0f, 0.8f);
     [SerializeField] private Color occupiedCellColor = new Color(0f, 1f, 0f, 0.2f);
     [SerializeField] private Color itemCellColor = new Color(1f, 1f, 0f, 0.2f);
+    [SerializeField] private Color wallCellColor = new Color(1f, 0f, 0f, 0.3f);
 
     private void OnDrawGizmos()
     {
@@ -31,6 +32,7 @@ public class SpatialGridDebug : MonoBehaviour
         if (showBounds) DrawBounds(mapMin, mapMax);
         if (showGrid) DrawGrid(mapMin, mapMax, cellSize);
         if (showOccupiedCells) DrawOccupiedCells(cellSize);
+        DrawWallCells(map, cellSize);
     }
 
     private float GetCellSize()
@@ -124,6 +126,24 @@ public class SpatialGridDebug : MonoBehaviour
 
                 Gizmos.color = itemCellColor;
                 Gizmos.DrawCube(cellCenter, new Vector3(cellSize * 0.9f, cellSize * 0.9f, 0.01f));
+            }
+        }
+    }
+
+    private void DrawWallCells(MapManager map, float cellSize)
+    {
+        WallGrid wg = map.WallGrid;
+        if (wg == null) return;
+
+        Gizmos.color = wallCellColor;
+        for (int row = 0; row < map.Rows; row++)
+        {
+            for (int col = 0; col < map.Columns; col++)
+            {
+                if (!wg.IsBlocked(col, row)) continue;
+
+                Vector3 center = wg.CellToWorld(col, row);
+                Gizmos.DrawCube(center, new Vector3(cellSize * 0.95f, cellSize * 0.95f, 0.01f));
             }
         }
     }

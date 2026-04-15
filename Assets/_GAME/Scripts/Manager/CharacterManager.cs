@@ -63,14 +63,36 @@ public class CharacterManager : Singleton<CharacterManager>
         for (int i = 0; i < characters.Count; i++)
         {
             CharacterBase c = characters[i];
+            Vector3 prevPos = c.transform.position; // lưu vị trí trước khi di chuyển
+
             if (c is IManagedUpdate managed)
                 managed.ManagedUpdate(dt);
 
-            // Clamp position to map bounds
+            // Clamp position to map bounds and prevent entering wall cells
             Vector3 pos = c.transform.position;
             MapManager map = MapManager.Instance;
             if (map != null)
+            {
                 pos = map.ClampToMap(pos);
+
+                // If new position is inside a wall, revert to previous position
+                WallGrid wg = map.WallGrid;
+                if (wg != null && wg.IsBlockedWorld(pos))
+                {
+                    // Try keeping only X movement
+                    Vector3 tryX = new Vector3(pos.x, prevPos.y, pos.z);
+                    // Try keeping only Y movement
+                    Vector3 tryY = new Vector3(prevPos.x, pos.y, pos.z);
+
+                    if (!wg.IsBlockedWorld(tryX))
+                        pos = tryX; // slide along X
+                    else if (!wg.IsBlockedWorld(tryY))
+                        pos = tryY; // slide along Y
+                    else
+                        pos = prevPos; // fully blocked, stay put
+                }
+            }
+            pos.z = pos.y + 25f;
             c.transform.position = pos;
 
             grid.UpdatePosition(c, pos);

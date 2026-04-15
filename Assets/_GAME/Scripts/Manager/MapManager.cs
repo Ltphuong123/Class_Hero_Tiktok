@@ -15,10 +15,18 @@ public class MapManager : Singleton<MapManager>
     [SerializeField, Tooltip("Center of the map. Bounds are calculated from this point.")]
     private Vector2 origin = Vector2.zero;
 
+    [Header("Wall Detection")]
+    [SerializeField] private LayerMask wallMask;
+
+    private WallGrid wallGrid;
+    private GridPathfinder pathfinder;
+
     // ── Public Properties ──
     public float CellSize => cellSize;
     public int Columns => columns;
     public int Rows => rows;
+    public WallGrid WallGrid => wallGrid;
+    public GridPathfinder Pathfinder => pathfinder;
     public float MapWidth => columns * cellSize;
     public float MapHeight => rows * cellSize;
     public Vector2 MapMin => origin - new Vector2(MapWidth * 0.5f, MapHeight * 0.5f);
@@ -73,6 +81,32 @@ public class MapManager : Singleton<MapManager>
         worldPos.x = Mathf.Clamp(worldPos.x, min.x, max.x);
         worldPos.y = Mathf.Clamp(worldPos.y, min.y, max.y);
         return worldPos;
+    }
+
+    protected override void Awake()
+    {
+        base.Awake();
+        BakeWallGrid();
+    }
+
+    /// <summary>
+    /// Bake the wall grid and create the pathfinder.
+    /// Call again if walls change at runtime.
+    /// </summary>
+    public void BakeWallGrid()
+    {
+        wallGrid = new WallGrid(columns, rows, cellSize, MapMin);
+        wallGrid.Bake(wallMask);
+        pathfinder = new GridPathfinder(wallGrid);
+        Debug.Log($"[MapManager] Wall grid baked: {columns}x{rows}, cellSize={cellSize}");
+    }
+
+    /// <summary>
+    /// Check if a world position is in a wall cell.
+    /// </summary>
+    public bool IsWall(Vector3 worldPos)
+    {
+        return wallGrid != null && wallGrid.IsBlockedWorld(worldPos);
     }
 
     private void OnValidate()

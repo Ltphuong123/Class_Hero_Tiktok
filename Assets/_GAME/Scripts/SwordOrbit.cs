@@ -93,6 +93,16 @@ public class SwordOrbit : MonoBehaviour
         swords.Remove(sword);
     }
 
+    /// <summary>
+    /// Rơi kiếm tại index ra map (dùng khi chết).
+    /// </summary>
+    public void DropSword(int index)
+    {
+        if (index < 0 || index >= swords.Count) return;
+        Sword sword = swords[index];
+        sword.KnockOff();
+    }
+
     public void OnSwordFlyComplete(Sword sword) { }
 
     private void RedistributeExistingSwords(float step)
