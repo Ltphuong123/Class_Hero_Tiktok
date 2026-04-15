@@ -1,42 +1,45 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-/// <summary>
-/// A* pathfinder on the WallGrid. Returns a list of world positions from start to goal,
-/// avoiding blocked cells. Supports 8-directional movement.
-/// Designed for AI usage — call FindPath() during Evaluate(), cache the result,
-/// then follow waypoints during ExecuteMovement().
-/// </summary>
 public class GridPathfinder
 {
-    private readonly WallGrid wallGrid;
+    private readonly MapManager map;
+    private readonly int maxSearchNodes;
+    private readonly int cols;
+    private readonly float cs;
 
-    // Pre-allocated structures to avoid GC
-    private readonly Dictionary<int, float> gScore = new();
-    private readonly Dictionary<int, float> fScore = new();
-    private readonly Dictionary<int, int> cameFrom = new();
-    private readonly HashSet<int> closedSet = new();
-    private readonly HashSet<int> openSet = new();
+    private readonly float[] gArr;
+    private readonly float[] fArr;
+    private readonly int[] fromArr;
+    private readonly byte[] stateArr; // 0=none, 1=open, 2=closed
+
     private readonly List<int> openList = new();
     private readonly List<int> reconstructKeys = new();
 
-    // 8 directions: N, NE, E, SE, S, SW, W, NW
     private static readonly int[] DCol = { 0, 1, 1, 1, 0, -1, -1, -1 };
     private static readonly int[] DRow = { 1, 1, 0, -1, -1, -1, 0, 1 };
     private static readonly float[] DCost = { 1f, 1.414f, 1f, 1.414f, 1f, 1.414f, 1f, 1.414f };
+    private static readonly bool[] IsDiag = { false, true, false, true, false, true, false, true };
 
-    private readonly int maxSearchNodes;
+    private int generation;
 
-    public GridPathfinder(WallGrid wallGrid, int maxSearchNodes = 200)
+    private int[] genArr;
+
+    public GridPathfinder(MapManager map, int maxSearchNodes = 200)
     {
-        this.wallGrid = wallGrid;
+        this.map = map;
         this.maxSearchNodes = maxSearchNodes;
+        cols = map.Columns;
+        cs = map.CellSize;
+
+        int total = cols * map.Rows;
+        gArr = new float[total];
+        fArr = new float[total];
+        fromArr = new int[total];
+        stateArr = new byte[total];
+        genArr = new int[total];
     }
 
-    /// <summary>
-    /// Compute the total walking distance of a path (sum of segment lengths).
-    /// Returns float.MaxValue if path is empty (no route).
-    /// </summary>
     public static float PathDistance(Vector3 start, List<Vector3> path)
     {
         if (path == null || path.Count == 0) return float.MaxValue;
@@ -47,65 +50,59 @@ public class GridPathfinder
         return dist;
     }
 
-    /// <summary>
-    /// Find path distance from start to goal using A* gScore.
-    /// Much cheaper than FindPath() when you only need the distance, not the waypoints.
-    /// Returns float.MaxValue if no path found.
-    /// </summary>
     public float FindPathDistance(Vector3 startWorld, Vector3 goalWorld)
     {
-        Vector2Int startCell = wallGrid.WorldToCell(startWorld);
-        Vector2Int goalCell = wallGrid.WorldToCell(goalWorld);
+        Vector2Int startCell = map.WorldToCell(startWorld);
+        Vector2Int goalCell = map.WorldToCell(goalWorld);
 
-        if (wallGrid.IsBlocked(goalCell.x, goalCell.y))
+        if (map.IsBlocked(goalCell.x, goalCell.y))
         {
             goalCell = FindNearestOpen(goalCell);
             if (goalCell.x < 0) return float.MaxValue;
         }
-        if (wallGrid.IsBlocked(startCell.x, startCell.y))
+        if (map.IsBlocked(startCell.x, startCell.y))
         {
             startCell = FindNearestOpen(startCell);
             if (startCell.x < 0) return float.MaxValue;
         }
-        if (startCell == goalCell)
-            return Vector3.Distance(startWorld, goalWorld);
+        if (startCell.x == goalCell.x && startCell.y == goalCell.y)
+        {
+            float dx = startWorld.x - goalWorld.x;
+            float dy = startWorld.y - goalWorld.y;
+            return Mathf.Sqrt(dx * dx + dy * dy);
+        }
 
-        return RunAStar(startCell, goalCell, distanceOnly: true, goalWorld, null);
+        return RunAStar(startCell, goalCell, true, goalWorld, null);
     }
 
-    /// <summary>
-    /// Find a path and write waypoints into the provided buffer (no allocation).
-    /// Returns the path distance, or float.MaxValue if no path found.
-    /// </summary>
     public float FindPath(Vector3 startWorld, Vector3 goalWorld, List<Vector3> result)
     {
         result.Clear();
 
-        Vector2Int startCell = wallGrid.WorldToCell(startWorld);
-        Vector2Int goalCell = wallGrid.WorldToCell(goalWorld);
+        Vector2Int startCell = map.WorldToCell(startWorld);
+        Vector2Int goalCell = map.WorldToCell(goalWorld);
 
-        if (wallGrid.IsBlocked(goalCell.x, goalCell.y))
+        if (map.IsBlocked(goalCell.x, goalCell.y))
         {
             goalCell = FindNearestOpen(goalCell);
             if (goalCell.x < 0) return float.MaxValue;
         }
-        if (wallGrid.IsBlocked(startCell.x, startCell.y))
+        if (map.IsBlocked(startCell.x, startCell.y))
         {
             startCell = FindNearestOpen(startCell);
             if (startCell.x < 0) return float.MaxValue;
         }
-        if (startCell == goalCell)
+        if (startCell.x == goalCell.x && startCell.y == goalCell.y)
         {
             result.Add(goalWorld);
-            return Vector3.Distance(startWorld, goalWorld);
+            float dx = startWorld.x - goalWorld.x;
+            float dy = startWorld.y - goalWorld.y;
+            return Mathf.Sqrt(dx * dx + dy * dy);
         }
 
-        return RunAStar(startCell, goalCell, distanceOnly: false, goalWorld, result);
+        return RunAStar(startCell, goalCell, false, goalWorld, result);
     }
 
-    /// <summary>
-    /// Legacy overload — allocates a new list. Prefer the buffer overload.
-    /// </summary>
     public List<Vector3> FindPath(Vector3 startWorld, Vector3 goalWorld)
     {
         var result = new List<Vector3>();
@@ -113,128 +110,128 @@ public class GridPathfinder
         return result;
     }
 
-    /// <summary>
-    /// Core A* implementation. If distanceOnly=true, returns gScore at goal (cell distance × cellSize)
-    /// without reconstructing the path. Otherwise reconstructs into result list.
-    /// </summary>
     private float RunAStar(Vector2Int startCell, Vector2Int goalCell, bool distanceOnly, Vector3 goalWorld, List<Vector3> result)
     {
-        gScore.Clear();
-        fScore.Clear();
-        cameFrom.Clear();
-        closedSet.Clear();
-        openSet.Clear();
+        generation++;
         openList.Clear();
 
-        int cols = wallGrid.Columns;
-        float cellSize = wallGrid.CellSize;
         int startKey = startCell.x + startCell.y * cols;
         int goalKey = goalCell.x + goalCell.y * cols;
+        int goalCol = goalCell.x;
+        int goalRow = goalCell.y;
 
-        gScore[startKey] = 0f;
-        fScore[startKey] = Heuristic(startCell.x, startCell.y, goalCell.x, goalCell.y);
+        genArr[startKey] = generation;
+        gArr[startKey] = 0f;
+        fArr[startKey] = Heuristic(startCell.x, startCell.y, goalCol, goalRow);
+        stateArr[startKey] = 1;
+        fromArr[startKey] = -1;
         openList.Add(startKey);
-        openSet.Add(startKey);
 
         int nodesSearched = 0;
 
         while (openList.Count > 0)
         {
-            // Find node with lowest fScore
             int bestIdx = 0;
-            float bestF = fScore[openList[0]];
+            float bestF = fArr[openList[0]];
             for (int i = 1; i < openList.Count; i++)
             {
-                float f = fScore[openList[i]];
-                if (f < bestF)
-                {
-                    bestF = f;
-                    bestIdx = i;
-                }
+                float f = fArr[openList[i]];
+                if (f < bestF) { bestF = f; bestIdx = i; }
             }
 
             int currentKey = openList[bestIdx];
-            openList.RemoveAt(bestIdx);
-            openSet.Remove(currentKey);
+            int lastIdx = openList.Count - 1;
+            openList[bestIdx] = openList[lastIdx];
+            openList.RemoveAt(lastIdx);
 
             if (currentKey == goalKey)
             {
-                float dist = gScore[goalKey] * cellSize;
+                float dist = gArr[goalKey] * cs;
                 if (!distanceOnly && result != null)
-                    ReconstructPath(currentKey, cols, goalWorld, result);
+                    ReconstructPath(currentKey, goalWorld, result);
                 return dist;
             }
 
-            closedSet.Add(currentKey);
+            stateArr[currentKey] = 2;
             nodesSearched++;
             if (nodesSearched > maxSearchNodes) break;
 
             int curCol = currentKey % cols;
             int curRow = currentKey / cols;
-            float curG = gScore[currentKey];
+            float curG = gArr[currentKey];
 
             for (int d = 0; d < 8; d++)
             {
                 int nc = curCol + DCol[d];
                 int nr = curRow + DRow[d];
 
-                if (wallGrid.IsBlocked(nc, nr)) continue;
+                if (map.IsBlocked(nc, nr)) continue;
 
-                // Diagonal: block if either adjacent cardinal is blocked (no corner cutting)
-                if (DCost[d] > 1f)
+                if (IsDiag[d])
                 {
-                    if (wallGrid.IsBlocked(curCol + DCol[d], curRow) ||
-                        wallGrid.IsBlocked(curCol, curRow + DRow[d]))
+                    if (map.IsBlocked(nc, curRow) || map.IsBlocked(curCol, nr))
                         continue;
                 }
 
                 int neighborKey = nc + nr * cols;
-                if (closedSet.Contains(neighborKey)) continue;
+
+                if (genArr[neighborKey] == generation && stateArr[neighborKey] == 2)
+                    continue;
 
                 float tentativeG = curG + DCost[d];
 
-                if (!gScore.TryGetValue(neighborKey, out float existingG) || tentativeG < existingG)
+                if (genArr[neighborKey] != generation)
                 {
-                    cameFrom[neighborKey] = currentKey;
-                    gScore[neighborKey] = tentativeG;
-                    fScore[neighborKey] = tentativeG + Heuristic(nc, nr, goalCell.x, goalCell.y);
+                    genArr[neighborKey] = generation;
+                    gArr[neighborKey] = tentativeG;
+                    fArr[neighborKey] = tentativeG + Heuristic(nc, nr, goalCol, goalRow);
+                    fromArr[neighborKey] = currentKey;
+                    stateArr[neighborKey] = 1;
+                    openList.Add(neighborKey);
+                }
+                else if (tentativeG < gArr[neighborKey])
+                {
+                    gArr[neighborKey] = tentativeG;
+                    fArr[neighborKey] = tentativeG + Heuristic(nc, nr, goalCol, goalRow);
+                    fromArr[neighborKey] = currentKey;
 
-                    if (openSet.Add(neighborKey))
+                    if (stateArr[neighborKey] != 1)
+                    {
+                        stateArr[neighborKey] = 1;
                         openList.Add(neighborKey);
+                    }
                 }
             }
         }
 
-        return float.MaxValue; // no path found
+        return float.MaxValue;
     }
 
-    private void ReconstructPath(int currentKey, int cols, Vector3 goalWorld, List<Vector3> result)
+    private void ReconstructPath(int currentKey, Vector3 goalWorld, List<Vector3> result)
     {
         reconstructKeys.Clear();
         int key = currentKey;
-        while (cameFrom.ContainsKey(key))
+        while (fromArr[key] >= 0)
         {
             reconstructKeys.Add(key);
-            key = cameFrom[key];
+            key = fromArr[key];
         }
 
         for (int i = reconstructKeys.Count - 1; i >= 0; i--)
         {
             int k = reconstructKeys[i];
-            int col = k % cols;
-            int row = k / cols;
-            result.Add(wallGrid.CellToWorld(col, row));
+            result.Add(map.CellToWorld(k % cols, k / cols));
         }
 
         if (result.Count > 0)
             result[result.Count - 1] = goalWorld;
     }
 
-    private static float Heuristic(int col1, int row1, int col2, int row2)
+    private static float Heuristic(int c1, int r1, int c2, int r2)
     {
-        int dx = Mathf.Abs(col1 - col2);
-        int dy = Mathf.Abs(row1 - row2);
-        return Mathf.Max(dx, dy) + 0.414f * Mathf.Min(dx, dy);
+        int dx = c1 > c2 ? c1 - c2 : c2 - c1;
+        int dy = r1 > r2 ? r1 - r2 : r2 - r1;
+        return (dx > dy ? dx : dy) + 0.414f * (dx < dy ? dx : dy);
     }
 
     private Vector2Int FindNearestOpen(Vector2Int cell)
@@ -245,10 +242,10 @@ public class GridPathfinder
             {
                 for (int dx = -r; dx <= r; dx++)
                 {
-                    if (Mathf.Abs(dx) != r && Mathf.Abs(dy) != r) continue;
+                    if (dx > -r && dx < r && dy > -r && dy < r) continue;
                     int nc = cell.x + dx;
                     int nr = cell.y + dy;
-                    if (!wallGrid.IsBlocked(nc, nr))
+                    if (!map.IsBlocked(nc, nr))
                         return new Vector2Int(nc, nr);
                 }
             }

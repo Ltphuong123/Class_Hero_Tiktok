@@ -15,8 +15,15 @@ public class CharacterBase : MonoBehaviour, IManagedUpdate
     [Header("Knockback")]
     [SerializeField] private float knockbackDuration = 0.3f;
 
+    [Header("State Machine")]
+    [SerializeField] private float visionRadius = 15f;
+    [SerializeField] private float attackKeepDistance = 1f;
+    [SerializeField] private float fleeSpeedMultiplier = 1.6f;
+    [SerializeField] private float fleeSpeedDuration = 1.2f;
+    [SerializeField] private float fleeSpeedCooldown = 5f;
+    [SerializeField] private float stateMinDuration = 0.4f;
+
     private float currentHp;
-    private Vector3 moveDirection;
     private SwordType currentSwordType = SwordType.Default;
     private int swordTypeCount;
     private Vector3 knockbackVelocity;
@@ -24,7 +31,9 @@ public class CharacterBase : MonoBehaviour, IManagedUpdate
     private CharacterBase lastAttacker;
     private float lastAttackerTimer;
 
-    private const float AttackerMemoryDuration = 3f; // nhớ kẻ tấn công trong 3 giây
+    private CharacterStateMachine stateMachine;
+
+    private const float AttackerMemoryDuration = 3f;
 
     public Vector3 Position => transform.position;
     public float CurrentHp => currentHp;
@@ -34,12 +43,31 @@ public class CharacterBase : MonoBehaviour, IManagedUpdate
     public bool IsKnockedBack => knockbackTimer > 0f;
     public CharacterBase LastAttacker => lastAttackerTimer > 0f ? lastAttacker : null;
 
+    /// <summary>
+    /// Tên state hiện tại (dùng cho debug).
+    /// </summary>
+    public string CurrentStateName => stateMachine?.CurrentState?.GetType().Name ?? "None";
+
     private void Start()
     {
         currentHp = maxHp;
         swordTypeCount = System.Enum.GetValues(typeof(SwordType)).Length;
-        if (swordOrbit != null) swordOrbit.IsPlayer = true;
         if (infoUI != null) infoUI.Init(characterName, avatar, currentHp, maxHp);
+
+        // Khởi tạo state machine cho non-player characters
+        if (!isPlayerControlled)
+        {
+            stateMachine = new CharacterStateMachine(
+                this,
+                visionRadius,
+                attackKeepDistance,
+                fleeSpeedMultiplier,
+                fleeSpeedDuration,
+                fleeSpeedCooldown,
+                stateMinDuration
+            );
+            stateMachine.Start();
+        }
     }
 
     private void OnEnable()
@@ -56,41 +84,39 @@ public class CharacterBase : MonoBehaviour, IManagedUpdate
 
     public void ManagedUpdate(float deltaTime)
     {
-        // Giảm timer nhớ kẻ tấn công
         if (lastAttackerTimer > 0f) lastAttackerTimer -= deltaTime;
 
-        // Knockback: đẩy nhân vật, giảm dần, không cho di chuyển
+        // Knockback physics (áp dụng cho cả player và non-player)
         if (knockbackTimer > 0f)
         {
-            float t = knockbackTimer / knockbackDuration; // 1→0
+            float t = knockbackTimer / knockbackDuration;
             transform.position += knockbackVelocity * t * deltaTime;
-            SyncZ();
             knockbackTimer -= deltaTime;
+
+            // Non-player: state machine vẫn chạy (KnockbackState chờ hết timer)
+            if (!isPlayerControlled && stateMachine != null)
+                stateMachine.Update(deltaTime);
+
             return;
         }
 
-        // Only process keyboard input for player-controlled characters
-        if (!isPlayerControlled) return;
-
-        float x = 0f;
-        float y = 0f;
-
-        if (Input.GetKey(KeyCode.A)) x = -1f;
-        if (Input.GetKey(KeyCode.D)) x = 1f;
-        if (Input.GetKey(KeyCode.W)) y = 1f;
-        if (Input.GetKey(KeyCode.S)) y = -1f;
-
-        moveDirection = new Vector3(x, y, 0f).normalized;
-        transform.position += moveDirection * moveSpeed * deltaTime;
-        SyncZ();
-
-        if (Input.GetKeyDown(KeyCode.Q) && swordOrbit != null)
-            swordOrbit.IncreaseRadius(0.5f);
-
-        if (Input.GetKeyDown(KeyCode.E) && swordOrbit != null)
+        if (isPlayerControlled)
         {
-            currentSwordType = (SwordType)(((int)currentSwordType + 1) % swordTypeCount);
-            swordOrbit.SetSwordType(currentSwordType);
+            // Player input
+            if (Input.GetKeyDown(KeyCode.Q) && swordOrbit != null)
+                swordOrbit.IncreaseRadius(0.5f);
+
+            if (Input.GetKeyDown(KeyCode.E) && swordOrbit != null)
+            {
+                currentSwordType = (SwordType)(((int)currentSwordType + 1) % swordTypeCount);
+                swordOrbit.SetSwordType(currentSwordType);
+            }
+        }
+        else
+        {
+            // State machine update
+            if (stateMachine != null)
+                stateMachine.Update(deltaTime);
         }
     }
 
@@ -110,6 +136,10 @@ public class CharacterBase : MonoBehaviour, IManagedUpdate
             lastAttackerTimer = AttackerMemoryDuration;
         }
 
+        // Thông báo state machine
+        if (!isPlayerControlled && stateMachine != null)
+            stateMachine.OnTakeDamage(attacker);
+
         if (currentHp <= 0f) OnDeath();
     }
 
@@ -121,33 +151,38 @@ public class CharacterBase : MonoBehaviour, IManagedUpdate
 
     private void OnDeath()
     {
-        // Rơi tất cả kiếm đang orbit ra map
-        if (swordOrbit != null)
+        if (!isPlayerControlled && stateMachine != null)
         {
-            int count = swordOrbit.SwordCount;
-            for (int i = count - 1; i >= 0; i--)
-                swordOrbit.DropSword(i);
+            // State machine xử lý death (rơi kiếm, disable)
+            stateMachine.ChangeState(stateMachine.Dead);
         }
-
-        gameObject.SetActive(false);
-    }
-
-    /// <summary>
-    /// Đẩy nhân vật theo hướng direction với lực force.
-    /// Trong thời gian knockback, nhân vật không thể di chuyển.
-    /// </summary>
-    public void ApplyKnockback(Vector2 direction, float force)
-    {
-        knockbackVelocity = (Vector3)(direction.normalized * force);
-        knockbackTimer = knockbackDuration;
+        else
+        {
+            // Player death — xử lý trực tiếp
+            if (swordOrbit != null)
+            {
+                int count = swordOrbit.SwordCount;
+                for (int i = count - 1; i >= 0; i--)
+                    swordOrbit.DropSword(i);
+            }
+            gameObject.SetActive(false);
+        }
     }
 
     public SwordOrbit GetSwordOrbit() => swordOrbit;
 
-    private void SyncZ()
+    public void ApplyKnockback(Vector2 direction, float force)
     {
-        Vector3 pos = transform.position;
-        pos.z = pos.y + 25f;
-        transform.position = pos;
+        knockbackVelocity = (Vector3)(direction.normalized * force);
+        knockbackTimer = knockbackDuration;
+
+        // Thông báo state machine chuyển sang KnockbackState
+        if (!isPlayerControlled && stateMachine != null)
+            stateMachine.OnKnockback();
     }
+
+    /// <summary>
+    /// Lấy state machine (dùng cho debug hoặc external access).
+    /// </summary>
+    public CharacterStateMachine GetStateMachine() => stateMachine;
 }

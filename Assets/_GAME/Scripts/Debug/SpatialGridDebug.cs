@@ -132,17 +132,14 @@ public class SpatialGridDebug : MonoBehaviour
 
     private void DrawWallCells(MapManager map, float cellSize)
     {
-        WallGrid wg = map.WallGrid;
-        if (wg == null) return;
-
         Gizmos.color = wallCellColor;
         for (int row = 0; row < map.Rows; row++)
         {
             for (int col = 0; col < map.Columns; col++)
             {
-                if (!wg.IsBlocked(col, row)) continue;
+                if (!map.IsBlocked(col, row)) continue;
 
-                Vector3 center = wg.CellToWorld(col, row);
+                Vector3 center = map.CellToWorld(col, row);
                 Gizmos.DrawCube(center, new Vector3(cellSize * 0.95f, cellSize * 0.95f, 0.01f));
             }
         }

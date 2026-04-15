@@ -1,11 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-/// <summary>
-/// Centralized manager for all CharacterBase instances.
-/// Provides batch updates, spatial queries, and deferred registration
-/// to handle 500+ characters efficiently.
-/// </summary>
 public class CharacterManager : Singleton<CharacterManager>
 {
     [SerializeField] private bool persistAcrossScenes = false;
@@ -15,7 +10,8 @@ public class CharacterManager : Singleton<CharacterManager>
     private readonly List<CharacterBase> pendingAdd = new();
     private readonly List<CharacterBase> pendingRemove = new();
     private readonly HashSet<CharacterBase> characterSet = new();
-    private bool isUpdating = false;
+    private MapManager cachedMap;
+    private bool isUpdating;
 
     public int CharacterCount => characterSet.Count;
 
@@ -23,7 +19,8 @@ public class CharacterManager : Singleton<CharacterManager>
     {
         base.Awake();
 
-        float cellSize = MapManager.Instance != null ? MapManager.Instance.CellSize : 5f;
+        cachedMap = MapManager.Instance;
+        float cellSize = cachedMap != null ? cachedMap.CellSize : 5f;
         grid = new SpatialGrid<CharacterBase>(cellSize);
 
         if (persistAcrossScenes)
@@ -32,8 +29,55 @@ public class CharacterManager : Singleton<CharacterManager>
 
     private void Update()
     {
-        // Flush pending additions
-        for (int i = 0; i < pendingAdd.Count; i++)
+        FlushPending();
+
+        isUpdating = true;
+        float dt = Time.deltaTime;
+        int count = characters.Count;
+        bool hasMap = cachedMap != null;
+
+        for (int i = 0; i < count; i++)
+        {
+            CharacterBase c = characters[i];
+            Transform t = c.transform;
+            Vector3 prevPos = t.position;
+
+            if (c is IManagedUpdate managed)
+                managed.ManagedUpdate(dt);
+
+            Vector3 pos = t.position;
+
+            if (hasMap)
+            {
+                pos = cachedMap.ClampToMap(pos);
+
+                if (cachedMap.IsBlockedWorld(pos))
+                {
+                    Vector3 tryX = new Vector3(pos.x, prevPos.y, pos.z);
+                    if (!cachedMap.IsBlockedWorld(tryX))
+                    {
+                        pos = tryX;
+                    }
+                    else
+                    {
+                        Vector3 tryY = new Vector3(prevPos.x, pos.y, pos.z);
+                        pos = !cachedMap.IsBlockedWorld(tryY) ? tryY : prevPos;
+                    }
+                }
+            }
+
+            pos.z = pos.y + 25f;
+            t.position = pos;
+            grid.UpdatePosition(c, pos);
+        }
+
+        isUpdating = false;
+    }
+
+    private void FlushPending()
+    {
+        int addCount = pendingAdd.Count;
+        for (int i = 0; i < addCount; i++)
         {
             CharacterBase c = pendingAdd[i];
             if (characterSet.Add(c))
@@ -42,73 +86,30 @@ public class CharacterManager : Singleton<CharacterManager>
                 grid.Add(c, c.transform.position);
             }
         }
-        pendingAdd.Clear();
+        if (addCount > 0) pendingAdd.Clear();
 
-        // Flush pending removals
-        for (int i = 0; i < pendingRemove.Count; i++)
+        int removeCount = pendingRemove.Count;
+        for (int i = 0; i < removeCount; i++)
         {
             CharacterBase c = pendingRemove[i];
             if (characterSet.Remove(c))
             {
-                characters.Remove(c);
+                int idx = characters.IndexOf(c);
+                if (idx >= 0)
+                {
+                    int last = characters.Count - 1;
+                    characters[idx] = characters[last];
+                    characters.RemoveAt(last);
+                }
                 grid.Remove(c);
             }
         }
-        pendingRemove.Clear();
-
-        // Batch update loop
-        isUpdating = true;
-        float dt = Time.deltaTime;
-
-        for (int i = 0; i < characters.Count; i++)
-        {
-            CharacterBase c = characters[i];
-            Vector3 prevPos = c.transform.position; // lưu vị trí trước khi di chuyển
-
-            if (c is IManagedUpdate managed)
-                managed.ManagedUpdate(dt);
-
-            // Clamp position to map bounds and prevent entering wall cells
-            Vector3 pos = c.transform.position;
-            MapManager map = MapManager.Instance;
-            if (map != null)
-            {
-                pos = map.ClampToMap(pos);
-
-                // If new position is inside a wall, revert to previous position
-                WallGrid wg = map.WallGrid;
-                if (wg != null && wg.IsBlockedWorld(pos))
-                {
-                    // Try keeping only X movement
-                    Vector3 tryX = new Vector3(pos.x, prevPos.y, pos.z);
-                    // Try keeping only Y movement
-                    Vector3 tryY = new Vector3(prevPos.x, pos.y, pos.z);
-
-                    if (!wg.IsBlockedWorld(tryX))
-                        pos = tryX; // slide along X
-                    else if (!wg.IsBlockedWorld(tryY))
-                        pos = tryY; // slide along Y
-                    else
-                        pos = prevPos; // fully blocked, stay put
-                }
-            }
-            pos.z = pos.y + 25f;
-            c.transform.position = pos;
-
-            grid.UpdatePosition(c, pos);
-        }
-
-        isUpdating = false;
+        if (removeCount > 0) pendingRemove.Clear();
     }
 
-    /// <summary>
-    /// Register a character with the manager. Idempotent — duplicate calls are ignored.
-    /// If called during the update loop, registration is deferred to the next frame.
-    /// </summary>
     public void Register(CharacterBase character)
     {
-        if (characterSet.Contains(character))
-            return;
+        if (characterSet.Contains(character)) return;
 
         if (isUpdating)
         {
@@ -121,14 +122,9 @@ public class CharacterManager : Singleton<CharacterManager>
         grid.Add(character, character.transform.position);
     }
 
-    /// <summary>
-    /// Deregister a character from the manager. Silently ignores unregistered characters.
-    /// If called during the update loop, deregistration is deferred to the next frame.
-    /// </summary>
     public void Deregister(CharacterBase character)
     {
-        if (!characterSet.Contains(character))
-            return;
+        if (!characterSet.Contains(character)) return;
 
         if (isUpdating)
         {
@@ -137,29 +133,26 @@ public class CharacterManager : Singleton<CharacterManager>
         }
 
         characterSet.Remove(character);
-        characters.Remove(character);
+        int idx = characters.IndexOf(character);
+        if (idx >= 0)
+        {
+            int last = characters.Count - 1;
+            characters[idx] = characters[last];
+            characters.RemoveAt(last);
+        }
         grid.Remove(character);
     }
 
-    /// <summary>
-    /// Get all characters within a radius of a position. Delegates to the spatial grid.
-    /// </summary>
     public void GetNearbyCharacters(Vector3 position, float radius, List<CharacterBase> results)
     {
         grid.GetInRadius(position, radius, results);
     }
 
-    /// <summary>
-    /// Get the nearest character within a radius, optionally excluding a specific character.
-    /// </summary>
     public CharacterBase GetNearestCharacter(Vector3 position, float radius, CharacterBase excludeSelf = null)
     {
         return grid.GetNearest(position, radius, excludeSelf);
     }
 
-    /// <summary>
-    /// Get all characters within a radius, sorted by distance ascending.
-    /// </summary>
     public void GetCharactersInRadius(Vector3 position, float radius, List<CharacterBase> results)
     {
         grid.GetInRadius(position, radius, results);
@@ -167,9 +160,9 @@ public class CharacterManager : Singleton<CharacterManager>
         Vector3 center = position;
         results.Sort((a, b) =>
         {
-            float distA = (a.transform.position - center).sqrMagnitude;
-            float distB = (b.transform.position - center).sqrMagnitude;
-            return distA.CompareTo(distB);
+            float dA = (a.transform.position - center).sqrMagnitude;
+            float dB = (b.transform.position - center).sqrMagnitude;
+            return dA.CompareTo(dB);
         });
     }
 }
