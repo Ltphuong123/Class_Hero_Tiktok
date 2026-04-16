@@ -1,9 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// Bị đẩy lùi, mất quyền điều khiển.
-/// Khi hết knockbackTimer → quay về state phù hợp.
-/// </summary>
 public class KnockbackState : ICharacterState
 {
     public void Enter(CharacterStateMachine sm) { }
@@ -12,12 +8,8 @@ public class KnockbackState : ICharacterState
     {
         CharacterBase owner = sm.Owner;
 
-        // Knockback physics được xử lý trong CharacterBase (knockbackVelocity + decay)
-        // State này chỉ chờ hết knockback rồi chuyển state
-
         if (!owner.IsKnockedBack)
         {
-            // Hết knockback → quyết định state tiếp theo
             if (owner.CurrentHp <= 0f)
             {
                 sm.ChangeState(sm.Dead);
@@ -31,20 +23,17 @@ public class KnockbackState : ICharacterState
             {
                 if (mySwords > 0)
                 {
-                    // Có kiếm → phản đòn
                     sm.Attack.SetTarget(attacker);
                     sm.ChangeState(sm.Attack);
                 }
                 else
                 {
-                    // Không kiếm → chạy trốn
                     sm.Flee.SetThreat(attacker);
                     sm.ChangeState(sm.Flee);
                 }
             }
             else
             {
-                // Không có threat → tìm kiếm hoặc wander
                 Sword sword = sm.FindBestSword();
                 if (sword != null)
                 {

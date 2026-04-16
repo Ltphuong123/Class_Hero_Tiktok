@@ -1,7 +1,3 @@
-/// <summary>
-/// Nhân vật chết: rơi tất cả kiếm, disable GameObject.
-/// State cuối cùng, không chuyển đi đâu.
-/// </summary>
 public class DeadState : ICharacterState
 {
     public void Enter(CharacterStateMachine sm)
@@ -17,10 +13,7 @@ public class DeadState : ICharacterState
         sm.Owner.gameObject.SetActive(false);
     }
 
-    public void Execute(CharacterStateMachine sm, float deltaTime)
-    {
-        // Không làm gì — đã chết
-    }
+    public void Execute(CharacterStateMachine sm, float deltaTime) { }
 
     public void Exit(CharacterStateMachine sm) { }
 }

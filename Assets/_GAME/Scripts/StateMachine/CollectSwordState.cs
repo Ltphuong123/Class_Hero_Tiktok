@@ -1,8 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// Đi nhặt kiếm rơi gần nhất. Nhặt trực tiếp khi đủ gần.
-/// </summary>
 public class CollectSwordState : ICharacterState
 {
     private Sword targetSword;
@@ -35,13 +32,11 @@ public class CollectSwordState : ICharacterState
             return;
         }
 
-        // Không có kiếm nào → chuyển Wander ngay
         sm.ChangeState(sm.Wander);
     }
 
     public void Execute(CharacterStateMachine sm, float deltaTime)
     {
-        // Scan enemy yếu hơn
         rescanTimer -= deltaTime;
         if (rescanTimer <= 0f)
         {
@@ -58,7 +53,6 @@ public class CollectSwordState : ICharacterState
             }
         }
 
-        // Target còn hợp lệ?
         if (targetSword == null || targetSword.State != SwordState.Dropped || !targetSword.IsActive)
         {
             targetSword = sm.FindBestSword();
@@ -66,32 +60,33 @@ public class CollectSwordState : ICharacterState
             BuildPathToSword(sm);
         }
 
-        // Nhặt trực tiếp nếu đủ gần
         float dx = targetSword.Position.x - sm.CachedPosition.x;
         float dy = targetSword.Position.y - sm.CachedPosition.y;
         if (dx * dx + dy * dy <= PickupRadiusSq)
         {
             if (targetSword.Collect(sm.Owner))
             {
-                targetSword = sm.FindBestSword();
-                if (targetSword != null) { BuildPathToSword(sm); return; }
-
-                if (sm.MySwordCount > 0)
+                // Successfully collected! Now find next target
+                CharacterBase weakTarget = sm.FindWeakerTarget();
+                if (weakTarget != null)
                 {
-                    CharacterBase weakTarget = sm.FindWeakerTarget();
-                    if (weakTarget != null)
-                    {
-                        sm.Attack.SetTarget(weakTarget);
-                        sm.ChangeState(sm.Attack);
-                    }
-                    else sm.ChangeState(sm.Wander);
+                    sm.Attack.SetTarget(weakTarget);
+                    sm.ChangeState(sm.Attack);
+                    return;
                 }
-                else sm.ChangeState(sm.Wander);
+
+                targetSword = sm.FindBestSword();
+                if (targetSword != null)
+                {
+                    BuildPathToSword(sm);
+                    return;
+                }
+
+                sm.ChangeState(sm.Wander);
                 return;
             }
         }
 
-        // Retarget
         retargetTimer -= deltaTime;
         if (retargetTimer <= 0f)
         {
@@ -104,7 +99,6 @@ public class CollectSwordState : ICharacterState
             }
         }
 
-        // Di chuyển
         if (sm.MoveAlongPath(ref pathIndex, sm.GetCurrentSpeed(), deltaTime))
         {
             targetSword = sm.FindBestSword();

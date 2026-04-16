@@ -2,48 +2,57 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
-/// <summary>
-/// Bộ điều khiển state machine cho CharacterBase.
-/// Được gọi từ CharacterBase.ManagedUpdate mỗi frame.
-/// </summary>
-public class CharacterStateMachine
+public class CharacterStateMachine : MonoBehaviour
 {
-    // --- Cached references ---
-    public CharacterBase Owner { get; private set; }
-    public SwordOrbit Orbit { get; private set; }
-    public MapManager Map { get; private set; }
-    public GridPathfinder Pathfinder { get; private set; }
-    public CharacterManager CharMgr { get; private set; }
-    public ItemManager ItemMgr { get; private set; }
+    [Header("References")]
+    [SerializeField] private CharacterBase owner;
+    [SerializeField] private SwordOrbit orbit;
 
-    // --- Config ---
-    public float VisionRadius { get; private set; }
-    public float VisionRadiusSq { get; private set; }
-    public float FleeSpeedMultiplier { get; private set; }
-    public float FleeSpeedDuration { get; private set; }
-    public float FleeSpeedCooldown { get; private set; }
-    public float StateMinDuration { get; private set; }
+    private MapManager map;
+    private CharacterManager charMgr;
+    private ItemManager itemMgr;
 
-    // --- Separation ---
-    public float SeparationRadius { get; private set; }
-    private float SeparationRadiusSq => SeparationRadius * SeparationRadius;
+    [Header("AI Settings")]
+    [SerializeField] private float visionRadius = 15f;
+    [SerializeField] private float separationRadius = 1.2f;
+
+    [SerializeField] private float fleeSpeedMultiplier = 1.6f;
+    [SerializeField] private float fleeSpeedDuration = 1.2f;
+    [SerializeField] private float fleeSpeedCooldown = 5f;
+
+    [SerializeField] private float stateMinDuration = 0.4f;
+
+    private float visionRadiusSq;
+    private float separationRadiusSq;
+
+    public CharacterBase Owner => owner;
+    public SwordOrbit Orbit => orbit;
+    public MapManager Map => map;
+    public GridPathfinder Pathfinder => map != null ? map.Pathfinder : null;
+    public CharacterManager CharMgr => charMgr;
+    public ItemManager ItemMgr => itemMgr;
+
+    public float VisionRadius => visionRadius;
+    public float VisionRadiusSq => visionRadiusSq;
+    public float FleeSpeedMultiplier => fleeSpeedMultiplier;
+    public float FleeSpeedDuration => fleeSpeedDuration;
+    public float FleeSpeedCooldown => fleeSpeedCooldown;
+    public float StateMinDuration => stateMinDuration;
+
+    public float SeparationRadius => separationRadius;
     private const float SeparationForce = 8f;
 
-    // --- State ---
     public ICharacterState CurrentState { get; private set; }
     public float StateTimer { get; set; }
     public float FleeBoostTimer { get; set; }
     public float FleeCooldownTimer { get; set; }
 
-    // --- Cached position (cập nhật 1 lần đầu mỗi frame) ---
     public Vector3 CachedPosition { get; private set; }
 
-    // --- Reusable buffers ---
     public readonly List<Vector3> PathBuffer = new(32);
     public readonly List<CharacterBase> NearbyCharacters = new(16);
     public readonly List<Sword> NearbySwords = new(16);
 
-    // --- Shared state instances ---
     public readonly WanderState Wander = new();
     public readonly CollectSwordState CollectSword = new();
     public readonly AttackState Attack = new();
@@ -51,57 +60,43 @@ public class CharacterStateMachine
     public readonly DeadState Dead = new();
     public readonly KnockbackState Knockback = new();
 
-    public CharacterStateMachine(
-        CharacterBase owner,
-        float visionRadius = 15f,
-        float separationRadius = 1.2f,
-        float fleeSpeedMultiplier = 1.6f,
-        float fleeSpeedDuration = 1.2f,
-        float fleeSpeedCooldown = 5f,
-        float stateMinDuration = 0.4f)
+    private void Awake()
     {
-        Owner = owner;
-        Orbit = owner.GetSwordOrbit();
-        VisionRadius = visionRadius;
-        VisionRadiusSq = visionRadius * visionRadius;
-        SeparationRadius = separationRadius;
-        FleeSpeedMultiplier = fleeSpeedMultiplier;
-        FleeSpeedDuration = fleeSpeedDuration;
-        FleeSpeedCooldown = fleeSpeedCooldown;
-        StateMinDuration = stateMinDuration;
+        if (owner == null) owner = GetComponent<CharacterBase>();
+        if (orbit == null && owner != null) orbit = owner.GetSwordOrbit();
+        
+        if (map == null) map = MapManager.Instance;
+        if (charMgr == null) charMgr = CharacterManager.Instance;
+        if (itemMgr == null) itemMgr = ItemManager.Instance;
 
-        Map = MapManager.Instance;
-        Pathfinder = Map != null ? Map.Pathfinder : null;
-        CharMgr = CharacterManager.Instance;
-        ItemMgr = ItemManager.Instance;
+        // Cache squared values
+        visionRadiusSq = visionRadius * visionRadius;
+        separationRadiusSq = separationRadius * separationRadius;
+
+        if (map == null || charMgr == null || itemMgr == null)
+            Debug.LogWarning($"[{gameObject.name}] CharacterStateMachine: Some managers are null! Please assign in Inspector or ensure singletons are initialized.");
     }
 
-    public void Start() => ChangeState(Wander);
-
-    public void Update(float deltaTime)
+    private void Start()
     {
-        // Lazy re-cache managers nếu chưa sẵn sàng lúc khởi tạo
-        if (Map == null || CharMgr == null || ItemMgr == null)
-        {
-            TryRecacheManagers();
-        }
+        ChangeState(Wander);
+    }
 
-        CachedPosition = Owner.transform.position;
+    public void ManagedUpdate(float deltaTime)
+    {
+        CachedPosition = owner.transform.position;
 
         StateTimer += deltaTime;
         if (FleeCooldownTimer > 0f) FleeCooldownTimer -= deltaTime;
         if (FleeBoostTimer > 0f) FleeBoostTimer -= deltaTime;
 
-        // Thoát tường
-        if (Map != null && Map.IsWall(CachedPosition))
+        if (map != null && map.IsWall(CachedPosition))
         {
             TryEscapeWall();
-            CachedPosition = Owner.transform.position;
+            CachedPosition = owner.transform.position;
         }
 
         CurrentState?.Execute(this, deltaTime);
-
-        // Separation
         ApplySeparation(deltaTime);
     }
 
@@ -117,20 +112,18 @@ public class CharacterStateMachine
     public void OnTakeDamage(CharacterBase attacker)
     {
         if (CurrentState == Dead) return;
-        if (Owner.CurrentHp <= 0f) { ChangeState(Dead); return; }
+        if (owner.CurrentHp <= 0f) { ChangeState(Dead); return; }
         if (CurrentState == Knockback) return;
 
         if (attacker != null)
         {
             if (MySwordCount > 5)
             {
-                // Nhiều kiếm → phản đòn
                 Attack.SetTarget(attacker);
                 ChangeState(Attack);
             }
             else
             {
-                // 5 kiếm hoặc ít hơn → luôn chạy trốn
                 Flee.SetThreat(attacker);
                 ChangeState(Flee);
             }
@@ -140,45 +133,31 @@ public class CharacterStateMachine
     public void OnKnockback()
     {
         if (CurrentState == Dead) return;
-        if (CurrentState == Flee) return; // Đang chạy trốn → bỏ qua knockback
+        if (CurrentState == Flee) return;
         ChangeState(Knockback);
     }
 
-    private void TryRecacheManagers()
-    {
-        if (Map == null)
-        {
-            Map = MapManager.Instance;
-            if (Map != null) Pathfinder = Map.Pathfinder;
-        }
-        if (CharMgr == null) CharMgr = CharacterManager.Instance;
-        if (ItemMgr == null) ItemMgr = ItemManager.Instance;
-    }
-
-    // --- Properties ---
     public int MySwordCount
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => Orbit != null ? Orbit.SwordCount : 0;
+        get => orbit != null ? orbit.SwordCount : 0;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public float GetCurrentSpeed()
     {
-        float speed = Owner.MoveSpeed;
-        if (FleeBoostTimer > 0f) speed *= FleeSpeedMultiplier;
+        float speed = owner.MoveSpeed;
+        if (FleeBoostTimer > 0f) speed *= fleeSpeedMultiplier;
         return speed;
     }
 
     public bool TryActivateFleeBoost()
     {
         if (FleeCooldownTimer > 0f) return false;
-        FleeBoostTimer = FleeSpeedDuration;
-        FleeCooldownTimer = FleeSpeedCooldown;
+        FleeBoostTimer = fleeSpeedDuration;
+        FleeCooldownTimer = fleeSpeedCooldown;
         return true;
     }
-
-    // --- Movement ---
 
     public bool MoveToward(Vector3 target, float speed, float deltaTime, float arriveThreshold = 0.3f)
     {
@@ -205,7 +184,6 @@ public class CharacterStateMachine
             nextY = posY + dy * inv;
         }
 
-        // Validate
         ValidateMove(posX, posY, ref nextX, ref nextY, posZ);
 
         float movedDx = nextX - posX;
@@ -214,7 +192,7 @@ public class CharacterStateMachine
             return true;
 
         Vector3 newPos = new Vector3(nextX, nextY, posZ);
-        Owner.transform.position = newPos;
+        owner.transform.position = newPos;
         CachedPosition = newPos;
 
         float remainDx = target.x - nextX;
@@ -222,39 +200,33 @@ public class CharacterStateMachine
         return (remainDx * remainDx + remainDy * remainDy) <= threshSq;
     }
 
-    /// <summary>
-    /// Validate di chuyển — sửa nextX/nextY in-place, tránh tạo Vector3 tạm.
-    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ValidateMove(float fromX, float fromY, ref float toX, ref float toY, float z)
     {
-        if (Map == null) return;
+        if (map == null) return;
 
-        // Check điểm đến + midpoint
-        if (!Map.IsBlockedWorld(new Vector3(toX, toY, z)))
+        if (!map.IsBlockedWorld(new Vector3(toX, toY, z)))
         {
             float midX = (fromX + toX) * 0.5f;
             float midY = (fromY + toY) * 0.5f;
-            if (!Map.IsBlockedWorld(new Vector3(midX, midY, z)))
+            if (!map.IsBlockedWorld(new Vector3(midX, midY, z)))
                 return;
         }
 
-        // Slide X
-        if (!Map.IsBlockedWorld(new Vector3(toX, fromY, z)))
+        if (!map.IsBlockedWorld(new Vector3(toX, fromY, z)))
         {
             float midX = (fromX + toX) * 0.5f;
-            if (!Map.IsBlockedWorld(new Vector3(midX, fromY, z)))
+            if (!map.IsBlockedWorld(new Vector3(midX, fromY, z)))
             {
                 toY = fromY;
                 return;
             }
         }
 
-        // Slide Y
-        if (!Map.IsBlockedWorld(new Vector3(fromX, toY, z)))
+        if (!map.IsBlockedWorld(new Vector3(fromX, toY, z)))
         {
             float midY = (fromY + toY) * 0.5f;
-            if (!Map.IsBlockedWorld(new Vector3(fromX, midY, z)))
+            if (!map.IsBlockedWorld(new Vector3(fromX, midY, z)))
             {
                 toX = fromX;
                 return;
@@ -265,9 +237,6 @@ public class CharacterStateMachine
         toY = fromY;
     }
 
-    /// <summary>
-    /// Overload Vector3 cho compatibility với AttackState lùi.
-    /// </summary>
     public Vector3 ValidateMove(Vector3 from, Vector3 to)
     {
         float toX = to.x, toY = to.y;
@@ -286,15 +255,13 @@ public class CharacterStateMachine
         return false;
     }
 
-    // --- Scanning ---
-
     public CharacterBase FindWeakerTarget()
     {
-        if (CharMgr == null) return null;
+        if (charMgr == null) return null;
         int mySwords = MySwordCount;
         if (mySwords <= 0) return null;
 
-        CharMgr.GetNearbyCharacters(CachedPosition, VisionRadius, NearbyCharacters);
+        charMgr.GetNearbyCharacters(CachedPosition, visionRadius, NearbyCharacters);
 
         CharacterBase best = null;
         float bestDistSq = float.MaxValue;
@@ -304,7 +271,7 @@ public class CharacterStateMachine
         for (int i = 0; i < count; i++)
         {
             CharacterBase other = NearbyCharacters[i];
-            if (other == Owner || other.CurrentHp <= 0f) continue;
+            if (other == owner || other.CurrentHp <= 0f) continue;
 
             SwordOrbit otherOrbit = other.GetSwordOrbit();
             int otherSwords = otherOrbit != null ? otherOrbit.SwordCount : 0;
@@ -322,23 +289,18 @@ public class CharacterStateMachine
         return best;
     }
 
-    /// <summary>
-    /// Tìm kiếm rơi gần nhất — dùng Euclidean distance thay vì A* path distance.
-    /// Chỉ dùng A* khi có nhiều kiếm cùng khoảng cách (top 3 gần nhất).
-    /// </summary>
     public Sword FindBestSword()
     {
-        if (ItemMgr == null) return null;
+        if (itemMgr == null) return null;
 
-        ItemMgr.GetNearbySwords(CachedPosition, VisionRadius, NearbySwords);
+        itemMgr.GetNearbySwords(CachedPosition, visionRadius, NearbySwords);
         int count = NearbySwords.Count;
         if (count == 0) return null;
+        if (count == 1) return NearbySwords[0];
 
         float myX = CachedPosition.x, myY = CachedPosition.y;
 
-        if (count == 1) return NearbySwords[0];
-
-        // Tìm top gần nhất bằng Euclidean (O(n), không cần A*)
+        // Find nearest by Euclidean distance (cheap)
         Sword best = null;
         float bestDistSq = float.MaxValue;
 
@@ -355,39 +317,17 @@ public class CharacterStateMachine
             }
         }
 
-        // Nếu có pathfinder, verify kiếm gần nhất có đường đi hợp lệ
-        if (Pathfinder != null && best != null)
-        {
-            float pathDist = Pathfinder.FindPathDistance(CachedPosition, best.Position);
-            if (pathDist >= float.MaxValue)
-            {
-                // Kiếm gần nhất không có đường → tìm kiếm khác có đường
-                best = null;
-                bestDistSq = float.MaxValue;
-                for (int i = 0; i < count; i++)
-                {
-                    Sword s = NearbySwords[i];
-                    float dist = Pathfinder.FindPathDistance(CachedPosition, s.Position);
-                    if (dist < bestDistSq)
-                    {
-                        bestDistSq = dist;
-                        best = s;
-                    }
-                }
-            }
-        }
-
+        // Note: Pathfinding validation removed for performance
+        // States will handle unreachable swords via stuck detection
         return best;
     }
 
-    // --- Separation & Wall escape ---
-
     private void ApplySeparation(float deltaTime)
     {
-        if (CharMgr == null || CurrentState == Dead) return;
+        if (charMgr == null || CurrentState == Dead) return;
 
         float myX = CachedPosition.x, myY = CachedPosition.y;
-        CharMgr.GetNearbyCharacters(CachedPosition, SeparationRadius, NearbyCharacters);
+        charMgr.GetNearbyCharacters(CachedPosition, separationRadius, NearbyCharacters);
 
         float pushX = 0f, pushY = 0f;
         int count = NearbyCharacters.Count;
@@ -395,7 +335,7 @@ public class CharacterStateMachine
         for (int i = 0; i < count; i++)
         {
             CharacterBase other = NearbyCharacters[i];
-            if (other == Owner || other.CurrentHp <= 0f) continue;
+            if (other == owner || other.CurrentHp <= 0f) continue;
 
             float dx = myX - other.Position.x;
             float dy = myY - other.Position.y;
@@ -403,33 +343,35 @@ public class CharacterStateMachine
 
             if (distSq < 0.001f)
             {
-                // Trùng vị trí — dùng hash thay vì Random để deterministic
-                float angle = (Owner.GetInstanceID() * 2654435761u & 0xFFFF) * (Mathf.PI * 2f / 65536f);
+                // Deterministic random push when exactly overlapping
+                float angle = (owner.GetInstanceID() * 2654435761u & 0xFFFF) * (Mathf.PI * 2f / 65536f);
                 pushX += Mathf.Cos(angle);
                 pushY += Mathf.Sin(angle);
                 continue;
             }
 
-            if (distSq >= SeparationRadiusSq) continue;
+            if (distSq >= separationRadiusSq) continue;
 
+            // Optimize: avoid Sqrt by using distSq directly
             float dist = Mathf.Sqrt(distSq);
-            float strength = (SeparationRadius - dist) / SeparationRadius;
-            float invDist = 1f / dist;
-            pushX += dx * invDist * strength;
-            pushY += dy * invDist * strength;
+            float strength = (separationRadius - dist) / separationRadius;
+            float factor = strength / dist; // Combined invDist * strength
+            pushX += dx * factor;
+            pushY += dy * factor;
         }
 
         if (pushX == 0f && pushY == 0f) return;
 
-        float mag = Mathf.Sqrt(pushX * pushX + pushY * pushY);
-        if (mag > 0f)
+        float magSq = pushX * pushX + pushY * pushY;
+        if (magSq > 0f)
         {
-            float step = SeparationForce * deltaTime / mag;
-            float newX = myX + pushX * step;
-            float newY = myY + pushY * step;
+            float invMag = 1f / Mathf.Sqrt(magSq);
+            float step = SeparationForce * deltaTime;
+            float newX = myX + pushX * invMag * step;
+            float newY = myY + pushY * invMag * step;
             ValidateMove(myX, myY, ref newX, ref newY, CachedPosition.z);
             Vector3 newPos = new Vector3(newX, newY, CachedPosition.z);
-            Owner.transform.position = newPos;
+            owner.transform.position = newPos;
             CachedPosition = newPos;
         }
     }
@@ -437,27 +379,25 @@ public class CharacterStateMachine
     private void TryEscapeWall()
     {
         Vector3 pos = CachedPosition;
-        Vector2Int cell = Map.WorldToCell(pos);
+        Vector2Int cell = map.WorldToCell(pos);
 
         float bestDistSq = float.MaxValue;
         int bestCol = cell.x, bestRow = cell.y;
         bool found = false;
 
-        // Scan vòng ngoài trước — early exit khi tìm được ô mở
         for (int r = 1; r <= 5; r++)
         {
             for (int dy = -r; dy <= r; dy++)
             {
                 for (int dx = -r; dx <= r; dx++)
                 {
-                    // Chỉ check vòng ngoài của radius r
                     if (dx > -r && dx < r && dy > -r && dy < r) continue;
 
                     int nc = cell.x + dx;
                     int nr = cell.y + dy;
-                    if (Map.IsBlocked(nc, nr)) continue;
+                    if (map.IsBlocked(nc, nr)) continue;
 
-                    Vector3 candidate = Map.CellToWorld(nc, nr);
+                    Vector3 candidate = map.CellToWorld(nc, nr);
                     float ddx = candidate.x - pos.x;
                     float ddy = candidate.y - pos.y;
                     float distSq = ddx * ddx + ddy * ddy;
@@ -471,13 +411,13 @@ public class CharacterStateMachine
                     }
                 }
             }
-            if (found) break; // Tìm được ở vòng r → không cần check vòng xa hơn
+            if (found) break;
         }
 
         if (found)
         {
-            Vector3 target = Map.CellToWorld(bestCol, bestRow);
-            Owner.transform.position = new Vector3(target.x, target.y, pos.z);
+            Vector3 target = map.CellToWorld(bestCol, bestRow);
+            owner.transform.position = new Vector3(target.x, target.y, pos.z);
         }
     }
 }

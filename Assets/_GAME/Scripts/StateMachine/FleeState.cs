@@ -1,9 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// Chạy trốn xa kẻ địch trong 2 giây với tăng tốc tức thời.
-/// Dùng pathfinder tránh tường. Sau 2 giây → WanderState.
-/// </summary>
 public class FleeState : ICharacterState
 {
     private CharacterBase threat;
@@ -14,7 +10,7 @@ public class FleeState : ICharacterState
     private float stuckTimer;
 
     private const float FleeDuration = 2f;
-    private const float RescanInterval = 0.3f;
+    private const float RescanInterval = 0.5f;  // Increased from 0.3f for better performance
     private const float FleeDistance = 12f;
     private const float StuckThreshold = 0.6f;
     private const float StuckMoveSq = 0.01f;
@@ -29,7 +25,6 @@ public class FleeState : ICharacterState
         lastPosX = sm.CachedPosition.x;
         lastPosY = sm.CachedPosition.y;
 
-        // Luôn tăng tốc tức thời khi flee (bỏ qua cooldown)
         sm.FleeBoostTimer = sm.FleeSpeedDuration;
 
         CalculateFleeTarget(sm);
@@ -44,7 +39,6 @@ public class FleeState : ICharacterState
             return;
         }
 
-        // Stuck detection
         float cx = sm.CachedPosition.x, cy = sm.CachedPosition.y;
         float mdx = cx - lastPosX, mdy = cy - lastPosY;
         if (mdx * mdx + mdy * mdy < StuckMoveSq)
@@ -63,7 +57,6 @@ public class FleeState : ICharacterState
             lastPosY = cy;
         }
 
-        // Tính lại hướng chạy định kỳ (threat di chuyển)
         rescanTimer -= deltaTime;
         if (rescanTimer <= 0f)
         {
@@ -114,7 +107,6 @@ public class FleeState : ICharacterState
     {
         Vector3 myPos = sm.CachedPosition;
 
-        // Hướng chạy = ngược hướng tất cả kẻ địch gần
         float fleeDirX = 0f, fleeDirY = 0f;
 
         if (sm.CharMgr != null)
@@ -137,7 +129,6 @@ public class FleeState : ICharacterState
             }
         }
 
-        // Fallback: dùng threat hoặc random
         float mag = Mathf.Sqrt(fleeDirX * fleeDirX + fleeDirY * fleeDirY);
         if (mag < 0.01f)
         {
@@ -157,7 +148,6 @@ public class FleeState : ICharacterState
         fleeDirX /= mag;
         fleeDirY /= mag;
 
-        // Tìm điểm đến bằng pathfinder — 8 hướng xoay 45°
         Vector3 bestCandidate = Vector3.zero;
         bool found = false;
 
@@ -181,7 +171,6 @@ public class FleeState : ICharacterState
                     if (sm.Map.IsWall(candidate)) continue;
                 }
 
-                // Dùng pathfinder tìm đường tránh tường
                 if (sm.Pathfinder != null)
                 {
                     float dist = sm.Pathfinder.FindPath(myPos, candidate, sm.PathBuffer);

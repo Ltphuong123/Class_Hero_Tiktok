@@ -1,9 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// State mặc định: di chuyển ngẫu nhiên, scan tìm kiếm hoặc enemy.
-/// Khi gần rìa map, ưu tiên hướng về trung tâm.
-/// </summary>
 public class WanderState : ICharacterState
 {
     private int pathIndex;
@@ -52,7 +48,6 @@ public class WanderState : ICharacterState
             }
         }
 
-        // Stuck detection
         float cx = sm.CachedPosition.x, cy = sm.CachedPosition.y;
         float mdx = cx - lastPosX, mdy = cy - lastPosY;
         if (mdx * mdx + mdy * mdy < StuckMoveSq)
@@ -71,7 +66,6 @@ public class WanderState : ICharacterState
             lastPosY = cy;
         }
 
-        // Path hết hoặc rỗng → pick mới
         if (pathIndex >= sm.PathBuffer.Count || sm.PathBuffer.Count == 0)
         {
             PickNewWanderTarget(sm);
@@ -89,7 +83,6 @@ public class WanderState : ICharacterState
         Vector3 myPos = sm.CachedPosition;
         float myX = myPos.x, myY = myPos.y;
 
-        // Nếu gần rìa map → bias hướng về trung tâm
         float biasX = 0f, biasY = 0f;
         if (sm.Map != null)
         {
@@ -104,24 +97,34 @@ public class WanderState : ICharacterState
             {
                 biasX = centerX - myX;
                 biasY = centerY - myY;
-                float bMag = Mathf.Sqrt(biasX * biasX + biasY * biasY);
-                if (bMag > 0.1f) { biasX /= bMag; biasY /= bMag; }
+                float bMagSq = biasX * biasX + biasY * biasY;
+                if (bMagSq > 0.01f)
+                {
+                    float invMag = 1f / Mathf.Sqrt(bMagSq);
+                    biasX *= invMag;
+                    biasY *= invMag;
+                }
             }
         }
 
-        for (int attempt = 0; attempt < 15; attempt++)
+        // Reduced from 15 to 10 attempts for better performance
+        for (int attempt = 0; attempt < 10; attempt++)
         {
             float angle = Random.Range(0f, Mathf.PI * 2f);
             float dirX = Mathf.Cos(angle);
             float dirY = Mathf.Sin(angle);
 
-            // Pha bias hướng trung tâm nếu gần rìa
             if (biasX != 0f || biasY != 0f)
             {
                 dirX = dirX * 0.5f + biasX * 0.5f;
                 dirY = dirY * 0.5f + biasY * 0.5f;
-                float dMag = Mathf.Sqrt(dirX * dirX + dirY * dirY);
-                if (dMag > 0f) { dirX /= dMag; dirY /= dMag; }
+                float dMagSq = dirX * dirX + dirY * dirY;
+                if (dMagSq > 0f)
+                {
+                    float invMag = 1f / Mathf.Sqrt(dMagSq);
+                    dirX *= invMag;
+                    dirY *= invMag;
+                }
             }
 
             float dist = Random.Range(3f, WanderRadius);
@@ -137,7 +140,6 @@ public class WanderState : ICharacterState
                 if (sm.Map.IsWall(candidate)) continue;
             }
 
-            // Check khoảng cách sau clamp — phải đủ xa
             float cdx = candidate.x - myX;
             float cdy = candidate.y - myY;
             if (cdx * cdx + cdy * cdy < 1f) continue;
@@ -148,11 +150,10 @@ public class WanderState : ICharacterState
                 float pathDist = sm.Pathfinder.FindPath(myPos, candidate, sm.PathBuffer);
                 if (pathDist >= float.MaxValue || sm.PathBuffer.Count == 0) continue;
 
-                // Check waypoint cuối phải khác vị trí hiện tại
                 Vector3 last = sm.PathBuffer[sm.PathBuffer.Count - 1];
                 float ldx = last.x - myX;
                 float ldy = last.y - myY;
-                if (ldx * ldx + ldy * ldy < 0.5f) continue;
+                if (ldx * ldx + ldy * ldy < 0.25f) continue; // 0.5f * 0.5f pre-calculated
             }
             else
             {
@@ -162,7 +163,7 @@ public class WanderState : ICharacterState
             return;
         }
 
-        // Fallback: đi về hướng trung tâm map
+        // Fallback: move toward center
         if (sm.Map != null)
         {
             Vector2 min = sm.Map.MapMin;
@@ -170,15 +171,16 @@ public class WanderState : ICharacterState
             float cx = (min.x + max.x) * 0.5f;
             float cy = (min.y + max.y) * 0.5f;
 
-            // Đi 1 đoạn về trung tâm
             float toCX = cx - myX, toCY = cy - myY;
-            float toMag = Mathf.Sqrt(toCX * toCX + toCY * toCY);
-            if (toMag > 1f)
+            float toMagSq = toCX * toCX + toCY * toCY;
+            if (toMagSq > 1f)
             {
+                float toMag = Mathf.Sqrt(toMagSq);
                 float step = Mathf.Min(5f, toMag);
+                float invMag = step / toMag;
                 Vector3 fallback = new Vector3(
-                    myX + toCX / toMag * step,
-                    myY + toCY / toMag * step,
+                    myX + toCX * invMag,
+                    myY + toCY * invMag,
                     myPos.z
                 );
                 fallback = sm.Map.ClampToMap(fallback);

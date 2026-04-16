@@ -1,11 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-/// <summary>
-/// Vẽ đường đi (PathBuffer) của tất cả nhân vật AI.
-/// Hiển thị trong cả Scene view (Gizmos) và Game view (GL).
-/// Attach vào bất kỳ GameObject nào trong scene.
-/// </summary>
 public class PathDebug : MonoBehaviour
 {
     [Header("Display")]
@@ -53,8 +48,6 @@ public class PathDebug : MonoBehaviour
         }
     }
 
-    // --- Game View rendering (GL) ---
-
     private void OnRenderObject()
     {
         if (!showInGameView || !Application.isPlaying) return;
@@ -66,7 +59,6 @@ public class PathDebug : MonoBehaviour
         foreach (var c in characters)
         {
             if (c == null || !c.gameObject.activeInHierarchy) continue;
-            if (c.IsPlayerControlled) continue;
 
             CharacterStateMachine sm = c.GetStateMachine();
             if (sm == null) continue;
@@ -74,14 +66,12 @@ public class PathDebug : MonoBehaviour
             List<Vector3> path = sm.PathBuffer;
             if (path == null || path.Count == 0) continue;
 
-            // Vẽ đường từ vị trí hiện tại đến waypoint đầu tiên
             GL.Begin(GL.LINES);
             GL.Color(pathColor);
             Vector3 pos = c.Position;
             GL.Vertex3(pos.x, pos.y, pos.z);
             GL.Vertex3(path[0].x, path[0].y, path[0].z);
 
-            // Vẽ đường giữa các waypoint
             for (int i = 0; i < path.Count - 1; i++)
             {
                 GL.Vertex3(path[i].x, path[i].y, path[i].z);
@@ -89,7 +79,6 @@ public class PathDebug : MonoBehaviour
             }
             GL.End();
 
-            // Vẽ waypoint markers (hình thoi nhỏ)
             GL.Begin(GL.TRIANGLES);
             GL.Color(waypointColor);
             for (int i = 0; i < path.Count; i++)
@@ -98,7 +87,6 @@ public class PathDebug : MonoBehaviour
             }
             GL.End();
 
-            // Vẽ vị trí hiện tại
             if (showCurrentPosition)
             {
                 GL.Begin(GL.TRIANGLES);
@@ -112,17 +100,13 @@ public class PathDebug : MonoBehaviour
     private void DrawDiamondGL(Vector3 center, float size)
     {
         float x = center.x, y = center.y, z = center.z;
-        // Top triangle
         GL.Vertex3(x, y + size, z);
         GL.Vertex3(x - size, y, z);
         GL.Vertex3(x + size, y, z);
-        // Bottom triangle
         GL.Vertex3(x, y - size, z);
         GL.Vertex3(x + size, y, z);
         GL.Vertex3(x - size, y, z);
     }
-
-    // --- Scene View rendering (Gizmos) ---
 
     private void OnDrawGizmos()
     {
@@ -132,7 +116,6 @@ public class PathDebug : MonoBehaviour
         foreach (var c in chars)
         {
             if (c == null || !c.gameObject.activeInHierarchy) continue;
-            if (c.IsPlayerControlled) continue;
 
             CharacterStateMachine sm = c.GetStateMachine();
             if (sm == null) continue;
@@ -142,25 +125,21 @@ public class PathDebug : MonoBehaviour
 
             Vector3 pos = c.Position;
 
-            // Đường path
             Gizmos.color = pathColor;
             Gizmos.DrawLine(pos, path[0]);
             for (int i = 0; i < path.Count - 1; i++)
                 Gizmos.DrawLine(path[i], path[i + 1]);
 
-            // Waypoint markers
             Gizmos.color = waypointColor;
             for (int i = 0; i < path.Count; i++)
                 Gizmos.DrawWireSphere(path[i], waypointSize);
 
-            // Vị trí hiện tại
             if (showCurrentPosition)
             {
                 Gizmos.color = positionColor;
                 Gizmos.DrawWireSphere(pos, positionSize);
             }
 
-            // Tên state
             if (showStateName)
             {
 #if UNITY_EDITOR

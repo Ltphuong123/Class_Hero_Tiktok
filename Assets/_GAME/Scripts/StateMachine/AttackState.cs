@@ -1,10 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// Đuổi theo target yếu hơn bằng pathfinding.
-/// Separation trong CharacterStateMachine tự đẩy ra khi quá gần.
-/// Đuổi tối đa 3 giây, không kịp → nhặt kiếm.
-/// </summary>
 public class AttackState : ICharacterState
 {
     private CharacterBase target;
@@ -13,8 +8,8 @@ public class AttackState : ICharacterState
     private float chaseTimer;
     private Vector3 lastTargetPos;
 
-    private const float RepathInterval = 0.3f;
-    private const float TargetMovedThresholdSq = 1.5f * 1.5f;
+    private const float RepathInterval = 0.5f;  // Increased from 0.3f for better performance
+    private const float TargetMovedThresholdSq = 2.25f;  // 1.5f * 1.5f (pre-calculated)
     private const float ChaseDuration = 3f;
 
     public void SetTarget(CharacterBase t) => target = t;
@@ -54,14 +49,12 @@ public class AttackState : ICharacterState
         float dy = targetPos.y - myPos.y;
         float distSq = dx * dx + dy * dy;
 
-        // Ngoài tầm nhìn → bỏ
         if (distSq > sm.VisionRadiusSq * 1.2f)
         {
             GiveUpChase(sm);
             return;
         }
 
-        // Đếm thời gian đuổi
         chaseTimer += deltaTime;
         if (chaseTimer >= ChaseDuration)
         {
@@ -69,7 +62,6 @@ public class AttackState : ICharacterState
             return;
         }
 
-        // Repath khi cần
         repathTimer -= deltaTime;
         float mdx = targetPos.x - lastTargetPos.x;
         float mdy = targetPos.y - lastTargetPos.y;
@@ -79,7 +71,6 @@ public class AttackState : ICharacterState
             BuildPathToTarget(sm);
         }
 
-        // Di chuyển về phía target — separation tự đẩy ra khi quá gần
         sm.MoveAlongPath(ref pathIndex, sm.GetCurrentSpeed(), deltaTime);
     }
 

@@ -1,17 +1,12 @@
 using UnityEngine;
 
-/// <summary>
-/// Debug visualizer for the SpatialGrid system.
-/// Draws grid lines, map bounds, and highlights occupied cells in the Scene view.
-/// Attach to any GameObject (e.g., the CharacterManager).
-/// </summary>
 public class SpatialGridDebug : MonoBehaviour
 {
     [Header("Display")]
     [SerializeField] private bool showGrid = true;
     [SerializeField] private bool showBounds = true;
     [SerializeField] private bool showOccupiedCells = true;
-    [SerializeField] private bool showCharacterCount = true;
+    [SerializeField] private bool showWallCells = true;
 
     [Header("Colors")]
     [SerializeField] private Color gridColor = new Color(1f, 1f, 1f, 0.15f);
@@ -32,13 +27,7 @@ public class SpatialGridDebug : MonoBehaviour
         if (showBounds) DrawBounds(mapMin, mapMax);
         if (showGrid) DrawGrid(mapMin, mapMax, cellSize);
         if (showOccupiedCells) DrawOccupiedCells(cellSize);
-        DrawWallCells(map, cellSize);
-    }
-
-    private float GetCellSize()
-    {
-        MapManager map = MapManager.Instance;
-        return map != null ? map.CellSize : 5f;
+        if (showWallCells) DrawWallCells(map, cellSize);
     }
 
     private void DrawBounds(Vector2 min, Vector2 max)
@@ -59,11 +48,9 @@ public class SpatialGridDebug : MonoBehaviour
     {
         Gizmos.color = gridColor;
 
-        // Snap to cell boundaries
         float startX = Mathf.Floor(min.x / cellSize) * cellSize;
         float startY = Mathf.Floor(min.y / cellSize) * cellSize;
 
-        // Vertical lines
         for (float x = startX; x <= max.x; x += cellSize)
         {
             Gizmos.DrawLine(
@@ -72,7 +59,6 @@ public class SpatialGridDebug : MonoBehaviour
             );
         }
 
-        // Horizontal lines
         for (float y = startY; y <= max.y; y += cellSize)
         {
             Gizmos.DrawLine(
@@ -89,7 +75,6 @@ public class SpatialGridDebug : MonoBehaviour
         CharacterManager charMgr = CharacterManager.Instance;
         if (charMgr == null) return;
 
-        // Draw a highlight for each character's cell
         var characters = FindObjectsByType<CharacterBase>(FindObjectsSortMode.None);
         foreach (var c in characters)
         {
@@ -106,7 +91,6 @@ public class SpatialGridDebug : MonoBehaviour
             Gizmos.DrawCube(cellCenter, new Vector3(cellSize, cellSize, 0.01f));
         }
 
-        // Draw item cells
         ItemManager itemMgr = ItemManager.Instance;
         if (itemMgr != null && itemMgr.DroppedSwordCount > 0)
         {

@@ -9,8 +9,9 @@ public class SwordOrbit : MonoBehaviour
     [SerializeField] private float flyStartRadius = 4f;
     [SerializeField] private Sword swordPrefab;
     [SerializeField] private int initialSwordCount = 0;
+    [SerializeField] private SwordType currentSwordType = SwordType.Default;
+    
     private readonly List<Sword> swords = new();
-    private SwordType currentSwordType = SwordType.Default;
     private const float TWO_PI = Mathf.PI * 2f;
     private const float RAD_TO_DEG = Mathf.Rad2Deg;
 
