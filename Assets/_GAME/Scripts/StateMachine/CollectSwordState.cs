@@ -1,8 +1,7 @@
 using UnityEngine;
 
 /// <summary>
-/// Đi nhặt kiếm rơi có path distance ngắn nhất trong tầm nhìn.
-/// Nếu hết kiếm → Wander. Nếu thấy enemy yếu hơn + có kiếm → Attack.
+/// Đi nhặt kiếm rơi gần nhất. Nhặt trực tiếp khi đủ gần.
 /// </summary>
 public class CollectSwordState : ICharacterState
 {
@@ -13,6 +12,7 @@ public class CollectSwordState : ICharacterState
 
     private const float RescanInterval = 0.5f;
     private const float RetargetInterval = 1.5f;
+    private const float PickupRadiusSq = 0.8f * 0.8f;
 
     public void SetTargetSword(Sword sword) => targetSword = sword;
 
@@ -25,24 +25,27 @@ public class CollectSwordState : ICharacterState
         if (targetSword != null && targetSword.State == SwordState.Dropped)
         {
             BuildPathToSword(sm);
+            return;
         }
-        else
+
+        targetSword = sm.FindBestSword();
+        if (targetSword != null)
         {
-            // Không có target → tìm mới
-            targetSword = sm.FindBestSword();
-            if (targetSword != null)
-                BuildPathToSword(sm);
+            BuildPathToSword(sm);
+            return;
         }
+
+        // Không có kiếm nào → chuyển Wander ngay
+        sm.ChangeState(sm.Wander);
     }
 
     public void Execute(CharacterStateMachine sm, float deltaTime)
     {
-        // Scan enemy yếu hơn (nếu có kiếm)
+        // Scan enemy yếu hơn
         rescanTimer -= deltaTime;
         if (rescanTimer <= 0f)
         {
             rescanTimer = RescanInterval;
-
             if (sm.MySwordCount > 0)
             {
                 CharacterBase weakTarget = sm.FindWeakerTarget();
@@ -55,19 +58,40 @@ public class CollectSwordState : ICharacterState
             }
         }
 
-        // Kiểm tra target còn hợp lệ
+        // Target còn hợp lệ?
         if (targetSword == null || targetSword.State != SwordState.Dropped || !targetSword.IsActive)
         {
             targetSword = sm.FindBestSword();
-            if (targetSword == null)
-            {
-                sm.ChangeState(sm.Wander);
-                return;
-            }
+            if (targetSword == null) { sm.ChangeState(sm.Wander); return; }
             BuildPathToSword(sm);
         }
 
-        // Định kỳ tìm kiếm tốt hơn
+        // Nhặt trực tiếp nếu đủ gần
+        float dx = targetSword.Position.x - sm.CachedPosition.x;
+        float dy = targetSword.Position.y - sm.CachedPosition.y;
+        if (dx * dx + dy * dy <= PickupRadiusSq)
+        {
+            if (targetSword.Collect(sm.Owner))
+            {
+                targetSword = sm.FindBestSword();
+                if (targetSword != null) { BuildPathToSword(sm); return; }
+
+                if (sm.MySwordCount > 0)
+                {
+                    CharacterBase weakTarget = sm.FindWeakerTarget();
+                    if (weakTarget != null)
+                    {
+                        sm.Attack.SetTarget(weakTarget);
+                        sm.ChangeState(sm.Attack);
+                    }
+                    else sm.ChangeState(sm.Wander);
+                }
+                else sm.ChangeState(sm.Wander);
+                return;
+            }
+        }
+
+        // Retarget
         retargetTimer -= deltaTime;
         if (retargetTimer <= 0f)
         {
@@ -80,31 +104,22 @@ public class CollectSwordState : ICharacterState
             }
         }
 
-        // Di chuyển theo path
-        bool arrived = sm.MoveAlongPath(ref pathIndex, sm.GetCurrentSpeed(), deltaTime);
-        if (arrived)
+        // Di chuyển
+        if (sm.MoveAlongPath(ref pathIndex, sm.GetCurrentSpeed(), deltaTime))
         {
-            // Đến nơi nhưng kiếm có thể đã bị nhặt → tìm lại
             targetSword = sm.FindBestSword();
-            if (targetSword != null)
-                BuildPathToSword(sm);
-            else
-                sm.ChangeState(sm.Wander);
+            if (targetSword != null) BuildPathToSword(sm);
+            else sm.ChangeState(sm.Wander);
         }
     }
 
-    public void Exit(CharacterStateMachine sm)
-    {
-        targetSword = null;
-    }
+    public void Exit(CharacterStateMachine sm) => targetSword = null;
 
     private void BuildPathToSword(CharacterStateMachine sm)
     {
         pathIndex = 0;
         if (sm.Pathfinder != null)
-        {
-            sm.Pathfinder.FindPath(sm.Owner.Position, targetSword.Position, sm.PathBuffer);
-        }
+            sm.Pathfinder.FindPath(sm.CachedPosition, targetSword.Position, sm.PathBuffer);
         else
         {
             sm.PathBuffer.Clear();

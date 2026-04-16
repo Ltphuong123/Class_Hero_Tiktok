@@ -1,124 +1,113 @@
 using UnityEngine;
 
 /// <summary>
-/// Đuổi theo và tấn công CharacterBase yếu hơn.
-/// Giữ khoảng cách AttackKeepDistance để kiếm orbit chạm target.
-/// Nếu hết kiếm → Flee. Nếu target chết/mất → quay về scan.
+/// Đuổi theo target yếu hơn bằng pathfinding.
+/// Separation trong CharacterStateMachine tự đẩy ra khi quá gần.
+/// Đuổi tối đa 3 giây, không kịp → nhặt kiếm.
 /// </summary>
 public class AttackState : ICharacterState
 {
     private CharacterBase target;
+    private int pathIndex;
     private float repathTimer;
+    private float chaseTimer;
+    private Vector3 lastTargetPos;
 
     private const float RepathInterval = 0.3f;
+    private const float TargetMovedThresholdSq = 1.5f * 1.5f;
+    private const float ChaseDuration = 3f;
 
     public void SetTarget(CharacterBase t) => target = t;
 
     public void Enter(CharacterStateMachine sm)
     {
         repathTimer = 0f;
+        chaseTimer = 0f;
+        pathIndex = 0;
+        lastTargetPos = Vector3.zero;
+        if (target != null) BuildPathToTarget(sm);
     }
 
     public void Execute(CharacterStateMachine sm, float deltaTime)
     {
-        // Hết kiếm → Flee
         if (sm.MySwordCount <= 0)
         {
-            if (target != null)
-                sm.Flee.SetThreat(target);
+            if (target != null) sm.Flee.SetThreat(target);
             sm.ChangeState(sm.Flee);
             return;
         }
 
-        // Target không hợp lệ → tìm target mới hoặc quay về collect/wander
         if (target == null || target.CurrentHp <= 0f || !target.gameObject.activeInHierarchy)
         {
-            target = null;
-            CharacterBase newTarget = sm.FindWeakerTarget();
-            if (newTarget != null)
+            target = sm.FindWeakerTarget();
+            if (target != null)
             {
-                target = newTarget;
+                chaseTimer = 0f;
+                BuildPathToTarget(sm);
             }
-            else
-            {
-                // Không còn ai để đánh → tìm kiếm hoặc wander
-                Sword sword = sm.FindBestSword();
-                if (sword != null)
-                {
-                    sm.CollectSword.SetTargetSword(sword);
-                    sm.ChangeState(sm.CollectSword);
-                }
-                else
-                {
-                    sm.ChangeState(sm.Wander);
-                }
-                return;
-            }
+            else { GiveUpChase(sm); return; }
         }
 
-        // Kiểm tra target còn trong tầm nhìn
-        Vector3 myPos = sm.Owner.Position;
+        Vector3 myPos = sm.CachedPosition;
         Vector3 targetPos = target.Position;
         float dx = targetPos.x - myPos.x;
         float dy = targetPos.y - myPos.y;
         float distSq = dx * dx + dy * dy;
-        float visionSq = sm.VisionRadius * sm.VisionRadius;
 
-        if (distSq > visionSq * 1.2f) // thêm 20% hysteresis tránh ping-pong
+        // Ngoài tầm nhìn → bỏ
+        if (distSq > sm.VisionRadiusSq * 1.2f)
         {
-            target = null;
-            Sword sword = sm.FindBestSword();
-            if (sword != null)
-            {
-                sm.CollectSword.SetTargetSword(sword);
-                sm.ChangeState(sm.CollectSword);
-            }
-            else
-            {
-                sm.ChangeState(sm.Wander);
-            }
+            GiveUpChase(sm);
             return;
         }
 
-        // Di chuyển đuổi theo target, giữ khoảng cách AttackKeepDistance
-        float dist = Mathf.Sqrt(distSq);
-        float keepDist = sm.AttackKeepDistance;
-
-        if (dist > keepDist + 0.2f)
+        // Đếm thời gian đuổi
+        chaseTimer += deltaTime;
+        if (chaseTimer >= ChaseDuration)
         {
-            // Đuổi theo - di chuyển thẳng về phía target
-            float speed = sm.GetCurrentSpeed();
-            float step = speed * deltaTime;
-            float inv = step / dist;
-            if (inv > 1f) inv = 1f;
-
-            // Dừng lại ở khoảng cách keepDist
-            float moveRatio = Mathf.Min(inv, (dist - keepDist) / dist);
-            sm.Owner.transform.position = new Vector3(
-                myPos.x + dx * moveRatio,
-                myPos.y + dy * moveRatio,
-                myPos.z
-            );
+            GiveUpChase(sm);
+            return;
         }
-        else if (dist < keepDist - 0.3f)
+
+        // Repath khi cần
+        repathTimer -= deltaTime;
+        float mdx = targetPos.x - lastTargetPos.x;
+        float mdy = targetPos.y - lastTargetPos.y;
+        if (repathTimer <= 0f || (mdx * mdx + mdy * mdy) > TargetMovedThresholdSq)
         {
-            // Quá gần → lùi ra một chút
-            float speed = sm.GetCurrentSpeed() * 0.5f;
-            float step = speed * deltaTime;
-            float inv = step / dist;
-            if (inv > 1f) inv = 1f;
-
-            sm.Owner.transform.position = new Vector3(
-                myPos.x - dx * inv,
-                myPos.y - dy * inv,
-                myPos.z
-            );
+            repathTimer = RepathInterval;
+            BuildPathToTarget(sm);
         }
-        // Nếu đúng khoảng cách → đứng yên, kiếm orbit tự tấn công
+
+        // Di chuyển về phía target — separation tự đẩy ra khi quá gần
+        sm.MoveAlongPath(ref pathIndex, sm.GetCurrentSpeed(), deltaTime);
     }
 
-    public void Exit(CharacterStateMachine sm)
+    public void Exit(CharacterStateMachine sm) => target = null;
+
+    private void GiveUpChase(CharacterStateMachine sm)
     {
         target = null;
+        Sword sword = sm.FindBestSword();
+        if (sword != null)
+        {
+            sm.CollectSword.SetTargetSword(sword);
+            sm.ChangeState(sm.CollectSword);
+        }
+        else sm.ChangeState(sm.Wander);
+    }
+
+    private void BuildPathToTarget(CharacterStateMachine sm)
+    {
+        if (target == null) return;
+        lastTargetPos = target.Position;
+        pathIndex = 0;
+        if (sm.Pathfinder != null)
+            sm.Pathfinder.FindPath(sm.CachedPosition, target.Position, sm.PathBuffer);
+        else
+        {
+            sm.PathBuffer.Clear();
+            sm.PathBuffer.Add(target.Position);
+        }
     }
 }

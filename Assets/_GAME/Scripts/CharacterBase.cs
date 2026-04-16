@@ -13,11 +13,11 @@ public class CharacterBase : MonoBehaviour, IManagedUpdate
     [SerializeField] private CharacterInfoUI infoUI;
 
     [Header("Knockback")]
-    [SerializeField] private float knockbackDuration = 0.3f;
+    [SerializeField] private float knockbackDuration = 0.1f;
 
     [Header("State Machine")]
     [SerializeField] private float visionRadius = 15f;
-    [SerializeField] private float attackKeepDistance = 1f;
+    [SerializeField] private float separationRadius = 1.2f;
     [SerializeField] private float fleeSpeedMultiplier = 1.6f;
     [SerializeField] private float fleeSpeedDuration = 1.2f;
     [SerializeField] private float fleeSpeedCooldown = 5f;
@@ -54,32 +54,47 @@ public class CharacterBase : MonoBehaviour, IManagedUpdate
         swordTypeCount = System.Enum.GetValues(typeof(SwordType)).Length;
         if (infoUI != null) infoUI.Init(characterName, avatar, currentHp, maxHp);
 
-        // Khởi tạo state machine cho non-player characters
         if (!isPlayerControlled)
-        {
-            stateMachine = new CharacterStateMachine(
-                this,
-                visionRadius,
-                attackKeepDistance,
-                fleeSpeedMultiplier,
-                fleeSpeedDuration,
-                fleeSpeedCooldown,
-                stateMinDuration
-            );
-            stateMachine.Start();
-        }
+            EnsureStateMachine();
     }
 
     private void OnEnable()
     {
         if (CharacterManager.Instance != null)
             CharacterManager.Instance.Register(this);
+
+        // Respawn: reset HP và state machine nếu đã chết
+        if (!isPlayerControlled && stateMachine != null && stateMachine.CurrentState == stateMachine.Dead)
+        {
+            currentHp = maxHp;
+            if (infoUI != null) infoUI.UpdateHp(currentHp, maxHp);
+            stateMachine.Start();
+        }
     }
 
     private void OnDisable()
     {
         if (CharacterManager.Instance != null)
             CharacterManager.Instance.Deregister(this);
+    }
+
+    /// <summary>
+    /// Đảm bảo state machine luôn được tạo. Gọi từ Start và ManagedUpdate.
+    /// </summary>
+    private void EnsureStateMachine()
+    {
+        if (stateMachine != null) return;
+
+        stateMachine = new CharacterStateMachine(
+            this,
+            visionRadius,
+            separationRadius,
+            fleeSpeedMultiplier,
+            fleeSpeedDuration,
+            fleeSpeedCooldown,
+            stateMinDuration
+        );
+        stateMachine.Start();
     }
 
     public void ManagedUpdate(float deltaTime)
@@ -90,12 +105,49 @@ public class CharacterBase : MonoBehaviour, IManagedUpdate
         if (knockbackTimer > 0f)
         {
             float t = knockbackTimer / knockbackDuration;
-            transform.position += knockbackVelocity * t * deltaTime;
+            Vector3 nextPos = transform.position + knockbackVelocity * t * deltaTime;
+            Vector3 curPos = transform.position;
+
+            // Chặn knockback nếu vị trí mới hoặc đường đi nằm trong tường
+            var map = MapManager.Instance;
+            if (map != null)
+            {
+                Vector3 mid = new Vector3(
+                    (curPos.x + nextPos.x) * 0.5f,
+                    (curPos.y + nextPos.y) * 0.5f,
+                    curPos.z
+                );
+
+                if (map.IsWall(nextPos) || map.IsWall(mid))
+                {
+                    // Thử chỉ di chuyển theo từng trục
+                    Vector3 posX = new Vector3(nextPos.x, curPos.y, curPos.z);
+                    Vector3 posY = new Vector3(curPos.x, nextPos.y, curPos.z);
+
+                    if (!map.IsWall(posX))
+                        transform.position = posX;
+                    else if (!map.IsWall(posY))
+                        transform.position = posY;
+                    // Cả 2 trục đều tường → đứng yên, không đẩy vào tường
+                }
+                else
+                {
+                    transform.position = nextPos;
+                }
+            }
+            else
+            {
+                transform.position = nextPos;
+            }
+
             knockbackTimer -= deltaTime;
 
             // Non-player: state machine vẫn chạy (KnockbackState chờ hết timer)
-            if (!isPlayerControlled && stateMachine != null)
+            if (!isPlayerControlled)
+            {
+                EnsureStateMachine();
                 stateMachine.Update(deltaTime);
+            }
 
             return;
         }
@@ -114,9 +166,12 @@ public class CharacterBase : MonoBehaviour, IManagedUpdate
         }
         else
         {
-            // State machine update
-            if (stateMachine != null)
+            // State machine update — đảm bảo luôn có state machine
+            if (!isPlayerControlled)
+            {
+                EnsureStateMachine();
                 stateMachine.Update(deltaTime);
+            }
         }
     }
 

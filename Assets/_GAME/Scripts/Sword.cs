@@ -6,7 +6,7 @@ public enum SwordState { Dropped, Orbiting, Animating, FlyingIn, Sliding }
 public class Sword : MonoBehaviour, ICollectibleItem
 {
     [SerializeField] private SpriteRenderer spriteRenderer;
-    [SerializeField] private float knockForce = 6f;
+    [SerializeField] private float knockForce = 15f;
     [SerializeField] private float fallDuration = 0.8f;
     [SerializeField] private GameObject collisionParticle;
     [SerializeField] private SwordDataSO swordData;
@@ -59,6 +59,25 @@ public class Sword : MonoBehaviour, ICollectibleItem
     public void OnDespawn()
     {
         gameObject.SetActive(false);
+    }
+
+    /// <summary>
+    /// Nhặt kiếm trực tiếp bằng code (không phụ thuộc trigger).
+    /// Trả về true nếu nhặt thành công.
+    /// </summary>
+    public bool Collect(CharacterBase collector)
+    {
+        if (state != SwordState.Dropped) return false;
+        if (collector == null) return false;
+
+        SwordOrbit targetOrbit = collector.GetSwordOrbit();
+        if (targetOrbit == null) return false;
+
+        state = SwordState.Animating;
+        if (ItemManager.Instance != null)
+            ItemManager.Instance.DeregisterDroppedSword(this);
+        targetOrbit.AddSword(this);
+        return true;
     }
 
     public SwordOrbit Orbit => orbit;
@@ -248,29 +267,41 @@ public class Sword : MonoBehaviour, ICollectibleItem
         Vector3 landPos = worldPos + (Vector3)(dir.normalized * knockForce);
         landPos.z = 1f;
 
-        // Đảm bảo kiếm không văng vào ô có tường
+        // Tìm vị trí rơi hợp lệ — check dọc đường bay, bật ngược khi gặp tường
         MapManager map = MapManager.Instance;
-        if (map != null && map.IsWall(landPos))
+        if (map != null)
         {
-            // Thử giảm dần khoảng cách văng
-            bool found = false;
-            for (float t = 0.8f; t >= 0.1f; t -= 0.2f)
+            landPos = map.ClampToMap(landPos);
+
+            // Raycast dọc đường bay: tìm điểm xa nhất không trúng tường
+            Vector2 flyDir = dir.normalized;
+            float maxDist = knockForce;
+            float stepSize = map.CellSize * 0.5f;
+            Vector3 safeLand = worldPos;
+            safeLand.z = 1f;
+
+            for (float d = stepSize; d <= maxDist; d += stepSize)
             {
-                Vector3 candidate = worldPos + (Vector3)(dir.normalized * knockForce * t);
-                candidate.z = 1f;
-                if (!map.IsWall(candidate))
+                Vector3 check = worldPos + (Vector3)(flyDir * d);
+                check.z = 1f;
+                check = map.ClampToMap(check);
+
+                if (map.IsWall(check))
                 {
-                    landPos = candidate;
-                    found = true;
+                    // Gặp tường → dùng vị trí trước đó (an toàn)
                     break;
                 }
+                safeLand = check;
             }
-            // Nếu tất cả đều trúng tường, rơi tại chỗ
-            if (!found)
+
+            // Nếu safeLand vẫn trúng tường (edge case) → rơi tại chỗ
+            if (map.IsWall(safeLand))
             {
-                landPos = worldPos;
-                landPos.z = 1f;
+                safeLand = worldPos;
+                safeLand.z = 1f;
             }
+
+            landPos = safeLand;
         }
 
         var seq = DOTween.Sequence();

@@ -682,7 +682,7 @@ MonoBehaviour:
   infoUI: {fileID: 23875576}
   knockbackDuration: 0.3
   visionRadius: 15
-  attackKeepDistance: 1
+  attackKeepDistance: 4
   fleeSpeedMultiplier: 1.6
   fleeSpeedDuration: 1.2
   fleeSpeedCooldown: 5
@@ -768,7 +768,7 @@ Transform:
   m_GameObject: {fileID: 41722864}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 23.4, y: 6.4, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1117,7 +1117,7 @@ MonoBehaviour:
   infoUI: {fileID: 1130245147}
   knockbackDuration: 0.3
   visionRadius: 15
-  attackKeepDistance: 1
+  attackKeepDistance: 4
   fleeSpeedMultiplier: 1.6
   fleeSpeedDuration: 1.2
   fleeSpeedCooldown: 5
@@ -6461,7 +6461,7 @@ MonoBehaviour:
   infoUI: {fileID: 1017998277}
   knockbackDuration: 0.3
   visionRadius: 15
-  attackKeepDistance: 1
+  attackKeepDistance: 4
   fleeSpeedMultiplier: 1.6
   fleeSpeedDuration: 1.2
   fleeSpeedCooldown: 5
@@ -11294,7 +11294,7 @@ MonoBehaviour:
   infoUI: {fileID: 1057667683}
   knockbackDuration: 0.3
   visionRadius: 15
-  attackKeepDistance: 1
+  attackKeepDistance: 4
   fleeSpeedMultiplier: 1.6
   fleeSpeedDuration: 1.2
   fleeSpeedCooldown: 5
@@ -11380,7 +11380,7 @@ Transform:
   m_GameObject: {fileID: 1092223846}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 2, y: 2.1, z: 0}
+  m_LocalPosition: {x: 19.9, y: -21.6, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -14906,7 +14906,7 @@ MonoBehaviour:
   infoUI: {fileID: 1741197019}
   knockbackDuration: 0.3
   visionRadius: 15
-  attackKeepDistance: 1
+  attackKeepDistance: 4
   fleeSpeedMultiplier: 1.6
   fleeSpeedDuration: 1.2
   fleeSpeedCooldown: 5
@@ -14992,7 +14992,7 @@ Transform:
   m_GameObject: {fileID: 1514287736}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -1.8, y: 12.8, z: 0}
+  m_LocalPosition: {x: 1.3, y: 16.5, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -15528,7 +15528,7 @@ MonoBehaviour:
   infoUI: {fileID: 1755533567}
   knockbackDuration: 0.3
   visionRadius: 15
-  attackKeepDistance: 2
+  attackKeepDistance: 4
   fleeSpeedMultiplier: 1.6
   fleeSpeedDuration: 1.2
   fleeSpeedCooldown: 5
@@ -16027,6 +16027,59 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2c8e74aa21bff0d4cbd6362774f937b5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1 &1660081082
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1660081084}
+  - component: {fileID: 1660081083}
+  m_Layer: 0
+  m_Name: GameObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1660081083
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1660081082}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 737418a588c9b0247ba7d39ae566339a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  showInGameView: 1
+  showInSceneView: 1
+  showCurrentPosition: 1
+  showStateName: 1
+  pathColor: {r: 0, g: 1, b: 0.5, a: 0.8}
+  waypointColor: {r: 1, g: 1, b: 0, a: 0.9}
+  positionColor: {r: 1, g: 0.3, b: 0.3, a: 0.9}
+  waypointSize: 0.15
+  positionSize: 0.2
+--- !u!4 &1660081084
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1660081082}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1661241885
 GameObject:
   m_ObjectHideFlags: 0
@@ -16054,7 +16107,7 @@ Transform:
   m_GameObject: {fileID: 1661241885}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: -23, y: 42, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -18996,7 +19049,7 @@ MonoBehaviour:
   infoUI: {fileID: 50821595}
   knockbackDuration: 0.3
   visionRadius: 15
-  attackKeepDistance: 1
+  attackKeepDistance: 4
   fleeSpeedMultiplier: 1.6
   fleeSpeedDuration: 1.2
   fleeSpeedCooldown: 5
@@ -20134,7 +20187,7 @@ MonoBehaviour:
   infoUI: {fileID: 1721949706}
   knockbackDuration: 0.3
   visionRadius: 15
-  attackKeepDistance: 1
+  attackKeepDistance: 4
   fleeSpeedMultiplier: 1.6
   fleeSpeedDuration: 1.2
   fleeSpeedCooldown: 5
@@ -20220,7 +20273,7 @@ Transform:
   m_GameObject: {fileID: 2094155525}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -4.4, y: -11.8, z: 0}
+  m_LocalPosition: {x: -8.7, y: -21.5, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -81442,3 +81495,4 @@ SceneRoots:
   - {fileID: 550984985}
   - {fileID: 77782385}
   - {fileID: 1605249327}
+  - {fileID: 1660081084}
