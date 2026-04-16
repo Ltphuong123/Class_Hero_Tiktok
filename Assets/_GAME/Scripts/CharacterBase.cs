@@ -15,6 +15,9 @@ public class CharacterBase : MonoBehaviour, IManagedUpdate
     [Header("Knockback")]
     [SerializeField] private float knockbackDuration = 0.1f;
 
+    [Header("Visual")]
+    [SerializeField] private Transform visualTransform; // GameObject để flip scale X
+
     [Header("State Machine")]
     [SerializeField] private float visionRadius = 15f;
     [SerializeField] private float separationRadius = 1.2f;
@@ -32,6 +35,7 @@ public class CharacterBase : MonoBehaviour, IManagedUpdate
     private float lastAttackerTimer;
 
     private CharacterStateMachine stateMachine;
+    private float lastFrameX;
 
     private const float AttackerMemoryDuration = 3f;
 
@@ -173,6 +177,34 @@ public class CharacterBase : MonoBehaviour, IManagedUpdate
                 stateMachine.Update(deltaTime);
             }
         }
+
+        // Flip visual dựa trên hướng di chuyển
+        UpdateFacing();
+    }
+
+    private void UpdateFacing()
+    {
+        if (visualTransform == null) return;
+
+        float currentX = transform.position.x;
+        float delta = currentX - lastFrameX;
+
+        if (delta > 0.01f)
+        {
+            // Di chuyển sang phải → scale X = -1
+            Vector3 s = visualTransform.localScale;
+            s.x = -Mathf.Abs(s.x);
+            visualTransform.localScale = s;
+        }
+        else if (delta < -0.01f)
+        {
+            // Di chuyển sang trái → scale X = 1
+            Vector3 s = visualTransform.localScale;
+            s.x = Mathf.Abs(s.x);
+            visualTransform.localScale = s;
+        }
+
+        lastFrameX = currentX;
     }
 
     public void TakeDamage(float damage)
