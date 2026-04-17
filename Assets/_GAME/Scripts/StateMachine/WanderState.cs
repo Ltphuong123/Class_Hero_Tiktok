@@ -7,7 +7,7 @@ public class WanderState : ICharacterState
     private float stuckTimer;
     private float lastPosX, lastPosY;
 
-    private const float RescanInterval = 0.5f;
+    private const float RescanInterval = 0.2f;  // Giảm từ 0.5s → 0.2s để phản ứng nhanh hơn
     private const float WanderRadius = 8f;
     private const float StuckThreshold = 1.0f;
     private const float StuckMoveSq = 0.01f;

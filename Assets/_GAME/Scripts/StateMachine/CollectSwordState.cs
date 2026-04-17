@@ -7,7 +7,7 @@ public class CollectSwordState : ICharacterState
     private float rescanTimer;
     private float retargetTimer;
 
-    private const float RescanInterval = 0.5f;
+    private const float RescanInterval = 0.2f;  // Giảm từ 0.5s → 0.2s để phản ứng nhanh hơn
     private const float RetargetInterval = 1.5f;
     private const float PickupRadiusSq = 0.8f * 0.8f;
 

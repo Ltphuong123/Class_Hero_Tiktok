@@ -126,7 +126,7 @@ MonoBehaviour:
   flyAroundDuration: 1
   flyStartRadius: 4.5
   swordPrefab: {fileID: 1260483932690100476, guid: ece07c08e71385d4991933f17678be5b, type: 3}
-  initialSwordCount: 6
+  initialSwordCount: 0
   currentSwordType: 1
 --- !u!1 &1232729046316689283
 GameObject:
@@ -1377,7 +1377,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6009160023978285966}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -1416,7 +1416,7 @@ BoxCollider2D:
   m_CallbackLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_UsedByEffector: 0
   m_UsedByComposite: 0
   m_Offset: {x: 0.007785797, y: 1.0199413}

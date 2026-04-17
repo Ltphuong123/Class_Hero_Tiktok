@@ -1,9 +1,24 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System;
+
+public struct CharacterRankData
+{
+    public CharacterBase Character;
+    public int Rank;
+    public string Name;
+    public Sprite Avatar;
+    public float CurrentHp;
+    public float MaxHp;
+    public int SwordCount;
+    public string StateName;
+    public float Power;
+}
 
 public class CharacterManager : Singleton<CharacterManager>
 {
     [SerializeField] private bool persistAcrossScenes = false;
+    [SerializeField] private float rankUpdateInterval = 0.5f;
 
     private SpatialGrid<CharacterBase> grid;
     private readonly List<CharacterBase> characters = new();
@@ -13,7 +28,14 @@ public class CharacterManager : Singleton<CharacterManager>
     private MapManager cachedMap;
     private bool isUpdating;
 
+    // Ranking
+    private readonly List<CharacterRankData> rankedList = new();
+    private float rankTimer;
+    private bool rankDirty = true;
+
     public int CharacterCount => characterSet.Count;
+    public IReadOnlyList<CharacterRankData> RankedCharacters => rankedList;
+    public event Action OnRankUpdated;
 
     protected override void Awake()
     {
@@ -72,6 +94,52 @@ public class CharacterManager : Singleton<CharacterManager>
         }
 
         isUpdating = false;
+
+        rankTimer -= dt;
+        if (rankTimer <= 0f || rankDirty)
+        {
+            rankTimer = rankUpdateInterval;
+            rankDirty = false;
+            UpdateRanking();
+        }
+    }
+
+    private void UpdateRanking()
+    {
+        rankedList.Clear();
+        int count = characters.Count;
+        for (int i = 0; i < count; i++)
+        {
+            CharacterBase c = characters[i];
+            if (c == null || !c.gameObject.activeInHierarchy) continue;
+            if (c.CurrentHp <= 0f) continue;
+
+            int swords = c.SwordCount;
+            float power = swords * 100f + c.CurrentHp;
+
+            rankedList.Add(new CharacterRankData
+            {
+                Character = c,
+                Name = c.CharacterName,
+                Avatar = c.Avatar,
+                CurrentHp = c.CurrentHp,
+                MaxHp = c.MaxHp,
+                SwordCount = swords,
+                StateName = c.CurrentStateName,
+                Power = power
+            });
+        }
+
+        rankedList.Sort((a, b) => b.Power.CompareTo(a.Power));
+
+        for (int i = 0; i < rankedList.Count; i++)
+        {
+            var d = rankedList[i];
+            d.Rank = i + 1;
+            rankedList[i] = d;
+        }
+
+        OnRankUpdated?.Invoke();
     }
 
     private void FlushPending()
@@ -120,6 +188,7 @@ public class CharacterManager : Singleton<CharacterManager>
         characterSet.Add(character);
         characters.Add(character);
         grid.Add(character, character.transform.position);
+        rankDirty = true;
     }
 
     public void Deregister(CharacterBase character)
@@ -141,6 +210,7 @@ public class CharacterManager : Singleton<CharacterManager>
             characters.RemoveAt(last);
         }
         grid.Remove(character);
+        rankDirty = true;
     }
 
     public void GetNearbyCharacters(Vector3 position, float radius, List<CharacterBase> results)

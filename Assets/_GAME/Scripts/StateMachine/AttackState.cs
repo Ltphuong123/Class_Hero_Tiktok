@@ -10,7 +10,7 @@ public class AttackState : ICharacterState
 
     private const float RepathInterval = 0.5f;  // Increased from 0.3f for better performance
     private const float TargetMovedThresholdSq = 2.25f;  // 1.5f * 1.5f (pre-calculated)
-    private const float ChaseDuration = 3f;
+    private const float ChaseDuration = 5f;
 
     public void SetTarget(CharacterBase t) => target = t;
 

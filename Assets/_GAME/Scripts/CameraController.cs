@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 /// <summary>
 /// Camera controller: follow target, zoom in/out (scroll/pinch), kéo camera (drag).
@@ -44,12 +45,15 @@ public class CameraController : MonoBehaviour
 
     private void HandleZoom()
     {
-        // Mouse scroll
+        // Không zoom khi pointer đang trên UI
+        if (IsPointerOverUI()) return;
+
+        // Mouse scroll - chỉ xử lý khi KHÔNG trên UI
         float scroll = Input.mouseScrollDelta.y;
         if (scroll != 0f)
             targetZoom -= scroll * zoomSpeed;
 
-        // Touch pinch
+        // Touch pinch - chỉ xử lý khi KHÔNG trên UI
         if (Input.touchCount == 2)
         {
             Touch t0 = Input.GetTouch(0);
@@ -68,6 +72,7 @@ public class CameraController : MonoBehaviour
             }
         }
 
+        // Chỉ apply zoom khi không trên UI
         targetZoom = Mathf.Clamp(targetZoom, minZoom, maxZoom);
         cam.orthographicSize = Mathf.Lerp(cam.orthographicSize, targetZoom, Time.deltaTime * 10f);
     }
@@ -86,6 +91,9 @@ public class CameraController : MonoBehaviour
 
         if (pressed)
         {
+            // Không drag khi pointer đang trên UI
+            if (IsPointerOverUI()) return;
+
             isDragging = true;
             dragOrigin = cam.ScreenToWorldPoint(Input.mousePosition);
         }
@@ -119,4 +127,21 @@ public class CameraController : MonoBehaviour
     /// Zoom đến giá trị cụ thể.
     /// </summary>
     public void SetZoom(float zoom) => targetZoom = Mathf.Clamp(zoom, minZoom, maxZoom);
+
+    private bool IsPointerOverUI()
+    {
+        if (EventSystem.current == null) return false;
+
+        // Mouse
+        if (EventSystem.current.IsPointerOverGameObject()) return true;
+
+        // Touch
+        for (int i = 0; i < Input.touchCount; i++)
+        {
+            if (EventSystem.current.IsPointerOverGameObject(Input.GetTouch(i).fingerId))
+                return true;
+        }
+
+        return false;
+    }
 }
