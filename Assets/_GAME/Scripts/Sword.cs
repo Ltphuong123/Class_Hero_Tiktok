@@ -10,7 +10,11 @@ public class Sword : MonoBehaviour, ICollectibleItem
     [SerializeField] private float fallDuration = 0.8f;
     [SerializeField] private GameObject collisionParticle;
     [SerializeField] private SwordDataSO swordData;
-    [SerializeField] private float damage = 10f;
+    
+    [Header("Combat Stats")]
+    [SerializeField] private float defaultMaxHp = 100f;
+    [SerializeField] private float defaultDamage = 10f;
+    [SerializeField] private float defaultSwordDamage = 20f;
 
     [Header("Knockback")]
     [SerializeField] private float hitKnockbackForce = 10f;
@@ -20,16 +24,68 @@ public class Sword : MonoBehaviour, ICollectibleItem
     private float currentAngle;
     private SwordType swordType = SwordType.Default;
 
+    // HP System
+    [SerializeField] private float currentHp;
+    private float maxHp;
+    private float damageToCharacter;
+    private float damageToSword;
+
     public SwordType SwordType => swordType;
+    public float CurrentHp => currentHp;
+    public float MaxHp => maxHp;
+    public float HpRatio => maxHp > 0f ? currentHp / maxHp : 0f;
 
     public void SetSwordType(SwordType type)
     {
         swordType = type;
+        
+        // Update sprite
         if (spriteRenderer != null && swordData != null)
         {
             Sprite sprite = swordData.GetSprite(type);
             if (sprite != null) spriteRenderer.sprite = sprite;
         }
+
+        // Update stats từ SwordData
+        if (swordData != null)
+        {
+            maxHp = swordData.GetMaxHp(type);
+            damageToCharacter = swordData.GetDamage(type);
+            damageToSword = swordData.GetSwordDamage(type);
+        }
+        else
+        {
+            // Fallback to default values
+            maxHp = defaultMaxHp;
+            damageToCharacter = defaultDamage;
+            damageToSword = defaultSwordDamage;
+        }
+
+        // Reset HP về max khi đổi type (QUAN TRỌNG!)
+        currentHp = maxHp;
+        
+        // Reset visual
+        if (spriteRenderer != null)
+            spriteRenderer.color = Color.white;
+    }
+
+    private void Awake()
+    {
+        // Initialize HP
+        if (swordData != null)
+        {
+            maxHp = swordData.GetMaxHp(swordType);
+            damageToCharacter = swordData.GetDamage(swordType);
+            damageToSword = swordData.GetSwordDamage(swordType);
+        }
+        else
+        {
+            maxHp = defaultMaxHp;
+            damageToCharacter = defaultDamage;
+            damageToSword = defaultSwordDamage;
+        }
+        
+        currentHp = maxHp;
     }
 
     private float flyStartAngle, flyTargetAngle, flyStartRadius, flyOrbitRadius;
@@ -53,6 +109,10 @@ public class Sword : MonoBehaviour, ICollectibleItem
         transform.position = position;
         gameObject.SetActive(true);
         state = SwordState.Dropped;
+        
+        // Reset HP khi spawn
+        currentHp = maxHp;
+        
         LogSwordCell("Spawned");
     }
 
@@ -76,6 +136,10 @@ public class Sword : MonoBehaviour, ICollectibleItem
         state = SwordState.Animating;
         if (ItemManager.Instance != null)
             ItemManager.Instance.DeregisterDroppedSword(this);
+        
+        // Reset HP khi được nhặt
+        currentHp = maxHp;
+        
         targetOrbit.AddSword(this);
         return true;
     }
@@ -219,12 +283,12 @@ public class Sword : MonoBehaviour, ICollectibleItem
         if (state != SwordState.Orbiting && state != SwordState.Sliding) return;
         if (orbit == null) return;
 
-        // kiếm đang xoay chạm vào Player khác (không phải chủ)
+        // Kiếm đang xoay chạm vào Player khác (không phải chủ)
         CharacterBase hitPlayer = other.GetComponent<CharacterBase>();
         if (hitPlayer != null && hitPlayer.GetSwordOrbit() != orbit)
         {
             CharacterBase attacker = orbit.GetComponentInParent<CharacterBase>();
-            hitPlayer.TakeDamage(damage, attacker);
+            hitPlayer.TakeDamage(damageToCharacter, attacker);
 
             Vector2 pushDir = ((Vector2)(hitPlayer.transform.position - orbit.transform.position)).normalized;
             if (pushDir == Vector2.zero) pushDir = Random.insideUnitCircle.normalized;
@@ -234,15 +298,55 @@ public class Sword : MonoBehaviour, ICollectibleItem
             return;
         }
 
+        // Kiếm chạm kiếm khác
         Sword otherSword = other.GetComponent<Sword>();
         if (otherSword == null) return;
         if (otherSword.state != SwordState.Orbiting && otherSword.state != SwordState.Sliding) return;
         if (otherSword.orbit == null || otherSword.orbit == orbit) return;
 
+        // ===== HP SYSTEM: Trừ máu lẫn nhau =====
         SpawnParticle((transform.position + otherSword.transform.position) * 0.5f);
 
-        KnockOff();
-        otherSword.KnockOff();
+        // Trừ máu cho kiếm này
+        TakeDamage(otherSword.damageToSword);
+
+        // Trừ máu cho kiếm kia
+        otherSword.TakeDamage(damageToSword);
+    }
+
+    /// <summary>
+    /// Kiếm nhận damage từ kiếm khác.
+    /// </summary>
+    public void TakeDamage(float damage)
+    {
+        currentHp -= damage;
+
+        // Visual feedback: flash hoặc scale
+        if (spriteRenderer != null)
+        {
+            // Flash effect (optional)
+            spriteRenderer.color = Color.Lerp(Color.white, Color.red, 1f - HpRatio);
+        }
+
+        // Chỉ rơi khi hết máu
+        if (currentHp <= 0f)
+        {
+            currentHp = 0f;
+            KnockOff();
+        }
+    }
+
+    /// <summary>
+    /// Hồi máu cho kiếm (dùng cho debug/powerup).
+    /// </summary>
+    public void Heal(float amount)
+    {
+        currentHp = Mathf.Min(maxHp, currentHp + amount);
+        
+        if (spriteRenderer != null)
+        {
+            spriteRenderer.color = Color.white;
+        }
     }
 
     public void KnockOff()
@@ -311,6 +415,12 @@ public class Sword : MonoBehaviour, ICollectibleItem
         seq.OnComplete(() =>
         {
             state = SwordState.Dropped;
+            
+            // Reset HP khi rơi xuống (có thể nhặt lại)
+            currentHp = maxHp;
+            if (spriteRenderer != null)
+                spriteRenderer.color = Color.white;
+            
             LogSwordCell("Dropped");
             if (ItemManager.Instance != null)
                 ItemManager.Instance.RegisterDroppedSword(this);

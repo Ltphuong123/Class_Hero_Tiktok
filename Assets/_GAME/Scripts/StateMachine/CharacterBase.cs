@@ -35,6 +35,9 @@ public class CharacterBase : MonoBehaviour, IManagedUpdate
     public float MaxHp => maxHp;
     public float MoveSpeed => moveSpeed;
     public int CharacterId => characterId;
+    public string CharacterName => characterName;
+    public Sprite Avatar => avatar;
+    public int SwordCount => swordOrbit != null ? swordOrbit.SwordCount : 0;
     public bool IsKnockedBack => knockbackTimer > 0f;
     public CharacterBase LastAttacker => lastAttackerTimer > 0f ? lastAttacker : null;
     public string CurrentStateName => stateMachine?.CurrentState?.GetType().Name ?? "None";
@@ -171,6 +174,22 @@ public class CharacterBase : MonoBehaviour, IManagedUpdate
     {
         currentHp = Mathf.Min(maxHp, currentHp + amount);
         if (infoUI != null) infoUI.UpdateHp(currentHp, maxHp);
+    }
+
+    /// <summary>
+    /// Nhân tốc độ di chuyển (dùng cho debug/cheat).
+    /// </summary>
+    public void MultiplySpeed(float multiplier)
+    {
+        moveSpeed *= multiplier;
+    }
+
+    /// <summary>
+    /// Set tốc độ di chuyển trực tiếp.
+    /// </summary>
+    public void SetSpeed(float newSpeed)
+    {
+        moveSpeed = Mathf.Max(0f, newSpeed);
     }
 
     private void OnDeath()

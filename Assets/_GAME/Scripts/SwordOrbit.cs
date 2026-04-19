@@ -49,8 +49,14 @@ public class SwordOrbit : MonoBehaviour
     public void SetSwordType(SwordType type)
     {
         currentSwordType = type;
-        for (int i = 0; i < swords.Count; i++)
+        
+        int count = swords.Count;
+        for (int i = 0; i < count; i++)
+        {
             swords[i].SetSwordType(type);
+        }
+
+        Debug.Log($"[SwordOrbit] Đã đổi {count} kiếm sang type {type} và reset HP");
     }
     private void Start()
     {

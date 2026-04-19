@@ -8,6 +8,11 @@ public class CharacterInfoUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI nameText;
     [SerializeField] private Image hpFill;
 
+    private void Awake()
+    {
+        DisableRaycastTargets();
+    }
+
     public void Init(string name, Sprite avatar, float currentHp, float maxHp)
     {
         if (nameText != null) nameText.text = name;
@@ -26,5 +31,11 @@ public class CharacterInfoUI : MonoBehaviour
         {
             transform.rotation = Camera.main.transform.rotation;
         }
+    }
+
+    private void DisableRaycastTargets()
+    {
+        foreach (var graphic in GetComponentsInChildren<Graphic>(true))
+            graphic.raycastTarget = false;
     }
 }

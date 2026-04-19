@@ -276,13 +276,10 @@ public class CharacterTestAdvanced1 : MonoBehaviour
 
         // 1-8: Direct selection
         if (Input.GetKeyDown(KeyCode.Alpha1)) SetSwordType(SwordType.Default);
-        if (Input.GetKeyDown(KeyCode.Alpha2)) SetSwordType(SwordType.Craze);
-        if (Input.GetKeyDown(KeyCode.Alpha3)) SetSwordType(SwordType.Fire);
-        if (Input.GetKeyDown(KeyCode.Alpha4)) SetSwordType(SwordType.Huge);
-        if (Input.GetKeyDown(KeyCode.Alpha5)) SetSwordType(SwordType.Iron);
-        if (Input.GetKeyDown(KeyCode.Alpha6)) SetSwordType(SwordType.Lightning);
-        if (Input.GetKeyDown(KeyCode.Alpha7)) SetSwordType(SwordType.Miasma);
-        if (Input.GetKeyDown(KeyCode.Alpha8)) SetSwordType(SwordType.Snow);
+        if (Input.GetKeyDown(KeyCode.Alpha2)) SetSwordType(SwordType.Fire);
+        if (Input.GetKeyDown(KeyCode.Alpha3)) SetSwordType(SwordType.Lightning);
+        if (Input.GetKeyDown(KeyCode.Alpha4)) SetSwordType(SwordType.Miasma);
+        if (Input.GetKeyDown(KeyCode.Alpha5)) SetSwordType(SwordType.Snow);
     }
 
     private void HandleSwordManagement()
