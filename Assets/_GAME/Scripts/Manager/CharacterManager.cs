@@ -47,6 +47,20 @@ public class CharacterManager : Singleton<CharacterManager>
 
         if (persistAcrossScenes)
             DontDestroyOnLoad(gameObject);
+        
+        int count = characters.Count;
+        if (count > 0)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                CharacterBase c = characters[i];
+                if (c != null)
+                    grid.Add(c, c.transform.position);
+            }
+        }
+        
+        if (pendingAdd.Count > 0)
+            FlushPending();
     }
 
     private void Update()
@@ -177,6 +191,7 @@ public class CharacterManager : Singleton<CharacterManager>
 
     public void Register(CharacterBase character)
     {
+        if (character == null) return;
         if (characterSet.Contains(character)) return;
 
         if (isUpdating)
@@ -187,7 +202,10 @@ public class CharacterManager : Singleton<CharacterManager>
 
         characterSet.Add(character);
         characters.Add(character);
-        grid.Add(character, character.transform.position);
+        
+        if (grid != null)
+            grid.Add(character, character.transform.position);
+        
         rankDirty = true;
     }
 

@@ -1,23 +1,54 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[System.Serializable]
+public class ParticleThreshold
+{
+    [Tooltip("Số kiếm cần để bật particle này")]
+    public int swordCount;
+    
+    [Tooltip("Particle system sẽ chạy khi đủ số kiếm")]
+    public ParticleSystem particle;
+}
+
+[System.Serializable]
+public class SwordTypeParticles
+{
+    [Tooltip("Loại kiếm")]
+    public SwordType swordType;
+    
+    [Tooltip("Danh sách particles với các mức kiếm khác nhau (VD: 5 kiếm, 10 kiếm, 15 kiếm, 25 kiếm...)")]
+    public ParticleThreshold[] particleThresholds;
+}
+
 public class SwordOrbit : MonoBehaviour
 {
+    [Header("Orbit Settings")]
     [SerializeField] private float radius = 1.2f;
     [SerializeField] private float rotateSpeed = 180f;
     [SerializeField] private float flyAroundDuration = 0.6f;
     [SerializeField] private float flyStartRadius = 4f;
+    
+    [Header("Sword Settings")]
     [SerializeField] private Sword swordPrefab;
     [SerializeField] private int initialSwordCount = 0;
     [SerializeField] private SwordType currentSwordType = SwordType.Default;
+
+    [Header("Particle Effects")]
+    [Tooltip("Cấu hình particles cho mỗi loại kiếm. Mỗi loại có thể có nhiều mức kiếm khác nhau.")]
+    [SerializeField] private SwordTypeParticles[] particlesByType;
     
     private readonly List<Sword> swords = new();
     private const float TWO_PI = Mathf.PI * 2f;
     private const float RAD_TO_DEG = Mathf.Rad2Deg;
 
+    private List<ParticleSystem> activeParticles = new();
+    private int lastSwordCount = 0;
+
     public float RotateSpeed => rotateSpeed;
     public float Radius => radius;
     public int SwordCount => swords.Count;
+    public bool IsPlayer { get; set; }
 
     public void IncreaseRadius(float amount)
     {
@@ -44,10 +75,12 @@ public class SwordOrbit : MonoBehaviour
             }
         }
     }
-    public bool IsPlayer { get; set; }
 
     public void SetSwordType(SwordType type)
     {
+        if (currentSwordType == type) return;
+
+        SwordType oldType = currentSwordType;
         currentSwordType = type;
         
         int count = swords.Count;
@@ -56,10 +89,15 @@ public class SwordOrbit : MonoBehaviour
             swords[i].SetSwordType(type);
         }
 
-        Debug.Log($"[SwordOrbit] Đã đổi {count} kiếm sang type {type} và reset HP");
+        UpdateParticleEffects();
+
+        Debug.Log($"[SwordOrbit] Đổi từ {oldType} → {type} | Đã tắt tất cả particles cũ và bật particles mới");
     }
+
     private void Start()
     {
+        InitializeParticles();
+
         if (initialSwordCount == 0) return;
 
         float step = TWO_PI / initialSwordCount;
@@ -76,6 +114,9 @@ public class SwordOrbit : MonoBehaviour
 
             swords.Add(sword);
         }
+
+        lastSwordCount = swords.Count;
+        UpdateParticleEffects();
     }
 
     public void AddSword(Sword sword)
@@ -93,16 +134,16 @@ public class SwordOrbit : MonoBehaviour
 
         RedistributeExistingSwords(step);
         FlyInNewSword(sword, t, step);
+
+        CheckParticleThresholds();
     }
 
     public void RemoveSword(Sword sword)
     {
         swords.Remove(sword);
+        CheckParticleThresholds();
     }
 
-    /// <summary>
-    /// Rơi kiếm tại index ra map (dùng khi chết).
-    /// </summary>
     public void DropSword(int index)
     {
         if (index < 0 || index >= swords.Count) return;
@@ -158,5 +199,169 @@ public class SwordOrbit : MonoBehaviour
     private void Update()
     {
         transform.Rotate(0f, 0f, rotateSpeed * Time.deltaTime);
+
+        if (lastSwordCount != swords.Count)
+        {
+            lastSwordCount = swords.Count;
+            CheckParticleThresholds();
+        }
     }
+
+    #region Particle System
+
+    private void InitializeParticles()
+    {
+        activeParticles = new List<ParticleSystem>();
+
+        if (particlesByType != null)
+        {
+            foreach (var particleSet in particlesByType)
+            {
+                if (particleSet.particleThresholds != null)
+                {
+                    foreach (var threshold in particleSet.particleThresholds)
+                    {
+                        if (threshold.particle != null)
+                        {
+                            threshold.particle.Stop();
+                            threshold.particle.gameObject.SetActive(false);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void CheckParticleThresholds()
+    {
+        int count = swords.Count;
+
+        SwordTypeParticles particleSet = GetParticleSetForType(currentSwordType);
+        if (particleSet == null || particleSet.particleThresholds == null) return;
+
+        foreach (var threshold in particleSet.particleThresholds)
+        {
+            if (threshold.particle == null) continue;
+
+            bool shouldBeActive = count >= threshold.swordCount;
+            UpdateParticleState(threshold.particle, shouldBeActive, threshold.swordCount);
+        }
+    }
+
+    private void UpdateParticleEffects()
+    {
+        StopAllParticles();
+        activeParticles.Clear();
+        CheckParticleThresholds();
+    }
+
+    private void StopAllParticles()
+    {
+        int stoppedCount = 0;
+
+        foreach (var particle in activeParticles)
+        {
+            if (particle != null && particle.gameObject.activeSelf)
+            {
+                particle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+                particle.gameObject.SetActive(false);
+                stoppedCount++;
+            }
+        }
+
+        if (particlesByType != null)
+        {
+            foreach (var particleSet in particlesByType)
+            {
+                if (particleSet.particleThresholds != null)
+                {
+                    foreach (var threshold in particleSet.particleThresholds)
+                    {
+                        if (threshold.particle != null && threshold.particle.gameObject.activeSelf)
+                        {
+                            threshold.particle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+                            threshold.particle.gameObject.SetActive(false);
+                            stoppedCount++;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (stoppedCount > 0)
+        {
+            Debug.Log($"[SwordOrbit] 🛑 Đã tắt {stoppedCount} particles");
+        }
+    }
+
+    private void UpdateParticleState(ParticleSystem particle, bool shouldBeActive, int threshold)
+    {
+        if (particle == null) return;
+
+        if (shouldBeActive)
+        {
+            if (!particle.gameObject.activeSelf)
+            {
+                particle.gameObject.SetActive(true);
+                particle.Play();
+                
+                if (!activeParticles.Contains(particle))
+                    activeParticles.Add(particle);
+
+                Debug.Log($"[SwordOrbit] ✅ Bật particle: {particle.name} cho {currentSwordType} (Threshold: {threshold}, Swords: {swords.Count})");
+            }
+        }
+        else
+        {
+            if (particle.gameObject.activeSelf)
+            {
+                particle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+                particle.gameObject.SetActive(false);
+                
+                activeParticles.Remove(particle);
+
+                Debug.Log($"[SwordOrbit] ❌ Tắt particle: {particle.name} (Threshold: {threshold})");
+            }
+        }
+    }
+
+    private SwordTypeParticles GetParticleSetForType(SwordType type)
+    {
+        if (particlesByType == null) return null;
+
+        foreach (var particleSet in particlesByType)
+        {
+            if (particleSet.swordType == type)
+                return particleSet;
+        }
+
+        return null;
+    }
+
+    #endregion
+
+    #region Public API
+
+    public void RefreshParticles()
+    {
+        UpdateParticleEffects();
+    }
+
+    public int GetActiveParticleCount()
+    {
+        return activeParticles.Count;
+    }
+
+    public List<ParticleSystem> GetActiveParticles()
+    {
+        return new List<ParticleSystem>(activeParticles);
+    }
+
+    public ParticleThreshold[] GetCurrentThresholds()
+    {
+        SwordTypeParticles particleSet = GetParticleSetForType(currentSwordType);
+        return particleSet?.particleThresholds;
+    }
+
+    #endregion
 }
