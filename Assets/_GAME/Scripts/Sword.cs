@@ -3,94 +3,26 @@ using DG.Tweening;
 
 public enum SwordState { Dropped, Orbiting, Animating, FlyingIn, Sliding }
 
-public class Sword : MonoBehaviour, ICollectibleItem
+public class Sword : GameUnit
 {
     [SerializeField] private SpriteRenderer spriteRenderer;
-    [SerializeField] private float knockForce = 15f;
-    [SerializeField] private float fallDuration = 0.8f;
-    [SerializeField] private GameObject collisionParticle;
     [SerializeField] private SwordDataSO swordData;
+    [SerializeField] private SwordType swordType = SwordType.Default;
     
-    [Header("Combat Stats")]
-    [SerializeField] private float defaultMaxHp = 100f;
-    [SerializeField] private float defaultDamage = 10f;
-    [SerializeField] private float defaultSwordDamage = 20f;
-
-    [Header("Knockback")]
-    [SerializeField] private float hitKnockbackForce = 10f;
-
+    private const float defaultMaxHp = 100f;
+    private const float defaultDamage = 15f;
+    private float knockForce = 6f;
+    private float fallDuration = 0.6f;
     private SwordOrbit orbit;
     private SwordState state = SwordState.Dropped;
     private float currentAngle;
-    private SwordType swordType = SwordType.Default;
-
-    // HP System
-    [SerializeField] private float currentHp;
+    
+    private float currentHp;
     private float maxHp;
-    private float damageToCharacter;
-    private float damageToSword;
-
-    public SwordType SwordType => swordType;
-    public float CurrentHp => currentHp;
-    public float MaxHp => maxHp;
-    public float HpRatio => maxHp > 0f ? currentHp / maxHp : 0f;
-
-    public void SetSwordType(SwordType type)
-    {
-        swordType = type;
-        
-        // Update sprite
-        if (spriteRenderer != null && swordData != null)
-        {
-            Sprite sprite = swordData.GetSprite(type);
-            if (sprite != null) spriteRenderer.sprite = sprite;
-        }
-
-        // Update stats từ SwordData
-        if (swordData != null)
-        {
-            maxHp = swordData.GetMaxHp(type);
-            damageToCharacter = swordData.GetDamage(type);
-            damageToSword = swordData.GetSwordDamage(type);
-        }
-        else
-        {
-            // Fallback to default values
-            maxHp = defaultMaxHp;
-            damageToCharacter = defaultDamage;
-            damageToSword = defaultSwordDamage;
-        }
-
-        // Reset HP về max khi đổi type (QUAN TRỌNG!)
-        currentHp = maxHp;
-        
-        // Reset visual
-        if (spriteRenderer != null)
-            spriteRenderer.color = Color.white;
-    }
-
-    private void Awake()
-    {
-        // Initialize HP
-        if (swordData != null)
-        {
-            maxHp = swordData.GetMaxHp(swordType);
-            damageToCharacter = swordData.GetDamage(swordType);
-            damageToSword = swordData.GetSwordDamage(swordType);
-        }
-        else
-        {
-            maxHp = defaultMaxHp;
-            damageToCharacter = defaultDamage;
-            damageToSword = defaultSwordDamage;
-        }
-        
-        currentHp = maxHp;
-    }
+    private float damage;
 
     private float flyStartAngle, flyTargetAngle, flyStartRadius, flyOrbitRadius;
     private float flyDuration, flyInvDuration, flyElapsed;
-
     private float slideFromAngle, slideDiff, slideTargetAngle, slideRadius;
     private float slideDuration, slideInvDuration, slideElapsed;
 
@@ -98,55 +30,93 @@ public class Sword : MonoBehaviour, ICollectibleItem
     private const float PI = Mathf.PI;
     private const float RAD_TO_DEG = Mathf.Rad2Deg;
 
-    // ICollectibleItem implementation
-    public Vector3 Position => transform.position;
-    public bool IsActive => gameObject.activeSelf;
-    public new GameObject GameObject => gameObject;
-    public CollectibleItemType ItemType => CollectibleItemType.Sword;
+    public SwordType SwordType => swordType;
+    public float CurrentHp => currentHp;
+    public float MaxHp => maxHp;
+    public float HpRatio => maxHp > 0f ? currentHp / maxHp : 0f;
+    public SwordOrbit Orbit => orbit;
+    public SwordState State => state;
+    public float CurrentAngle { get => currentAngle; set => currentAngle = value; }
 
-    public void OnSpawn(Vector3 position)
+
+    private void Update()
     {
-        transform.position = position;
-        gameObject.SetActive(true);
-        state = SwordState.Dropped;
-        
-        // Reset HP khi spawn
+        if (state == SwordState.FlyingIn) UpdateFlyIn();
+        else if (state == SwordState.Sliding) UpdateSlide();
+    }
+
+    public void OnInit()
+    {
+        if (swordData != null)
+        {
+            maxHp = swordData.GetMaxHp(swordType);
+            damage = swordData.GetDamage(swordType);
+        }
+        else
+        {
+            maxHp = defaultMaxHp;
+            damage = defaultDamage;
+        }
         currentHp = maxHp;
+        state = SwordState.Dropped;
+        orbit = null;
         
-        LogSwordCell("Spawned");
+        if (spriteRenderer != null)
+            spriteRenderer.color = Color.white;
     }
 
     public void OnDespawn()
     {
-        gameObject.SetActive(false);
+        TF.DOKill();
+        state = SwordState.Dropped;
+        orbit = null;
+        currentHp = maxHp;
+        
+        if (spriteRenderer != null)
+            spriteRenderer.color = Color.white;
+        
+        ItemManager.Instance.Despawn(this);
     }
 
-    /// <summary>
-    /// Nhặt kiếm trực tiếp bằng code (không phụ thuộc trigger).
-    /// Trả về true nếu nhặt thành công.
-    /// </summary>
+    public void SetSwordType(SwordType type)
+    {
+        swordType = type;
+        
+        if (spriteRenderer != null && swordData != null)
+        {
+            Sprite sprite = swordData.GetSprite(type);
+            if (sprite != null) spriteRenderer.sprite = sprite;
+        }
+
+        if (swordData != null)
+        {
+            maxHp = swordData.GetMaxHp(type);
+            damage = swordData.GetDamage(type);
+        }
+        else
+        {
+            maxHp = defaultMaxHp;
+            damage = defaultDamage;
+        }
+
+        currentHp = maxHp;
+        if (spriteRenderer != null) spriteRenderer.color = Color.white;
+    }
+
     public bool Collect(CharacterBase collector)
     {
-        if (state != SwordState.Dropped) return false;
-        if (collector == null) return false;
+        if (state != SwordState.Dropped || collector == null) return false;
 
         SwordOrbit targetOrbit = collector.GetSwordOrbit();
         if (targetOrbit == null) return false;
 
         state = SwordState.Animating;
-        if (ItemManager.Instance != null)
-            ItemManager.Instance.DeregisterDroppedSword(this);
+        ItemManager.Instance?.Unregister(this);
         
-        // Reset HP khi được nhặt
         currentHp = maxHp;
-        
         targetOrbit.AddSword(this);
         return true;
     }
-
-    public SwordOrbit Orbit => orbit;
-    public SwordState State => state;
-    public float CurrentAngle { get => currentAngle; set => currentAngle = value; }
 
     public void AttachToOrbit(SwordOrbit newOrbit)
     {
@@ -200,17 +170,10 @@ public class Sword : MonoBehaviour, ICollectibleItem
         StartSlide(slideFromAngle + slideDiff * Smooth(slideElapsed * slideInvDuration), newTarget, radius);
     }
 
-    private void Update()
-    {
-        if (state == SwordState.FlyingIn) UpdateFlyIn();
-        else if (state == SwordState.Sliding) UpdateSlide();
-    }
-
     private void UpdateFlyIn()
     {
         flyElapsed += Time.deltaTime;
-        float p = flyElapsed * flyInvDuration;
-        if (p > 1f) p = 1f;
+        float p = Mathf.Min(flyElapsed * flyInvDuration, 1f);
 
         float sweep = (flyTargetAngle - flyStartAngle) % TWO_PI;
         if (sweep < 0f) sweep += TWO_PI;
@@ -219,12 +182,9 @@ public class Sword : MonoBehaviour, ICollectibleItem
         float angle = flyStartAngle + sweep * p;
         float s = Smooth(p);
         float r = flyStartRadius + (flyOrbitRadius - flyStartRadius) * s;
-        float cos = Mathf.Cos(angle);
-        float sin = Mathf.Sin(angle);
 
-        transform.localPosition = new Vector3(cos * r, sin * r, -0.2f);
-        float deg = angle * RAD_TO_DEG;
-        transform.localRotation = Quaternion.Euler(0f, 0f, Mathf.LerpAngle(deg + 180f, deg - 90f, s));
+        TF.localPosition = new Vector3(Mathf.Cos(angle) * r, Mathf.Sin(angle) * r, -0.2f);
+        TF.localRotation = Quaternion.Euler(0f, 0f, Mathf.LerpAngle(angle * RAD_TO_DEG + 180f, angle * RAD_TO_DEG - 90f, s));
 
         if (flyElapsed >= flyDuration)
         {
@@ -246,16 +206,15 @@ public class Sword : MonoBehaviour, ICollectibleItem
         }
         else
         {
-            float angle = slideFromAngle + slideDiff * Smooth(slideElapsed * slideInvDuration);
-            currentAngle = angle;
-            PlaceAt(angle, slideRadius);
+            currentAngle = slideFromAngle + slideDiff * Smooth(slideElapsed * slideInvDuration);
+            PlaceAt(currentAngle, slideRadius);
         }
     }
 
     private void PlaceAt(float a, float r)
     {
-        transform.localPosition = new Vector3(Mathf.Cos(a) * r, Mathf.Sin(a) * r, 0f);
-        transform.localRotation = Quaternion.Euler(0f, 0f, a * RAD_TO_DEG - 90f);
+        TF.localPosition = new Vector3(Mathf.Cos(a) * r, Mathf.Sin(a) * r, 0f);
+        TF.localRotation = Quaternion.Euler(0f, 0f, a * RAD_TO_DEG - 90f);
     }
 
     private static float Smooth(float t)
@@ -269,66 +228,69 @@ public class Sword : MonoBehaviour, ICollectibleItem
     {
         if (state == SwordState.Animating || state == SwordState.FlyingIn) return;
 
+        CharacterBase character = other.GetComponent<CharacterBase>();
+
         if (state == SwordState.Dropped)
         {
-            CharacterBase player = other.GetComponent<CharacterBase>();
-            if (player == null) return;
-            state = SwordState.Animating;
-            if (ItemManager.Instance != null)
-                ItemManager.Instance.DeregisterDroppedSword(this);
-            player.GetSwordOrbit().AddSword(this);
+            if (character != null)
+            {
+                state = SwordState.Animating;
+                ItemManager.Instance?.Unregister(this);
+                character.GetSwordOrbit().AddSword(this);
+            }
             return;
         }
 
-        if (state != SwordState.Orbiting && state != SwordState.Sliding) return;
-        if (orbit == null) return;
+        if ((state != SwordState.Orbiting && state != SwordState.Sliding) || orbit == null) return;
 
-        // Kiếm đang xoay chạm vào Player khác (không phải chủ)
-        CharacterBase hitPlayer = other.GetComponent<CharacterBase>();
-        if (hitPlayer != null && hitPlayer.GetSwordOrbit() != orbit)
+        if (character != null)
         {
-            CharacterBase attacker = orbit.GetComponentInParent<CharacterBase>();
-            hitPlayer.TakeDamage(damageToCharacter, attacker);
-
-            Vector2 pushDir = ((Vector2)(hitPlayer.transform.position - orbit.transform.position)).normalized;
-            if (pushDir == Vector2.zero) pushDir = Random.insideUnitCircle.normalized;
-            hitPlayer.ApplyKnockback(pushDir, hitKnockbackForce);
-
-            SpawnParticle(other.ClosestPoint(transform.position));
+            SwordOrbit hitOrbit = character.GetSwordOrbit();
+            if (hitOrbit != orbit)
+            {
+                CharacterBase attacker = orbit.Owner;
+                character.TakeDamage(damage, attacker);
+                character.OnSwordInteraction(attacker);
+            }
             return;
         }
 
-        // Kiếm chạm kiếm khác
+
         Sword otherSword = other.GetComponent<Sword>();
-        if (otherSword == null) return;
+        
+        if (otherSword == null || otherSword.orbit == null || otherSword.orbit == orbit) return;
         if (otherSword.state != SwordState.Orbiting && otherSword.state != SwordState.Sliding) return;
-        if (otherSword.orbit == null || otherSword.orbit == orbit) return;
+        if (GetInstanceID() > otherSword.GetInstanceID()) return;
 
-        // ===== HP SYSTEM: Trừ máu lẫn nhau =====
-        SpawnParticle((transform.position + otherSword.transform.position) * 0.5f);
+        TakeDamage(otherSword.damage, otherSword);
+        otherSword.TakeDamage(damage, this);
 
-        // Trừ máu cho kiếm này
-        TakeDamage(otherSword.damageToSword);
+        CharacterBase myOwner = orbit.Owner;
+        CharacterBase otherOwner = otherSword.orbit.Owner;
 
-        // Trừ máu cho kiếm kia
-        otherSword.TakeDamage(damageToSword);
+        if (myOwner != null && otherOwner != null)
+        {
+            myOwner.OnSwordInteraction(otherOwner);
+            otherOwner.OnSwordInteraction(myOwner);
+        }
     }
 
-    /// <summary>
-    /// Kiếm nhận damage từ kiếm khác.
-    /// </summary>
-    public void TakeDamage(float damage)
+    public void TakeDamage(float dmg, Sword attackerSword = null)
     {
-        currentHp -= damage;
+        currentHp -= dmg;
 
-        // Visual feedback: flash hoặc scale
         if (spriteRenderer != null)
-        {
-            // Flash effect (optional)
             spriteRenderer.color = Color.Lerp(Color.white, Color.red, 1f - HpRatio);
+
+        if (orbit != null && attackerSword != null && attackerSword.orbit != null)
+        {
+            CharacterBase owner = orbit.Owner;
+            CharacterBase attacker = attackerSword.orbit.Owner;
+            
+            if (owner != null && attacker != null)
+                owner.GetStateMachine()?.OnUnderAttack(attacker);
         }
 
-        // Chỉ rơi khi hết máu
         if (currentHp <= 0f)
         {
             currentHp = 0f;
@@ -336,17 +298,10 @@ public class Sword : MonoBehaviour, ICollectibleItem
         }
     }
 
-    /// <summary>
-    /// Hồi máu cho kiếm (dùng cho debug/powerup).
-    /// </summary>
     public void Heal(float amount)
     {
         currentHp = Mathf.Min(maxHp, currentHp + amount);
-        
-        if (spriteRenderer != null)
-        {
-            spriteRenderer.color = Color.white;
-        }
+        if (spriteRenderer != null) spriteRenderer.color = Color.white;
     }
 
     public void KnockOff()
@@ -354,88 +309,56 @@ public class Sword : MonoBehaviour, ICollectibleItem
         if (orbit == null) return;
 
         state = SwordState.Animating;
-        transform.DOKill();
+        TF.DOKill();
 
         SwordOrbit owner = orbit;
         owner.RemoveSword(this);
         orbit = null;
 
-        Vector3 worldPos = transform.position;
+        Vector3 worldPos = TF.position;
         Vector2 radial = ((Vector2)(worldPos - owner.transform.position)).normalized;
         if (radial == Vector2.zero) radial = Random.insideUnitCircle.normalized;
 
         float sign = owner.RotateSpeed >= 0 ? -1f : 1f;
-        Vector2 dir = new Vector2(-radial.y, radial.x) * sign;
+        Vector2 dirNormalized = new Vector2(-radial.y, radial.x) * sign;
 
-        transform.SetParent(null);
-        Vector3 landPos = worldPos + (Vector3)(dir.normalized * knockForce);
+        TF.SetParent(null);
+        
+        Vector3 landPos = worldPos + (Vector3)(dirNormalized * knockForce);
         landPos.z = 1f;
 
-        // Tìm vị trí rơi hợp lệ — check dọc đường bay, bật ngược khi gặp tường
         MapManager map = MapManager.Instance;
         if (map != null)
         {
-            landPos = map.ClampToMap(landPos);
-
-            // Raycast dọc đường bay: tìm điểm xa nhất không trúng tường
-            Vector2 flyDir = dir.normalized;
-            float maxDist = knockForce;
             float stepSize = map.CellSize * 0.5f;
             Vector3 safeLand = worldPos;
             safeLand.z = 1f;
 
-            for (float d = stepSize; d <= maxDist; d += stepSize)
+            for (float d = stepSize; d <= knockForce; d += stepSize)
             {
-                Vector3 check = worldPos + (Vector3)(flyDir * d);
+                Vector3 check = worldPos + (Vector3)(dirNormalized * d);
                 check.z = 1f;
                 check = map.ClampToMap(check);
 
-                if (map.IsWall(check))
-                {
-                    // Gặp tường → dùng vị trí trước đó (an toàn)
-                    break;
-                }
+                if (map.IsWall(check)) break;
                 safeLand = check;
             }
 
-            // Nếu safeLand vẫn trúng tường (edge case) → rơi tại chỗ
-            if (map.IsWall(safeLand))
-            {
-                safeLand = worldPos;
-                safeLand.z = 1f;
-            }
-
-            landPos = safeLand;
+            landPos = map.IsWall(safeLand) ? worldPos : safeLand;
+            landPos.z = 1f;
+            landPos = map.ClampToMap(landPos);
         }
 
         var seq = DOTween.Sequence();
-        seq.Join(transform.DOMove(landPos, fallDuration).SetEase(Ease.OutQuad));
-        seq.Join(transform.DOScale(0.7f, fallDuration).SetEase(Ease.InQuad));
-        seq.Join(transform.DORotate(new Vector3(0f, 0f, Random.Range(0f, 360f)), fallDuration, RotateMode.FastBeyond360));
+        seq.Join(TF.DOMove(landPos, fallDuration).SetEase(Ease.OutQuad));
+        seq.Join(TF.DOScale(0.7f, fallDuration).SetEase(Ease.InQuad));
+        seq.Join(TF.DORotate(new Vector3(0f, 0f, Random.Range(0f, 360f)), fallDuration, RotateMode.FastBeyond360));
         seq.OnComplete(() =>
         {
             state = SwordState.Dropped;
-            
-            // Reset HP khi rơi xuống (có thể nhặt lại)
             currentHp = maxHp;
-            if (spriteRenderer != null)
-                spriteRenderer.color = Color.white;
-            
-            LogSwordCell("Dropped");
-            if (ItemManager.Instance != null)
-                ItemManager.Instance.RegisterDroppedSword(this);
+            if (spriteRenderer != null) spriteRenderer.color = Color.white;
+            ItemManager.Instance?.Register(this);
         });
-    }
-
-    private void SpawnParticle(Vector3 pos)
-    {
-        if (collisionParticle != null) Instantiate(collisionParticle, pos, Quaternion.identity);
-    }
-
-    private void LogSwordCell(string action)
-    {
-        MapManager map = MapManager.Instance;
-        if (map == null) return;
-        Vector2Int cell = map.WorldToCell(transform.position);
     }
 }

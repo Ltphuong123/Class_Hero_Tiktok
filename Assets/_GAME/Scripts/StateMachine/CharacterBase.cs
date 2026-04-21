@@ -1,172 +1,156 @@
 using UnityEngine;
 
-public class CharacterBase : MonoBehaviour, IManagedUpdate
+public class CharacterBase : GameUnit, IManagedUpdate
 {
     [Header("Character Info")]
-    [SerializeField] private int characterId;
+    [SerializeField] private string characterId;
     [SerializeField] private string characterName = "Player";
     [SerializeField] private Sprite avatar;
+    [SerializeField] private int characterLevel = 1;
+    
     [SerializeField] private float maxHp = 100f;
     [SerializeField] private float moveSpeed = 5f;
 
+    [Header("References")]
     [SerializeField] private SwordOrbit swordOrbit;
     [SerializeField] private CharacterInfoUI infoUI;
-    
-    [Header("Visual")]
     [SerializeField] private Transform visualTransform;
-
-    [Header("State Machine")]
     [SerializeField] private CharacterStateMachine stateMachine;
-
-    [Header("Knockback")]
-    [SerializeField] private float knockbackDuration = 0.1f;
+    [SerializeField] private CharacterLevelDataSO levelData;
     
     private float currentHp;
-    private Vector3 knockbackVelocity;
-    private float knockbackTimer;
-    private CharacterBase lastAttacker;
-    private float lastAttackerTimer;
     private float lastFrameX;
+    private float fleeProtectionTimer;
+    private int currentLevel;
+    private float levelTimer;
 
-    private const float AttackerMemoryDuration = 3f;
+    private const float FleeProtectionDuration = 3f;
 
-    public Vector3 Position => transform.position;
     public float CurrentHp => currentHp;
     public float MaxHp => maxHp;
     public float MoveSpeed => moveSpeed;
-    public int CharacterId => characterId;
+    public string CharacterId => characterId;
     public string CharacterName => characterName;
     public Sprite Avatar => avatar;
     public int SwordCount => swordOrbit != null ? swordOrbit.SwordCount : 0;
-    public bool IsKnockedBack => knockbackTimer > 0f;
-    public CharacterBase LastAttacker => lastAttackerTimer > 0f ? lastAttacker : null;
-    public string CurrentStateName => stateMachine?.CurrentState?.GetType().Name ?? "None";
+    public string CurrentStateName => stateMachine != null ? stateMachine.CurrentState.GetType().Name : "None";
+    public bool IsFleeProtected => fleeProtectionTimer > 0f;
+    public int CurrentLevel => currentLevel;
+    public SwordOrbit GetSwordOrbit() => swordOrbit;
+    public CharacterStateMachine GetStateMachine() => stateMachine;
 
-    private void Start()
+    public void OnInit()
     {
+        OnInit(characterId, characterName, avatar, characterLevel);
+    }
+
+    public void OnInit(string id, string name, Sprite avatarSprite, int level = 1)
+    {
+        characterId = id;
+        characterName = name;
+        avatar = avatarSprite;
+        characterLevel = level;
+        
         currentHp = maxHp;
+        currentLevel = characterLevel;
+        levelTimer = 0f;
+        fleeProtectionTimer = 0f;
+        lastFrameX = TF.position.x;
+        
+        if (stateMachine == null) stateMachine = GetComponent<CharacterStateMachine>();
         if (infoUI != null) infoUI.Init(characterName, avatar, currentHp, maxHp);
-
-        if (stateMachine == null)
-            stateMachine = GetComponent<CharacterStateMachine>();
+        
+        UpdateLevelSwordType();
+        CharacterManager.Instance?.Register(this);
     }
 
-    private void OnEnable()
+    public void OnDespawn()
     {
-        if (CharacterManager.Instance != null)
-            CharacterManager.Instance.Register(this);
-
-        if (stateMachine != null && stateMachine.CurrentState == stateMachine.Dead)
+        if (swordOrbit != null)
         {
-            currentHp = maxHp;
-            if (infoUI != null) infoUI.UpdateHp(currentHp, maxHp);
+            for (int i = swordOrbit.SwordCount - 1; i >= 0; i--)
+                swordOrbit.DropSword(i);
         }
-    }
-
-    private void OnDisable()
-    {
-        if (CharacterManager.Instance != null)
-            CharacterManager.Instance.Deregister(this);
+        
+        if (stateMachine != null)
+            stateMachine.ChangeState(stateMachine.Wander);
+        
+        CharacterManager.Instance?.Despawn(this);
     }
 
     public void ManagedUpdate(float deltaTime)
     {
-        if (lastAttackerTimer > 0f) lastAttackerTimer -= deltaTime;
+        if (fleeProtectionTimer > 0f) 
+            fleeProtectionTimer -= deltaTime;
 
-        Vector3 curPos = transform.position;
+        UpdateLevelTimer(deltaTime);
 
-        if (knockbackTimer > 0f)
-        {
-            float t = knockbackTimer / knockbackDuration;
-            float nextX = curPos.x + knockbackVelocity.x * t * deltaTime;
-            float nextY = curPos.y + knockbackVelocity.y * t * deltaTime;
-            float z = curPos.z;
-
-            var map = MapManager.Instance;
-            if (map != null)
-            {
-                float midX = (curPos.x + nextX) * 0.5f;
-                float midY = (curPos.y + nextY) * 0.5f;
-
-                // Check diagonal + midpoint
-                if (map.IsBlockedWorld(new Vector3(nextX, nextY, z)) || 
-                    map.IsBlockedWorld(new Vector3(midX, midY, z)))
-                {
-                    // Try X-axis only
-                    if (!map.IsBlockedWorld(new Vector3(nextX, curPos.y, z)))
-                    {
-                        nextY = curPos.y;
-                    }
-                    // Try Y-axis only
-                    else if (!map.IsBlockedWorld(new Vector3(curPos.x, nextY, z)))
-                    {
-                        nextX = curPos.x;
-                    }
-                    // Stuck - don't move
-                    else
-                    {
-                        nextX = curPos.x;
-                        nextY = curPos.y;
-                    }
-                }
-            }
-
-            transform.position = new Vector3(nextX, nextY, z);
-            knockbackTimer -= deltaTime;
-
-            if (stateMachine != null)
-                stateMachine.ManagedUpdate(deltaTime);
-
-            return;
-        }
-
-        if (stateMachine != null)
+        if (stateMachine != null) 
             stateMachine.ManagedUpdate(deltaTime);
-
-        UpdateFacing(curPos.x);
+        
+        UpdateFacing();
     }
 
-    private void UpdateFacing(float currentX)
+    private void UpdateLevelTimer(float deltaTime)
+    {
+        if (levelData == null) return;
+
+        levelTimer += deltaTime;
+        float duration = levelData.GetDuration(currentLevel);
+        
+        if (duration > 0f && levelTimer >= duration)
+            LevelUp();
+    }
+
+    private void UpdateLevelSwordType()
+    {
+        if (levelData != null && swordOrbit != null)
+            swordOrbit.SetSwordType(levelData.GetSwordType(currentLevel));
+    }
+
+    private void UpdateFacing()
     {
         if (visualTransform == null) return;
 
-        float delta = currentX - lastFrameX;
+        float delta = TF.position.x - lastFrameX;
 
-        if (delta > 0.01f)
+        if (Mathf.Abs(delta) > 0.01f)
         {
             Vector3 s = visualTransform.localScale;
-            s.x = -Mathf.Abs(s.x);
+            s.x = delta > 0f ? -Mathf.Abs(s.x) : Mathf.Abs(s.x);
             visualTransform.localScale = s;
-            lastFrameX = currentX;
-        }
-        else if (delta < -0.01f)
-        {
-            Vector3 s = visualTransform.localScale;
-            s.x = Mathf.Abs(s.x);
-            visualTransform.localScale = s;
-            lastFrameX = currentX;
+            lastFrameX = TF.position.x;
         }
     }
 
-    public void TakeDamage(float damage)
+    public void ActivateFleeProtection() => fleeProtectionTimer = FleeProtectionDuration;
+
+    public void LevelUp()
     {
-        TakeDamage(damage, null);
+        if (levelData == null) return;
+
+        int maxLevel = levelData.GetMaxLevel();
+        if (currentLevel >= maxLevel) return;
+
+        currentLevel++;
+        levelTimer = 0f;
+        UpdateLevelSwordType();
     }
 
-    public void TakeDamage(float damage, CharacterBase attacker)
+    public void SetLevel(int level)
+    {
+        if (levelData == null) return;
+
+        currentLevel = Mathf.Clamp(level, 1, levelData.GetMaxLevel());
+        levelTimer = 0f;
+        UpdateLevelSwordType();
+    }
+
+    public void TakeDamage(float damage, CharacterBase attacker = null)
     {
         currentHp = Mathf.Max(0f, currentHp - damage);
         if (infoUI != null) infoUI.UpdateHp(currentHp, maxHp);
-
-        if (attacker != null)
-        {
-            lastAttacker = attacker;
-            lastAttackerTimer = AttackerMemoryDuration;
-        }
-
-        if (stateMachine != null)
-            stateMachine.OnTakeDamage(attacker);
-
+        if (stateMachine != null) stateMachine.OnUnderAttack(attacker);
         if (currentHp <= 0f) OnDeath();
     }
 
@@ -176,50 +160,18 @@ public class CharacterBase : MonoBehaviour, IManagedUpdate
         if (infoUI != null) infoUI.UpdateHp(currentHp, maxHp);
     }
 
-    /// <summary>
-    /// Nhân tốc độ di chuyển (dùng cho debug/cheat).
-    /// </summary>
-    public void MultiplySpeed(float multiplier)
-    {
-        moveSpeed *= multiplier;
-    }
+    public void MultiplySpeed(float multiplier) => moveSpeed *= multiplier;
 
-    /// <summary>
-    /// Set tốc độ di chuyển trực tiếp.
-    /// </summary>
-    public void SetSpeed(float newSpeed)
+    public void OnSwordInteraction(CharacterBase other)
     {
-        moveSpeed = Mathf.Max(0f, newSpeed);
+        // TODO: Implement sword interaction logic
     }
 
     private void OnDeath()
     {
         if (stateMachine != null)
-        {
             stateMachine.ChangeState(stateMachine.Dead);
-        }
         else
-        {
-            if (swordOrbit != null)
-            {
-                int count = swordOrbit.SwordCount;
-                for (int i = count - 1; i >= 0; i--)
-                    swordOrbit.DropSword(i);
-            }
-            gameObject.SetActive(false);
-        }
+            OnDespawn();
     }
-
-    public SwordOrbit GetSwordOrbit() => swordOrbit;
-
-    public void ApplyKnockback(Vector2 direction, float force)
-    {
-        knockbackVelocity = (Vector3)(direction.normalized * force);
-        knockbackTimer = knockbackDuration;
-
-        if (stateMachine != null)
-            stateMachine.OnKnockback();
-    }
-
-    public CharacterStateMachine GetStateMachine() => stateMachine;
 }

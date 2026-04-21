@@ -45,7 +45,7 @@ public class CharacterDebugHelper : MonoBehaviour
 
         for (int i = 0; i < count; i++)
         {
-            Sword sword = Instantiate(swordPrefab, character.Position, Quaternion.identity);
+            Sword sword = Instantiate(swordPrefab, character.TF.position, Quaternion.identity);
             sword.Collect(character);
         }
 

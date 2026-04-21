@@ -7,9 +7,9 @@ public class CollectSwordState : ICharacterState
     private float rescanTimer;
     private float retargetTimer;
 
-    private const float RescanInterval = 0.2f;  // Giảm từ 0.5s → 0.2s để phản ứng nhanh hơn
+    private const float RescanInterval = 0.2f;
     private const float RetargetInterval = 1.5f;
-    private const float PickupRadiusSq = 0.8f * 0.8f;
+    private const float PickupRadiusSq = 0.64f;
 
     public void SetTargetSword(Sword sword) => targetSword = sword;
 
@@ -19,58 +19,55 @@ public class CollectSwordState : ICharacterState
         retargetTimer = RetargetInterval;
         pathIndex = 0;
 
-        if (targetSword != null && targetSword.State == SwordState.Dropped)
-        {
-            BuildPathToSword(sm);
-            return;
-        }
+        if (targetSword == null || targetSword.State != SwordState.Dropped)
+            targetSword = sm.FindBestSword();
 
-        targetSword = sm.FindBestSword();
         if (targetSword != null)
-        {
             BuildPathToSword(sm);
-            return;
-        }
-
-        sm.ChangeState(sm.Wander);
+        else
+            sm.ChangeState(sm.Wander);
     }
 
     public void Execute(CharacterStateMachine sm, float deltaTime)
     {
-        rescanTimer -= deltaTime;
-        if (rescanTimer <= 0f)
+        if ((rescanTimer -= deltaTime) <= 0f)
         {
             rescanTimer = RescanInterval;
+            
             if (sm.MySwordCount > 0)
             {
-                CharacterBase weakTarget = sm.FindWeakerTarget();
-                if (weakTarget != null)
+                CharacterBase target = sm.FindWeakerTarget();
+                if (target != null)
                 {
-                    sm.Attack.SetTarget(weakTarget);
+                    sm.Attack.SetTarget(target);
                     sm.ChangeState(sm.Attack);
                     return;
                 }
             }
         }
 
-        if (targetSword == null || targetSword.State != SwordState.Dropped || !targetSword.IsActive)
+        if (targetSword == null || targetSword.State != SwordState.Dropped || !targetSword.gameObject.activeSelf)
         {
             targetSword = sm.FindBestSword();
-            if (targetSword == null) { sm.ChangeState(sm.Wander); return; }
+            if (targetSword == null)
+            {
+                sm.ChangeState(sm.Wander);
+                return;
+            }
             BuildPathToSword(sm);
         }
 
-        float dx = targetSword.Position.x - sm.CachedPosition.x;
-        float dy = targetSword.Position.y - sm.CachedPosition.y;
+        float dx = targetSword.TF.position.x - sm.CachedPosition.x;
+        float dy = targetSword.TF.position.y - sm.CachedPosition.y;
+        
         if (dx * dx + dy * dy <= PickupRadiusSq)
         {
             if (targetSword.Collect(sm.Owner))
             {
-                // Successfully collected! Now find next target
-                CharacterBase weakTarget = sm.FindWeakerTarget();
-                if (weakTarget != null)
+                CharacterBase target = sm.FindWeakerTarget();
+                if (target != null)
                 {
-                    sm.Attack.SetTarget(weakTarget);
+                    sm.Attack.SetTarget(target);
                     sm.ChangeState(sm.Attack);
                     return;
                 }
@@ -87,8 +84,7 @@ public class CollectSwordState : ICharacterState
             }
         }
 
-        retargetTimer -= deltaTime;
-        if (retargetTimer <= 0f)
+        if ((retargetTimer -= deltaTime) <= 0f)
         {
             retargetTimer = RetargetInterval;
             Sword better = sm.FindBestSword();
@@ -102,8 +98,10 @@ public class CollectSwordState : ICharacterState
         if (sm.MoveAlongPath(ref pathIndex, sm.GetCurrentSpeed(), deltaTime))
         {
             targetSword = sm.FindBestSword();
-            if (targetSword != null) BuildPathToSword(sm);
-            else sm.ChangeState(sm.Wander);
+            if (targetSword != null)
+                BuildPathToSword(sm);
+            else
+                sm.ChangeState(sm.Wander);
         }
     }
 
@@ -113,11 +111,11 @@ public class CollectSwordState : ICharacterState
     {
         pathIndex = 0;
         if (sm.Pathfinder != null)
-            sm.Pathfinder.FindPath(sm.CachedPosition, targetSword.Position, sm.PathBuffer);
+            sm.Pathfinder.FindPath(sm.CachedPosition, targetSword.TF.position, sm.PathBuffer);
         else
         {
             sm.PathBuffer.Clear();
-            sm.PathBuffer.Add(targetSword.Position);
+            sm.PathBuffer.Add(targetSword.TF.position);
         }
     }
 }

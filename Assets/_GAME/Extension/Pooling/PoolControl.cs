@@ -36,5 +36,7 @@ public class PoolAmount
 }
 public enum PoolType
 {
-    PoolType = 0
+    None = 0,
+    Sword = 1,
+    Character = 2
 }

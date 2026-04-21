@@ -14,11 +14,6 @@ public class CharacterStateMachine : MonoBehaviour
 
     [Header("AI Settings")]
     [SerializeField] private float visionRadius = 15f;
-
-    [SerializeField] private float fleeSpeedMultiplier = 1.6f;
-    [SerializeField] private float fleeSpeedDuration = 1.2f;
-    [SerializeField] private float fleeSpeedCooldown = 5f;
-
     [SerializeField] private float stateMinDuration = 0.4f;
 
     private float visionRadiusSq;
@@ -32,15 +27,10 @@ public class CharacterStateMachine : MonoBehaviour
 
     public float VisionRadius => visionRadius;
     public float VisionRadiusSq => visionRadiusSq;
-    public float FleeSpeedMultiplier => fleeSpeedMultiplier;
-    public float FleeSpeedDuration => fleeSpeedDuration;
-    public float FleeSpeedCooldown => fleeSpeedCooldown;
     public float StateMinDuration => stateMinDuration;
 
     public ICharacterState CurrentState { get; private set; }
     public float StateTimer { get; set; }
-    public float FleeBoostTimer { get; set; }
-    public float FleeCooldownTimer { get; set; }
 
     public Vector3 CachedPosition { get; private set; }
 
@@ -53,7 +43,6 @@ public class CharacterStateMachine : MonoBehaviour
     public readonly AttackState Attack = new();
     public readonly FleeState Flee = new();
     public readonly DeadState Dead = new();
-    public readonly KnockbackState Knockback = new();
 
     private void Awake()
     {
@@ -79,11 +68,7 @@ public class CharacterStateMachine : MonoBehaviour
     public void ManagedUpdate(float deltaTime)
     {
         CachedPosition = owner.transform.position;
-
         StateTimer += deltaTime;
-        if (FleeCooldownTimer > 0f) FleeCooldownTimer -= deltaTime;
-        if (FleeBoostTimer > 0f) FleeBoostTimer -= deltaTime;
-
         CurrentState?.Execute(this, deltaTime);
     }
 
@@ -96,34 +81,69 @@ public class CharacterStateMachine : MonoBehaviour
         CurrentState.Enter(this);
     }
 
-    public void OnTakeDamage(CharacterBase attacker)
+    public void OnUnderAttack(CharacterBase attacker)
     {
         if (CurrentState == Dead) return;
         if (owner.CurrentHp <= 0f) { ChangeState(Dead); return; }
-        if (CurrentState == Knockback) return;
 
-        if (attacker != null)
+        if (attacker == null) return;
+
+        // Nếu đang Attack hoặc Flee, chỉ đổi target nếu attacker mới nguy hiểm hơn
+        if (CurrentState == Attack)
         {
-            Attack.RemoveFromBlacklist(attacker);
-            
-            if (MySwordCount > 3)
+            CharacterBase currentTarget = Attack.GetTarget();
+            if (currentTarget != null && ShouldSwitchTarget(currentTarget, attacker))
             {
                 Attack.SetTarget(attacker);
-                ChangeState(Attack);
             }
-            else
+            else if (currentTarget == null)
+            {
+                Attack.SetTarget(attacker);
+            }
+            return;
+        }
+
+        if (CurrentState == Flee)
+        {
+            CharacterBase currentThreat = Flee.GetThreat();
+            if (currentThreat != null && ShouldSwitchTarget(currentThreat, attacker))
             {
                 Flee.SetThreat(attacker);
-                ChangeState(Flee);
             }
+            else if (currentThreat == null)
+            {
+                Flee.SetThreat(attacker);
+            }
+            return;
+        }
+
+        // Chưa có target, quyết định Attack hoặc Flee
+        if (MySwordCount > 3)
+        {
+            Attack.SetTarget(attacker);
+            ChangeState(Attack);
+        }
+        else
+        {
+            Flee.SetThreat(attacker);
+            ChangeState(Flee);
         }
     }
 
-    public void OnKnockback()
+    private bool ShouldSwitchTarget(CharacterBase current, CharacterBase newAttacker)
     {
-        if (CurrentState == Dead) return;
-        if (CurrentState == Flee) return;
-        ChangeState(Knockback);
+        // Ưu tiên kẻ địch có nhiều kiếm hơn (nguy hiểm hơn)
+        int currentSwords = current.SwordCount;
+        int newSwords = newAttacker.SwordCount;
+        
+        if (newSwords > currentSwords) return true;
+        if (newSwords < currentSwords) return false;
+
+        // Nếu số kiếm bằng nhau, chọn kẻ gần hơn
+        float distToCurrent = (current.TF.position - CachedPosition).sqrMagnitude;
+        float distToNew = (newAttacker.TF.position - CachedPosition).sqrMagnitude;
+        
+        return distToNew < distToCurrent;
     }
 
     public int MySwordCount
@@ -133,20 +153,7 @@ public class CharacterStateMachine : MonoBehaviour
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public float GetCurrentSpeed()
-    {
-        float speed = owner.MoveSpeed;
-        if (FleeBoostTimer > 0f) speed *= fleeSpeedMultiplier;
-        return speed;
-    }
-
-    public bool TryActivateFleeBoost()
-    {
-        if (FleeCooldownTimer > 0f) return false;
-        FleeBoostTimer = fleeSpeedDuration;
-        FleeCooldownTimer = fleeSpeedCooldown;
-        return true;
-    }
+    public float GetCurrentSpeed() => owner.MoveSpeed;
 
     public bool MoveToward(Vector3 target, float speed, float deltaTime, float arriveThreshold = 0.3f)
     {
@@ -239,12 +246,12 @@ public class CharacterStateMachine : MonoBehaviour
         {
             CharacterBase other = NearbyCharacters[i];
             if (other == owner || other.CurrentHp <= 0f) continue;
-            if (Attack.IsBlacklisted(other)) continue;
+            if (other.IsFleeProtected) continue;
 
             int otherSwords = other.SwordCount;
             if (otherSwords > mySwords) continue;
 
-            Vector3 pos = other.Position;
+            Vector3 pos = other.TF.position;
             float dx = pos.x - myX, dy = pos.y - myY;
             float distSq = dx * dx + dy * dy;
             
@@ -273,7 +280,7 @@ public class CharacterStateMachine : MonoBehaviour
 
         for (int i = 0; i < count; i++)
         {
-            Vector3 pos = NearbySwords[i].Position;
+            Vector3 pos = NearbySwords[i].TF.position;
             float dx = pos.x - myX, dy = pos.y - myY;
             float distSq = dx * dx + dy * dy;
             

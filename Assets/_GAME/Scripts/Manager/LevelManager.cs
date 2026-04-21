@@ -3,22 +3,21 @@ using UnityEngine;
 public class LevelManager : Singleton<LevelManager>
 {
     [Header("Sword Spawning")]
-    [SerializeField] private GameObject swordPrefab;
     [SerializeField] private int initialSwordCount = 10;
+
+    [Header("Character Spawning")]
+    [SerializeField] private int initialCharacterCount = 5;
+    [SerializeField] private string[] characterNames = { "Bot A", "Bot B", "Bot C", "Bot D", "Bot E" };
+    [SerializeField] private Sprite[] characterAvatars;
 
     private void Start()
     {
         SpawnInitialSwords();
+        SpawnInitialCharacters();
     }
 
     private void SpawnInitialSwords()
     {
-        if (swordPrefab == null)
-        {
-            Debug.LogWarning("[LevelManager] Sword prefab not assigned. Skipping spawn.");
-            return;
-        }
-
         MapManager map = MapManager.Instance;
         if (map == null)
         {
@@ -26,9 +25,16 @@ public class LevelManager : Singleton<LevelManager>
             return;
         }
 
+        ItemManager itemMgr = ItemManager.Instance;
+        if (itemMgr == null)
+        {
+            Debug.LogWarning("[LevelManager] ItemManager not found. Skipping spawn.");
+            return;
+        }
+
         Vector2 min = map.MapMin;
         Vector2 max = map.MapMax;
-        float padding = map.CellSize; // keep swords away from edges
+        float padding = map.CellSize;
 
         for (int i = 0; i < initialSwordCount; i++)
         {
@@ -39,23 +45,52 @@ public class LevelManager : Singleton<LevelManager>
                 continue;
             }
 
-            ItemManager itemMgr = ItemManager.Instance;
-            if (itemMgr != null)
-            {
-                itemMgr.SpawnItem(swordPrefab, pos);
-            }
-            else
-            {
-                GameObject go = Instantiate(swordPrefab, pos, Quaternion.identity);
-                Sword sword = go.GetComponent<Sword>();
-                if (sword != null) sword.OnSpawn(pos);
-            }
+            itemMgr.Spawn(pos);
         }
 
         Debug.Log($"[LevelManager] Spawned {initialSwordCount} swords on the map.");
     }
 
-    // khoi tao chi so
+    private void SpawnInitialCharacters()
+    {
+        MapManager map = MapManager.Instance;
+        if (map == null)
+        {
+            Debug.LogWarning("[LevelManager] MapManager not found. Skipping character spawn.");
+            return;
+        }
+
+        CharacterManager charMgr = CharacterManager.Instance;
+        if (charMgr == null)
+        {
+            Debug.LogWarning("[LevelManager] CharacterManager not found. Skipping character spawn.");
+            return;
+        }
+
+        Vector2 min = map.MapMin;
+        Vector2 max = map.MapMax;
+        float padding = map.CellSize * 2f;
+
+        for (int i = 0; i < initialCharacterCount; i++)
+        {
+            Vector3 pos = FindOpenPosition(min, max, padding, map);
+            if (pos.z < 0f)
+            {
+                Debug.LogWarning($"[LevelManager] Could not find open position for character {i}. Skipping.");
+                continue;
+            }
+
+            string id = $"char_{i:000}";
+            string name = characterNames.Length > 0 ? characterNames[Random.Range(0, characterNames.Length)] : $"Character {i}";
+            Sprite avatar = characterAvatars != null && characterAvatars.Length > 0 ? characterAvatars[Random.Range(0, characterAvatars.Length)] : null;
+            int level = Random.Range(1, 4);
+
+            charMgr.Spawn(pos, id, name, avatar, level);
+        }
+
+        Debug.Log($"[LevelManager] Spawned {initialCharacterCount} characters on the map.");
+    }
+
     private void OnInit()
     {
     }
@@ -102,10 +137,6 @@ public class LevelManager : Singleton<LevelManager>
     {
     }
 
-    /// <summary>
-    /// Tìm vị trí ngẫu nhiên không trúng tường. Thử tối đa 30 lần.
-    /// Trả về z = -1 nếu không tìm được.
-    /// </summary>
     private static Vector3 FindOpenPosition(Vector2 min, Vector2 max, float padding, MapManager map)
     {
         for (int attempt = 0; attempt < 30; attempt++)

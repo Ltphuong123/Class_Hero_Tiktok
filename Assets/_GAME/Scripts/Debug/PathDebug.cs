@@ -68,7 +68,7 @@ public class PathDebug : MonoBehaviour
 
             GL.Begin(GL.LINES);
             GL.Color(pathColor);
-            Vector3 pos = c.Position;
+            Vector3 pos = c.TF.position;
             GL.Vertex3(pos.x, pos.y, pos.z);
             GL.Vertex3(path[0].x, path[0].y, path[0].z);
 
@@ -123,7 +123,7 @@ public class PathDebug : MonoBehaviour
             List<Vector3> path = sm.PathBuffer;
             if (path == null || path.Count == 0) continue;
 
-            Vector3 pos = c.Position;
+            Vector3 pos = c.TF.position;
 
             Gizmos.color = pathColor;
             Gizmos.DrawLine(pos, path[0]);

@@ -6,18 +6,17 @@ public struct CharacterRankData
 {
     public CharacterBase Character;
     public int Rank;
+    public string Id;
     public string Name;
     public Sprite Avatar;
     public float CurrentHp;
     public float MaxHp;
     public int SwordCount;
-    public string StateName;
-    public float Power;
+    public int Level;
 }
 
 public class CharacterManager : Singleton<CharacterManager>
 {
-    [SerializeField] private bool persistAcrossScenes = false;
     [SerializeField] private float rankUpdateInterval = 0.5f;
 
     private SpatialGrid<CharacterBase> grid;
@@ -28,7 +27,6 @@ public class CharacterManager : Singleton<CharacterManager>
     private MapManager cachedMap;
     private bool isUpdating;
 
-    // Ranking
     private readonly List<CharacterRankData> rankedList = new();
     private float rankTimer;
     private bool rankDirty = true;
@@ -44,23 +42,32 @@ public class CharacterManager : Singleton<CharacterManager>
         cachedMap = MapManager.Instance;
         float cellSize = cachedMap != null ? cachedMap.CellSize : 5f;
         grid = new SpatialGrid<CharacterBase>(cellSize);
+    }
 
-        if (persistAcrossScenes)
-            DontDestroyOnLoad(gameObject);
-        
-        int count = characters.Count;
-        if (count > 0)
+    public CharacterBase Spawn(Vector3 position, Quaternion rotation, string id, string name, Sprite avatarSprite, int level = 1)
+    {
+        CharacterBase character = SimplePool.Spawn<CharacterBase>(PoolType.Character, position, rotation);
+        if (character != null)
         {
-            for (int i = 0; i < count; i++)
-            {
-                CharacterBase c = characters[i];
-                if (c != null)
-                    grid.Add(c, c.transform.position);
-            }
+            character.TF.position = position;
+            character.TF.rotation = rotation;
+            character.gameObject.SetActive(true);
+            character.OnInit(id, name, avatarSprite, level);
+            Register(character);
         }
-        
-        if (pendingAdd.Count > 0)
-            FlushPending();
+        return character;
+    }
+
+    public CharacterBase Spawn(Vector3 position, string id, string name, Sprite avatarSprite, int level = 1)
+    {
+        return Spawn(position, Quaternion.identity, id, name, avatarSprite, level);
+    }
+
+    public void Despawn(CharacterBase character)
+    {
+        if (character == null) return;
+        Deregister(character);
+        SimplePool.Despawn(character);
     }
 
     private void Update()
@@ -128,23 +135,29 @@ public class CharacterManager : Singleton<CharacterManager>
             if (c == null || !c.gameObject.activeInHierarchy) continue;
             if (c.CurrentHp <= 0f) continue;
 
-            int swords = c.SwordCount;
-            float power = swords * 100f + c.CurrentHp;
-
             rankedList.Add(new CharacterRankData
             {
                 Character = c,
+                Id = c.CharacterId,
                 Name = c.CharacterName,
                 Avatar = c.Avatar,
                 CurrentHp = c.CurrentHp,
                 MaxHp = c.MaxHp,
-                SwordCount = swords,
-                StateName = c.CurrentStateName,
-                Power = power
+                SwordCount = c.SwordCount,
+                Level = c.CurrentLevel
             });
         }
 
-        rankedList.Sort((a, b) => b.Power.CompareTo(a.Power));
+        rankedList.Sort((a, b) =>
+        {
+            int levelCompare = b.Level.CompareTo(a.Level);
+            if (levelCompare != 0) return levelCompare;
+            
+            int swordCompare = b.SwordCount.CompareTo(a.SwordCount);
+            if (swordCompare != 0) return swordCompare;
+            
+            return b.CurrentHp.CompareTo(a.CurrentHp);
+        });
 
         for (int i = 0; i < rankedList.Count; i++)
         {

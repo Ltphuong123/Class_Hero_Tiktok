@@ -25,7 +25,7 @@ public class SpatialGridTest : MonoBehaviour
             return;
         }
 
-        Vector3 position = testCharacter.Position;
+        Vector3 position = testCharacter.TF.position;
         List<CharacterBase> results = new List<CharacterBase>();
 
         Debug.Log($"[Test] ========== SPATIAL GRID TEST ==========");
@@ -52,12 +52,12 @@ public class SpatialGridTest : MonoBehaviour
             for (int i = 0; i < results.Count; i++)
             {
                 CharacterBase other = results[i];
-                float distance = Vector3.Distance(position, other.Position);
+                float distance = Vector3.Distance(position, other.TF.position);
                 int swords = other.SwordCount;
                 bool isWeaker = swords < testCharacter.SwordCount;
 
                 Debug.Log($"[Test] {i + 1}. {other.CharacterName}:");
-                Debug.Log($"     Position: {other.Position}");
+                Debug.Log($"     Position: {other.TF.position}");
                 Debug.Log($"     Distance: {distance:F2} units");
                 Debug.Log($"     Swords: {swords} (Weaker: {isWeaker})");
                 Debug.Log($"     HP: {other.CurrentHp}/{other.MaxHp}");
@@ -92,7 +92,7 @@ public class SpatialGridTest : MonoBehaviour
             {
                 // Try to query this character
                 List<CharacterBase> results = new List<CharacterBase>();
-                CharacterManager.Instance.GetNearbyCharacters(character.Position, 0.1f, results);
+                CharacterManager.Instance.GetNearbyCharacters(character.TF.position, 0.1f, results);
 
                 bool isRegistered = results.Contains(character);
                 Debug.Log($"  {character.CharacterName}: {(isRegistered ? "✓ Registered" : "✗ NOT Registered")}");
@@ -136,21 +136,21 @@ public class SpatialGridTest : MonoBehaviour
 
         // Draw test radius
         Gizmos.color = Color.cyan;
-        DrawWireCircle(testCharacter.Position, testRadius, 64);
+        DrawWireCircle(testCharacter.TF.position, testRadius, 64);
 
         // Draw to all nearby characters
         if (Application.isPlaying && CharacterManager.Instance != null)
         {
             List<CharacterBase> results = new List<CharacterBase>();
-            CharacterManager.Instance.GetNearbyCharacters(testCharacter.Position, testRadius, results);
+            CharacterManager.Instance.GetNearbyCharacters(testCharacter.TF.position, testRadius, results);
 
             foreach (var other in results)
             {
                 if (other == testCharacter) continue;
 
                 Gizmos.color = other.SwordCount < testCharacter.SwordCount ? Color.green : Color.red;
-                Gizmos.DrawLine(testCharacter.Position, other.Position);
-                Gizmos.DrawWireSphere(other.Position, 0.5f);
+                Gizmos.DrawLine(testCharacter.TF.position, other.TF.position);
+                Gizmos.DrawWireSphere(other.TF.position, 0.5f);
             }
         }
     }

@@ -5,62 +5,34 @@ public class FleeState : ICharacterState
     private CharacterBase threat;
     private int pathIndex;
     private float fleeTimer;
-    private float rescanTimer;
-    private float lastPosX, lastPosY;
-    private float stuckTimer;
+    private float repathTimer;
 
     private const float FleeDuration = 2f;
-    private const float RescanInterval = 0.5f;  // Increased from 0.3f for better performance
-    private const float FleeDistance = 12f;
-    private const float StuckThreshold = 0.6f;
-    private const float StuckMoveSq = 0.01f;
+    private const float RepathInterval = 0.3f;
+    private const float FleeDistance = 10f;
 
     public void SetThreat(CharacterBase t) => threat = t;
+    public CharacterBase GetThreat() => threat;
 
     public void Enter(CharacterStateMachine sm)
     {
         fleeTimer = 0f;
-        rescanTimer = 0f;
-        stuckTimer = 0f;
-        lastPosX = sm.CachedPosition.x;
-        lastPosY = sm.CachedPosition.y;
-
-        sm.FleeBoostTimer = sm.FleeSpeedDuration;
-
+        repathTimer = 0f;
+        sm.Owner.ActivateFleeProtection();
         CalculateFleeTarget(sm);
     }
 
     public void Execute(CharacterStateMachine sm, float deltaTime)
     {
-        fleeTimer += deltaTime;
-        if (fleeTimer >= FleeDuration)
+        if ((fleeTimer += deltaTime) >= FleeDuration)
         {
             sm.ChangeState(sm.Wander);
             return;
         }
 
-        float cx = sm.CachedPosition.x, cy = sm.CachedPosition.y;
-        float mdx = cx - lastPosX, mdy = cy - lastPosY;
-        if (mdx * mdx + mdy * mdy < StuckMoveSq)
+        if ((repathTimer -= deltaTime) <= 0f)
         {
-            stuckTimer += deltaTime;
-            if (stuckTimer >= StuckThreshold)
-            {
-                stuckTimer = 0f;
-                ForceRandomFleeTarget(sm);
-            }
-        }
-        else
-        {
-            stuckTimer = 0f;
-            lastPosX = cx;
-            lastPosY = cy;
-        }
-
-        rescanTimer -= deltaTime;
-        if (rescanTimer <= 0f)
-        {
-            rescanTimer = RescanInterval;
+            repathTimer = RepathInterval;
             CalculateFleeTarget(sm);
         }
 
@@ -70,130 +42,95 @@ public class FleeState : ICharacterState
 
     public void Exit(CharacterStateMachine sm) => threat = null;
 
-    private void ForceRandomFleeTarget(CharacterStateMachine sm)
-    {
-        Vector3 myPos = sm.CachedPosition;
-        for (int attempt = 0; attempt < 12; attempt++)
-        {
-            float angle = Random.Range(0f, Mathf.PI * 2f);
-            float dist = Random.Range(3f, FleeDistance);
-            Vector3 candidate = new Vector3(
-                myPos.x + Mathf.Cos(angle) * dist,
-                myPos.y + Mathf.Sin(angle) * dist,
-                myPos.z);
-
-            if (sm.Map != null)
-            {
-                candidate = sm.Map.ClampToMap(candidate);
-                if (sm.Map.IsWall(candidate)) continue;
-            }
-
-            pathIndex = 0;
-            if (sm.Pathfinder != null)
-            {
-                float d = sm.Pathfinder.FindPath(myPos, candidate, sm.PathBuffer);
-                if (d < float.MaxValue && sm.PathBuffer.Count > 0) return;
-            }
-            else
-            {
-                sm.PathBuffer.Clear();
-                sm.PathBuffer.Add(candidate);
-                return;
-            }
-        }
-    }
-
     private void CalculateFleeTarget(CharacterStateMachine sm)
     {
         Vector3 myPos = sm.CachedPosition;
-
-        float fleeDirX = 0f, fleeDirY = 0f;
-
-        if (sm.CharMgr != null)
+        
+        if (threat == null || threat.CurrentHp <= 0f || !threat.gameObject.activeInHierarchy)
         {
-            sm.CharMgr.GetNearbyCharacters(myPos, sm.VisionRadius, sm.NearbyCharacters);
-            int count = sm.NearbyCharacters.Count;
-            for (int i = 0; i < count; i++)
-            {
-                CharacterBase other = sm.NearbyCharacters[i];
-                if (other == sm.Owner || other.CurrentHp <= 0f) continue;
+            float angle = Random.Range(0f, Mathf.PI * 2f);
+            Vector3 randomTarget = new Vector3(
+                myPos.x + Mathf.Cos(angle) * FleeDistance,
+                myPos.y + Mathf.Sin(angle) * FleeDistance,
+                myPos.z);
 
-                float dx = myPos.x - other.Position.x;
-                float dy = myPos.y - other.Position.y;
-                float distSq = dx * dx + dy * dy;
-                if (distSq < 0.01f) continue;
+            if (sm.Map != null)
+                randomTarget = sm.Map.ClampToMap(randomTarget);
 
-                float invDist = 1f / Mathf.Sqrt(distSq);
-                fleeDirX += dx * invDist;
-                fleeDirY += dy * invDist;
-            }
+            BuildPath(sm, myPos, randomTarget);
+            return;
         }
 
-        float mag = Mathf.Sqrt(fleeDirX * fleeDirX + fleeDirY * fleeDirY);
+        Vector3 threatPos = threat.TF.position;
+        float dx = myPos.x - threatPos.x;
+        float dy = myPos.y - threatPos.y;
+        float mag = Mathf.Sqrt(dx * dx + dy * dy);
+
         if (mag < 0.01f)
         {
-            if (threat != null && threat.CurrentHp > 0f && threat.gameObject.activeInHierarchy)
-            {
-                fleeDirX = myPos.x - threat.Position.x;
-                fleeDirY = myPos.y - threat.Position.y;
-                mag = Mathf.Sqrt(fleeDirX * fleeDirX + fleeDirY * fleeDirY);
-            }
-            if (mag < 0.01f)
-            {
-                float a = Random.Range(0f, Mathf.PI * 2f);
-                fleeDirX = Mathf.Cos(a); fleeDirY = Mathf.Sin(a);
-                mag = 1f;
-            }
+            float angle = Random.Range(0f, Mathf.PI * 2f);
+            dx = Mathf.Cos(angle);
+            dy = Mathf.Sin(angle);
         }
-        fleeDirX /= mag;
-        fleeDirY /= mag;
-
-        Vector3 bestCandidate = Vector3.zero;
-        bool found = false;
-
-        for (int attempt = 0; attempt < 8 && !found; attempt++)
+        else
         {
-            float angle = attempt * 0.785398f;
-            float cos = Mathf.Cos(angle), sin = Mathf.Sin(angle);
-            float rdx = fleeDirX * cos - fleeDirY * sin;
-            float rdy = fleeDirX * sin + fleeDirY * cos;
+            dx /= mag;
+            dy /= mag;
+        }
 
-            for (float t = 1f; t >= 0.3f; t -= 0.2f)
+        Vector3 fleeTarget = new Vector3(
+            myPos.x + dx * FleeDistance,
+            myPos.y + dy * FleeDistance,
+            myPos.z);
+
+        if (sm.Map != null)
+        {
+            fleeTarget = sm.Map.ClampToMap(fleeTarget);
+            
+            if (sm.Map.IsWall(fleeTarget))
             {
-                Vector3 candidate = new Vector3(
-                    myPos.x + rdx * FleeDistance * t,
-                    myPos.y + rdy * FleeDistance * t,
-                    myPos.z);
-
-                if (sm.Map != null)
+                for (int i = 0; i < 8; i++)
                 {
-                    candidate = sm.Map.ClampToMap(candidate);
-                    if (sm.Map.IsWall(candidate)) continue;
+                    float angle = i * 0.785398f;
+                    float cos = Mathf.Cos(angle), sin = Mathf.Sin(angle);
+                    float rdx = dx * cos - dy * sin;
+                    float rdy = dx * sin + dy * cos;
+                    
+                    Vector3 alt = new Vector3(
+                        myPos.x + rdx * FleeDistance,
+                        myPos.y + rdy * FleeDistance,
+                        myPos.z);
+                    
+                    alt = sm.Map.ClampToMap(alt);
+                    
+                    if (!sm.Map.IsWall(alt))
+                    {
+                        fleeTarget = alt;
+                        break;
+                    }
                 }
-
-                if (sm.Pathfinder != null)
-                {
-                    float dist = sm.Pathfinder.FindPath(myPos, candidate, sm.PathBuffer);
-                    if (dist >= float.MaxValue || sm.PathBuffer.Count == 0) continue;
-                }
-                else
-                {
-                    sm.PathBuffer.Clear();
-                    sm.PathBuffer.Add(candidate);
-                }
-
-                bestCandidate = candidate;
-                found = true;
-                break;
             }
         }
 
-        if (!found)
+        BuildPath(sm, myPos, fleeTarget);
+    }
+
+    private void BuildPath(CharacterStateMachine sm, Vector3 from, Vector3 to)
+    {
+        pathIndex = 0;
+        
+        if (sm.Pathfinder != null)
+        {
+            if (sm.Pathfinder.FindPath(from, to, sm.PathBuffer) >= float.MaxValue || sm.PathBuffer.Count == 0)
+            {
+                sm.PathBuffer.Clear();
+                sm.PathBuffer.Add(to);
+            }
+        }
+        else
         {
             sm.PathBuffer.Clear();
-            sm.PathBuffer.Add(myPos);
+            sm.PathBuffer.Add(to);
         }
-
-        pathIndex = 0;
     }
 }

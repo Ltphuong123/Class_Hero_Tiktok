@@ -8,10 +8,8 @@ public class SwordDataSO : ScriptableObject
     {
         public SwordType type;
         public Sprite sprite;
-        [Header("Stats")]
-        public float maxHp;           // HP tối đa của kiếm
-        public float damage;          // Damage gây cho character
-        public float swordDamage;     // Damage gây cho kiếm khác khi va chạm
+        public float maxHp;
+        public float damage;
     }
 
     [SerializeField] private SwordEntry[] entries;
@@ -28,14 +26,12 @@ public class SwordDataSO : ScriptableObject
         for (int i = 0; i < entries.Length; i++)
             if (entries[i].type == type) return entries[i];
         
-        // Default values nếu không tìm thấy
         return new SwordEntry
         {
             type = type,
             sprite = null,
             maxHp = 100f,
-            damage = 10f,
-            swordDamage = 20f
+            damage = 15f
         };
     }
 
@@ -48,12 +44,6 @@ public class SwordDataSO : ScriptableObject
     public float GetDamage(SwordType type)
     {
         var entry = GetEntry(type);
-        return entry.damage > 0f ? entry.damage : 10f;
-    }
-
-    public float GetSwordDamage(SwordType type)
-    {
-        var entry = GetEntry(type);
-        return entry.swordDamage > 0f ? entry.swordDamage : 20f;
+        return entry.damage > 0f ? entry.damage : 15f;
     }
 }
