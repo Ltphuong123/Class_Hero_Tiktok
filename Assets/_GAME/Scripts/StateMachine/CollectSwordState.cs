@@ -30,6 +30,8 @@ public class CollectSwordState : ICharacterState
 
     public void Execute(CharacterStateMachine sm, float deltaTime)
     {
+        if (sm.Owner.IsKnockedBack) return;
+
         if ((rescanTimer -= deltaTime) <= 0f)
         {
             rescanTimer = RescanInterval;

@@ -22,9 +22,13 @@ public class ItemManager : Singleton<ItemManager>
         Sword sword = SimplePool.Spawn<Sword>(PoolType.Sword, position, rotation);
         if (sword != null)
         {
-            sword.OnInit();
+            // Set position trước khi OnInit
+            position.z = 100f;
             sword.TF.position = position;
-            sword.TF.rotation = rotation;
+            
+            // OnInit sẽ set random rotation và đảm bảo z = 100
+            sword.OnInit();
+            
             sword.gameObject.SetActive(true);
             Register(sword);
         }

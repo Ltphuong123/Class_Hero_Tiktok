@@ -61,6 +61,13 @@ public class Sword : GameUnit
         state = SwordState.Dropped;
         orbit = null;
         
+        TF.rotation = Quaternion.Euler(0f, 0f, Random.Range(0f, 360f));
+        TF.localScale = Vector3.one * 0.7f;
+        
+        Vector3 pos = TF.position;
+        pos.z = 100f;
+        TF.position = pos;
+        
         if (spriteRenderer != null)
             spriteRenderer.color = Color.white;
     }
@@ -248,6 +255,9 @@ public class Sword : GameUnit
             SwordOrbit hitOrbit = character.GetSwordOrbit();
             if (hitOrbit != orbit)
             {
+                Vector3 hitPos = other.ClosestPoint(TF.position);
+                ParticlePool.Spawn(ParticleType.SwordVsCharacter, hitPos);
+                
                 CharacterBase attacker = orbit.Owner;
                 character.TakeDamage(damage, attacker);
                 character.OnSwordInteraction(attacker);
@@ -255,23 +265,25 @@ public class Sword : GameUnit
             return;
         }
 
-
         Sword otherSword = other.GetComponent<Sword>();
         
         if (otherSword == null || otherSword.orbit == null || otherSword.orbit == orbit) return;
         if (otherSword.state != SwordState.Orbiting && otherSword.state != SwordState.Sliding) return;
         if (GetInstanceID() > otherSword.GetInstanceID()) return;
 
-        TakeDamage(otherSword.damage, otherSword);
-        otherSword.TakeDamage(damage, this);
+        Vector3 collisionPoint = (TF.position + otherSword.TF.position) * 0.5f;
+        ParticlePool.Spawn(ParticleType.SwordVsSword, collisionPoint);
 
         CharacterBase myOwner = orbit.Owner;
         CharacterBase otherOwner = otherSword.orbit.Owner;
 
+        TakeDamage(otherSword.damage, otherSword);
+        otherSword.TakeDamage(damage, this);
+
         if (myOwner != null && otherOwner != null)
         {
-            myOwner.OnSwordInteraction(otherOwner);
-            otherOwner.OnSwordInteraction(myOwner);
+            myOwner.OnSwordToSwordKnockback(otherOwner);
+            otherOwner.OnSwordToSwordKnockback(myOwner);
         }
     }
 
@@ -324,7 +336,7 @@ public class Sword : GameUnit
 
         TF.SetParent(null);
         
-        Vector3 landPos = worldPos + (Vector3)(dirNormalized * knockForce);
+        Vector3 landPos = worldPos;
         landPos.z = 1f;
 
         MapManager map = MapManager.Instance;
@@ -344,9 +356,13 @@ public class Sword : GameUnit
                 safeLand = check;
             }
 
-            landPos = map.IsWall(safeLand) ? worldPos : safeLand;
+            if (map.IsWall(safeLand))
+            {
+                safeLand = FindNearestOpenPosition(worldPos, map);
+            }
+
+            landPos = safeLand;
             landPos.z = 1f;
-            landPos = map.ClampToMap(landPos);
         }
 
         var seq = DOTween.Sequence();
@@ -358,7 +374,36 @@ public class Sword : GameUnit
             state = SwordState.Dropped;
             currentHp = maxHp;
             if (spriteRenderer != null) spriteRenderer.color = Color.white;
+            
+            SetSwordType(SwordType.Default);
+            
+            Vector3 finalPos = TF.position;
+            finalPos.z = 100f;
+            TF.position = finalPos;
+            
             ItemManager.Instance?.Register(this);
         });
+    }
+
+    private Vector3 FindNearestOpenPosition(Vector3 center, MapManager map)
+    {
+        float cellSize = map.CellSize;
+        
+        for (int radius = 1; radius <= 5; radius++)
+        {
+            for (int angle = 0; angle < 360; angle += 45)
+            {
+                float rad = angle * Mathf.Deg2Rad;
+                Vector3 offset = new Vector3(Mathf.Cos(rad), Mathf.Sin(rad), 0f) * (cellSize * radius);
+                Vector3 checkPos = center + offset;
+                checkPos.z = 1f;
+                checkPos = map.ClampToMap(checkPos);
+                
+                if (!map.IsWall(checkPos))
+                    return checkPos;
+            }
+        }
+        
+        return map.ClampToMap(center);
     }
 }

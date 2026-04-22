@@ -9,6 +9,9 @@ public class AttackState : ICharacterState
 
     private const float RepathInterval = 0.5f;
     private const float FleeChaseTimeout = 2f;
+    private const float MinAttackDistance = 1.5f;
+    private const float MinAttackDistanceSq = MinAttackDistance * MinAttackDistance;
+    private const float ChaseSpeedBonus = 0.5f;
 
     public void SetTarget(CharacterBase t) => target = t;
     public CharacterBase GetTarget() => target;
@@ -18,12 +21,13 @@ public class AttackState : ICharacterState
         repathTimer = 0f;
         chaseTimer = 0f;
         pathIndex = 0;
-        
         if (target != null) BuildPathToTarget(sm);
     }
 
     public void Execute(CharacterStateMachine sm, float deltaTime)
     {
+        if (sm.Owner.IsKnockedBack) return;
+
         int mySwords = sm.MySwordCount;
         
         if (mySwords <= 0)
@@ -48,8 +52,7 @@ public class AttackState : ICharacterState
 
         if (target.GetStateMachine()?.CurrentState is FleeState)
         {
-            chaseTimer += deltaTime;
-            if (chaseTimer >= FleeChaseTimeout)
+            if ((chaseTimer += deltaTime) >= FleeChaseTimeout)
             {
                 sm.ChangeState(sm.Wander);
                 return;
@@ -71,13 +74,32 @@ public class AttackState : ICharacterState
             return;
         }
 
+        if (distSq < MinAttackDistanceSq)
+        {
+            float currentDist = Mathf.Sqrt(distSq);
+            Vector3 retreatDir = new Vector3(-dx, -dy, 0f).normalized;
+            Vector3 retreatTarget = sm.CachedPosition + retreatDir * (MinAttackDistance - currentDist + 0.5f);
+            
+            if (sm.Map != null)
+            {
+                retreatTarget = sm.Map.ClampToMap(retreatTarget);
+                if (!sm.Map.IsBlockedWorld(retreatTarget))
+                    sm.MoveToward(retreatTarget, sm.GetCurrentSpeed() + ChaseSpeedBonus, deltaTime);
+            }
+            else
+            {
+                sm.MoveToward(retreatTarget, sm.GetCurrentSpeed() + ChaseSpeedBonus, deltaTime);
+            }
+            return;
+        }
+
         if ((repathTimer -= deltaTime) <= 0f)
         {
             repathTimer = RepathInterval;
             BuildPathToTarget(sm);
         }
 
-        sm.MoveAlongPath(ref pathIndex, sm.GetCurrentSpeed(), deltaTime);
+        sm.MoveAlongPath(ref pathIndex, sm.GetCurrentSpeed() + ChaseSpeedBonus, deltaTime);
     }
 
     public void Exit(CharacterStateMachine sm) => target = null;

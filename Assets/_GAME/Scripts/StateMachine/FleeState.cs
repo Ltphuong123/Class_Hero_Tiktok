@@ -18,13 +18,16 @@ public class FleeState : ICharacterState
     {
         fleeTimer = 0f;
         repathTimer = 0f;
-        sm.Owner.ActivateFleeProtection();
         CalculateFleeTarget(sm);
     }
 
     public void Execute(CharacterStateMachine sm, float deltaTime)
     {
-        if ((fleeTimer += deltaTime) >= FleeDuration)
+        if (sm.Owner.IsKnockedBack) return;
+
+        fleeTimer += deltaTime;
+        
+        if (fleeTimer >= FleeDuration)
         {
             sm.ChangeState(sm.Wander);
             return;

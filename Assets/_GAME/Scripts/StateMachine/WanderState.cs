@@ -24,6 +24,8 @@ public class WanderState : ICharacterState
 
     public void Execute(CharacterStateMachine sm, float deltaTime)
     {
+        if (sm.Owner.IsKnockedBack) return;
+
         rescanTimer -= deltaTime;
         if (rescanTimer <= 0f)
         {

@@ -23,6 +23,20 @@ public class SwordOrbit : MonoBehaviour
     public int SwordCount => swords.Count;
     public CharacterBase Owner => owner;
 
+    public void OnInit()
+    {
+        swords.Clear();
+    }
+
+    public void OnDespawn()
+    {
+        // for (int i = swords.Count - 1; i >= 0; i--)
+        // {
+        //     swords[i].KnockOff();
+        // }
+        swords.Clear();
+    }
+
     public void IncreaseRadius(float amount)
     {
         radius += amount;

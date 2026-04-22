@@ -15,23 +15,23 @@ public class CharacterStateMachine : MonoBehaviour
     [Header("AI Settings")]
     [SerializeField] private float visionRadius = 15f;
     [SerializeField] private float stateMinDuration = 0.4f;
+    [SerializeField] private float targetSwitchCooldown = 0.5f;
 
     private float visionRadiusSq;
+    private float lastTargetSwitchTime;
+    private CharacterBase lastAttacker;
 
     public CharacterBase Owner => owner;
     public SwordOrbit Orbit => orbit;
     public MapManager Map => map;
-    public GridPathfinder Pathfinder => map != null ? map.Pathfinder : null;
+    public GridPathfinder Pathfinder => map?.Pathfinder;
     public CharacterManager CharMgr => charMgr;
     public ItemManager ItemMgr => itemMgr;
-
     public float VisionRadius => visionRadius;
     public float VisionRadiusSq => visionRadiusSq;
     public float StateMinDuration => stateMinDuration;
-
     public ICharacterState CurrentState { get; private set; }
     public float StateTimer { get; set; }
-
     public Vector3 CachedPosition { get; private set; }
 
     public readonly List<Vector3> PathBuffer = new(32);
@@ -49,20 +49,34 @@ public class CharacterStateMachine : MonoBehaviour
         if (owner == null) owner = GetComponent<CharacterBase>();
         if (orbit == null && owner != null) orbit = owner.GetSwordOrbit();
         
-        if (map == null) map = MapManager.Instance;
-        if (charMgr == null) charMgr = CharacterManager.Instance;
-        if (itemMgr == null) itemMgr = ItemManager.Instance;
-
-        // Cache squared values
+        map = MapManager.Instance;
+        charMgr = CharacterManager.Instance;
+        itemMgr = ItemManager.Instance;
         visionRadiusSq = visionRadius * visionRadius;
-
-        if (map == null || charMgr == null || itemMgr == null)
-            Debug.LogWarning($"[{gameObject.name}] CharacterStateMachine: Some managers are null! Please assign in Inspector or ensure singletons are initialized.");
     }
 
-    private void Start()
+    public void OnInit()
     {
+        PathBuffer.Clear();
+        NearbyCharacters.Clear();
+        NearbySwords.Clear();
+        StateTimer = 0f;
+        lastTargetSwitchTime = 0f;
+        lastAttacker = null;
+        CachedPosition = owner.transform.position;
         ChangeState(Wander);
+    }
+
+    public void OnDespawn()
+    {
+        PathBuffer.Clear();
+        NearbyCharacters.Clear();
+        NearbySwords.Clear();
+        CurrentState?.Exit(this);
+        CurrentState = null;
+        StateTimer = 0f;
+        lastTargetSwitchTime = 0f;
+        lastAttacker = null;
     }
 
     public void ManagedUpdate(float deltaTime)
@@ -83,22 +97,27 @@ public class CharacterStateMachine : MonoBehaviour
 
     public void OnUnderAttack(CharacterBase attacker)
     {
-        if (CurrentState == Dead) return;
-        if (owner.CurrentHp <= 0f) { ChangeState(Dead); return; }
+        if (CurrentState == Dead || owner.CurrentHp <= 0f || attacker == null)
+            return;
 
-        if (attacker == null) return;
+        float currentTime = Time.time;
+        bool canSwitch = currentTime - lastTargetSwitchTime >= targetSwitchCooldown;
 
-        // Nếu đang Attack hoặc Flee, chỉ đổi target nếu attacker mới nguy hiểm hơn
         if (CurrentState == Attack)
         {
             CharacterBase currentTarget = Attack.GetTarget();
-            if (currentTarget != null && ShouldSwitchTarget(currentTarget, attacker))
+            
+            if (currentTarget == null)
             {
                 Attack.SetTarget(attacker);
+                lastAttacker = attacker;
+                lastTargetSwitchTime = currentTime;
             }
-            else if (currentTarget == null)
+            else if (canSwitch && ShouldSwitchTarget(currentTarget, attacker))
             {
                 Attack.SetTarget(attacker);
+                lastAttacker = attacker;
+                lastTargetSwitchTime = currentTime;
             }
             return;
         }
@@ -106,18 +125,22 @@ public class CharacterStateMachine : MonoBehaviour
         if (CurrentState == Flee)
         {
             CharacterBase currentThreat = Flee.GetThreat();
-            if (currentThreat != null && ShouldSwitchTarget(currentThreat, attacker))
+            
+            if (currentThreat == null)
             {
                 Flee.SetThreat(attacker);
+                lastAttacker = attacker;
+                lastTargetSwitchTime = currentTime;
             }
-            else if (currentThreat == null)
+            else if (canSwitch && ShouldSwitchTarget(currentThreat, attacker))
             {
                 Flee.SetThreat(attacker);
+                lastAttacker = attacker;
+                lastTargetSwitchTime = currentTime;
             }
             return;
         }
 
-        // Chưa có target, quyết định Attack hoặc Flee
         if (MySwordCount > 3)
         {
             Attack.SetTarget(attacker);
@@ -128,28 +151,27 @@ public class CharacterStateMachine : MonoBehaviour
             Flee.SetThreat(attacker);
             ChangeState(Flee);
         }
+        
+        lastAttacker = attacker;
+        lastTargetSwitchTime = currentTime;
     }
 
     private bool ShouldSwitchTarget(CharacterBase current, CharacterBase newAttacker)
     {
-        // Ưu tiên kẻ địch có nhiều kiếm hơn (nguy hiểm hơn)
         int currentSwords = current.SwordCount;
         int newSwords = newAttacker.SwordCount;
         
-        if (newSwords > currentSwords) return true;
-        if (newSwords < currentSwords) return false;
+        if (newSwords != currentSwords) return newSwords > currentSwords;
 
-        // Nếu số kiếm bằng nhau, chọn kẻ gần hơn
         float distToCurrent = (current.TF.position - CachedPosition).sqrMagnitude;
         float distToNew = (newAttacker.TF.position - CachedPosition).sqrMagnitude;
-        
         return distToNew < distToCurrent;
     }
 
     public int MySwordCount
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => orbit != null ? orbit.SwordCount : 0;
+        get => orbit?.SwordCount ?? 0;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -169,7 +191,8 @@ public class CharacterStateMachine : MonoBehaviour
 
         if (step * step >= distSq)
         {
-            nextX = target.x; nextY = target.y;
+            nextX = target.x;
+            nextY = target.y;
         }
         else
         {
@@ -187,7 +210,8 @@ public class CharacterStateMachine : MonoBehaviour
         owner.transform.position = newPos;
         CachedPosition = newPos;
 
-        dx = target.x - nextX; dy = target.y - nextY;
+        dx = target.x - nextX;
+        dy = target.y - nextY;
         return dx * dx + dy * dy <= threshSq;
     }
 
@@ -196,19 +220,22 @@ public class CharacterStateMachine : MonoBehaviour
     {
         if (map == null) return;
 
-        if (!map.IsBlockedWorld(new Vector3(toX, toY, z)) && 
-            !map.IsBlockedWorld(new Vector3((fromX + toX) * 0.5f, (fromY + toY) * 0.5f, z)))
-            return;
+        Vector3 to = new Vector3(toX, toY, z);
+        Vector3 mid = new Vector3((fromX + toX) * 0.5f, (fromY + toY) * 0.5f, z);
+        
+        if (!map.IsBlockedWorld(to) && !map.IsBlockedWorld(mid)) return;
 
-        if (!map.IsBlockedWorld(new Vector3(toX, fromY, z)) && 
-            !map.IsBlockedWorld(new Vector3((fromX + toX) * 0.5f, fromY, z)))
+        Vector3 tryX = new Vector3(toX, fromY, z);
+        Vector3 midX = new Vector3((fromX + toX) * 0.5f, fromY, z);
+        if (!map.IsBlockedWorld(tryX) && !map.IsBlockedWorld(midX))
         {
             toY = fromY;
             return;
         }
 
-        if (!map.IsBlockedWorld(new Vector3(fromX, toY, z)) && 
-            !map.IsBlockedWorld(new Vector3(fromX, (fromY + toY) * 0.5f, z)))
+        Vector3 tryY = new Vector3(fromX, toY, z);
+        Vector3 midY = new Vector3(fromX, (fromY + toY) * 0.5f, z);
+        if (!map.IsBlockedWorld(tryY) && !map.IsBlockedWorld(midY))
         {
             toX = fromX;
             return;
@@ -217,8 +244,6 @@ public class CharacterStateMachine : MonoBehaviour
         toX = fromX;
         toY = fromY;
     }
-
-
 
     public bool MoveAlongPath(ref int pathIndex, float speed, float deltaTime)
     {
@@ -236,7 +261,7 @@ public class CharacterStateMachine : MonoBehaviour
         if (charMgr == null) return null;
         
         int mySwords = MySwordCount;
-        charMgr.GetNearbyCharacters(Owner.transform.position, visionRadius*0.65f, NearbyCharacters);
+        charMgr.GetNearbyCharacters(Owner.transform.position, visionRadius * 0.65f, NearbyCharacters);
 
         CharacterBase best = null;
         float bestDistSq = float.MaxValue;
@@ -245,11 +270,7 @@ public class CharacterStateMachine : MonoBehaviour
         for (int i = 0, count = NearbyCharacters.Count; i < count; i++)
         {
             CharacterBase other = NearbyCharacters[i];
-            if (other == owner || other.CurrentHp <= 0f) continue;
-            if (other.IsFleeProtected) continue;
-
-            int otherSwords = other.SwordCount;
-            if (otherSwords > mySwords) continue;
+            if (other == owner || other.CurrentHp <= 0f || other.SwordCount > mySwords) continue;
 
             Vector3 pos = other.TF.position;
             float dx = pos.x - myX, dy = pos.y - myY;
@@ -293,8 +314,4 @@ public class CharacterStateMachine : MonoBehaviour
 
         return best;
     }
-
-
-
-
 }

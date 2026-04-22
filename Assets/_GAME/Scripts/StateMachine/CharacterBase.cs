@@ -7,9 +7,12 @@ public class CharacterBase : GameUnit, IManagedUpdate
     [SerializeField] private string characterName = "Player";
     [SerializeField] private Sprite avatar;
     [SerializeField] private int characterLevel = 1;
-    
     [SerializeField] private float maxHp = 100f;
     [SerializeField] private float moveSpeed = 5f;
+    [SerializeField] private float knockbackForce = 5f;
+    [SerializeField] private float knockbackDuration = 0.3f;
+    [SerializeField] private float knockbackCooldown = 0.5f;
+    [SerializeField] private float characterKnockbackMultiplier = 2f;
 
     [Header("References")]
     [SerializeField] private SwordOrbit swordOrbit;
@@ -20,11 +23,12 @@ public class CharacterBase : GameUnit, IManagedUpdate
     
     private float currentHp;
     private float lastFrameX;
-    private float fleeProtectionTimer;
     private int currentLevel;
     private float levelTimer;
-
-    private const float FleeProtectionDuration = 3f;
+    private bool isKnockedBack;
+    private Vector3 knockbackVelocity;
+    private float knockbackTimer;
+    private float lastKnockbackTime;
 
     public float CurrentHp => currentHp;
     public float MaxHp => maxHp;
@@ -32,10 +36,10 @@ public class CharacterBase : GameUnit, IManagedUpdate
     public string CharacterId => characterId;
     public string CharacterName => characterName;
     public Sprite Avatar => avatar;
-    public int SwordCount => swordOrbit != null ? swordOrbit.SwordCount : 0;
-    public string CurrentStateName => stateMachine != null ? stateMachine.CurrentState.GetType().Name : "None";
-    public bool IsFleeProtected => fleeProtectionTimer > 0f;
+    public int SwordCount => swordOrbit?.SwordCount ?? 0;
+    public string CurrentStateName => stateMachine?.CurrentState.GetType().Name ?? "None";
     public int CurrentLevel => currentLevel;
+    public bool IsKnockedBack => isKnockedBack;
     public SwordOrbit GetSwordOrbit() => swordOrbit;
     public CharacterStateMachine GetStateMachine() => stateMachine;
 
@@ -54,38 +58,56 @@ public class CharacterBase : GameUnit, IManagedUpdate
         currentHp = maxHp;
         currentLevel = characterLevel;
         levelTimer = 0f;
-        fleeProtectionTimer = 0f;
         lastFrameX = TF.position.x;
+        lastKnockbackTime = -knockbackCooldown;
         
         if (stateMachine == null) stateMachine = GetComponent<CharacterStateMachine>();
+        if (swordOrbit != null) swordOrbit.OnInit();
+        if (stateMachine != null) stateMachine.OnInit();
         if (infoUI != null) infoUI.Init(characterName, avatar, currentHp, maxHp);
         
         UpdateLevelSwordType();
-        CharacterManager.Instance?.Register(this);
+        CharacterManager.Instance.Register(this);
     }
 
     public void OnDespawn()
     {
-        if (swordOrbit != null)
-        {
-            for (int i = swordOrbit.SwordCount - 1; i >= 0; i--)
-                swordOrbit.DropSword(i);
-        }
-        
-        if (stateMachine != null)
-            stateMachine.ChangeState(stateMachine.Wander);
-        
-        CharacterManager.Instance?.Despawn(this);
+        if (swordOrbit != null) swordOrbit.OnDespawn();
+        if (stateMachine != null) stateMachine.OnDespawn();
+        CharacterManager.Instance.Despawn(this);
     }
 
     public void ManagedUpdate(float deltaTime)
     {
-        if (fleeProtectionTimer > 0f) 
-            fleeProtectionTimer -= deltaTime;
+        if (isKnockedBack)
+        {
+            knockbackTimer -= deltaTime;
+            if (knockbackTimer <= 0f)
+            {
+                isKnockedBack = false;
+                knockbackVelocity = Vector3.zero;
+            }
+            else
+            {
+                Vector3 newPos = TF.position + knockbackVelocity * deltaTime;
+                if (MapManager.Instance != null)
+                {
+                    newPos = MapManager.Instance.ClampToMap(newPos);
+                    if (!MapManager.Instance.IsBlockedWorld(newPos))
+                        TF.position = newPos;
+                    else
+                        isKnockedBack = false;
+                }
+                else
+                {
+                    TF.position = newPos;
+                }
+            }
+        }
 
         UpdateLevelTimer(deltaTime);
 
-        if (stateMachine != null) 
+        if (stateMachine != null && !isKnockedBack) 
             stateMachine.ManagedUpdate(deltaTime);
         
         UpdateFacing();
@@ -123,8 +145,6 @@ public class CharacterBase : GameUnit, IManagedUpdate
         }
     }
 
-    public void ActivateFleeProtection() => fleeProtectionTimer = FleeProtectionDuration;
-
     public void LevelUp()
     {
         if (levelData == null) return;
@@ -150,7 +170,6 @@ public class CharacterBase : GameUnit, IManagedUpdate
     {
         currentHp = Mathf.Max(0f, currentHp - damage);
         if (infoUI != null) infoUI.UpdateHp(currentHp, maxHp);
-        if (stateMachine != null) stateMachine.OnUnderAttack(attacker);
         if (currentHp <= 0f) OnDeath();
     }
 
@@ -162,9 +181,47 @@ public class CharacterBase : GameUnit, IManagedUpdate
 
     public void MultiplySpeed(float multiplier) => moveSpeed *= multiplier;
 
-    public void OnSwordInteraction(CharacterBase other)
+    public void OnSwordInteraction(CharacterBase attacker)
     {
-        // TODO: Implement sword interaction logic
+        if (attacker == null) return;
+
+        float currentTime = Time.time;
+        bool canKnockback = currentTime - lastKnockbackTime >= knockbackCooldown;
+        
+        if (!isKnockedBack && canKnockback)
+        {
+            Vector3 direction = (TF.position - attacker.TF.position).normalized;
+            ApplyKnockback(direction, characterKnockbackMultiplier);
+            lastKnockbackTime = currentTime;
+            
+            if (stateMachine != null)
+                stateMachine.OnUnderAttack(attacker);
+        }
+    }
+
+    public void OnSwordToSwordKnockback(CharacterBase attacker)
+    {
+        if (attacker == null) return;
+
+        float currentTime = Time.time;
+        bool canKnockback = currentTime - lastKnockbackTime >= knockbackCooldown;
+        
+        if (!isKnockedBack && canKnockback)
+        {
+            Vector3 direction = (TF.position - attacker.TF.position).normalized;
+            ApplyKnockback(direction, 1f);
+            lastKnockbackTime = currentTime;
+            
+            if (stateMachine != null)
+                stateMachine.OnUnderAttack(attacker);
+        }
+    }
+
+    private void ApplyKnockback(Vector3 direction, float multiplier = 1f)
+    {
+        isKnockedBack = true;
+        knockbackVelocity = direction * knockbackForce * multiplier;
+        knockbackTimer = knockbackDuration;
     }
 
     private void OnDeath()
