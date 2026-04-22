@@ -38,5 +38,13 @@ public enum PoolType
 {
     None = 0,
     Sword = 1,
-    Character = 2
+    Character1 = 2,
+    Character2 = 3,
+    Character3 = 4,
+    Character4 = 5,
+    Character5 = 6,
+    Character6 = 7,
+    Character7 = 8,
+    Character8 = 9,
+    Character9 = 10,
 }

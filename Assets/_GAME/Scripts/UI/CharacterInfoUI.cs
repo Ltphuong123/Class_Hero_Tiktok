@@ -7,6 +7,9 @@ public class CharacterInfoUI : MonoBehaviour
     [SerializeField] private Image avatarImage;
     [SerializeField] private TextMeshProUGUI nameText;
     [SerializeField] private Image hpFill;
+    [SerializeField] private Image levelTimeFill;
+
+    private CharacterBase character;
 
     private void Awake()
     {
@@ -20,9 +23,34 @@ public class CharacterInfoUI : MonoBehaviour
         UpdateHp(currentHp, maxHp);
     }
 
+    public void SetCharacter(CharacterBase characterBase)
+    {
+        character = characterBase;
+    }
+
     public void UpdateHp(float current, float max)
     {
         if (hpFill != null) hpFill.fillAmount = max > 0f ? current / max : 0f;
+    }
+
+    private void Update()
+    {
+        if (character != null && levelTimeFill != null)
+        {
+            float timeRemaining = character.LevelTimeRemaining;
+            float duration = character.GetLevelDuration();
+            
+            if (duration > 0f)
+            {
+                float ratio = timeRemaining / duration;
+                levelTimeFill.fillAmount = ratio;
+                levelTimeFill.enabled = true;
+            }
+            else
+            {
+                levelTimeFill.enabled = false;
+            }
+        }
     }
 
     private void LateUpdate()

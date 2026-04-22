@@ -1,106 +1,144 @@
-// using UnityEngine;
-// using TMPro;
-// using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+using System.Collections.Generic;
 
-// public class CharacterLeaderboardUI : MonoBehaviour
-// {
-//     [Header("Panel")]
-//     [SerializeField] private GameObject panel;
-//     [SerializeField] private KeyCode toggleKey = KeyCode.Tab;
+public class CharacterLeaderboardUI : MonoBehaviour
+{
+    [Header("Panel")]
+    [SerializeField] private GameObject panel;
+    [SerializeField] private KeyCode toggleKey = KeyCode.Tab;
 
-//     [Header("Content")]
-//     [SerializeField] private Transform content;
-//     [SerializeField] private LeaderboardRow rowPrefab;
+    [Header("Buttons")]
+    [SerializeField] private Button openButton;
+    [SerializeField] private Button closeButton;
 
-//     [Header("Header Info")]
-//     [SerializeField] private TextMeshProUGUI aliveCountText;
+    [Header("Content")]
+    [SerializeField] private Transform content;
+    [SerializeField] private LeaderboardRow rowPrefab;
 
-//     [Header("Debug Panel")]
-//     [SerializeField] private CharacterDebugPanel debugPanel;
+    [Header("Header Info")]
+    [SerializeField] private TextMeshProUGUI aliveCountText;
 
-//     private readonly List<LeaderboardRow> rows = new();
-//     private bool isVisible = true;
+    [Header("Action Menu")]
+    [SerializeField] private CharacterActionMenu actionMenu;
 
-//     private void OnEnable()
-//     {
-//         if (CharacterManager.Instance != null)
-//             CharacterManager.Instance.OnRankUpdated += RefreshUI;
+    private readonly List<LeaderboardRow> rows = new();
+    private bool isVisible = false;
 
-//         // Subscribe to row click events
-//         LeaderboardRow.OnRowClicked += OnRowClicked;
-//     }
+    private void Awake()
+    {
+        if (openButton != null)
+            openButton.onClick.AddListener(OnOpenButtonClicked);
 
-//     private void OnDisable()
-//     {
-//         if (CharacterManager.Instance != null)
-//             CharacterManager.Instance.OnRankUpdated -= RefreshUI;
+        if (closeButton != null)
+            closeButton.onClick.AddListener(OnCloseButtonClicked);
+    }
 
-//         // Unsubscribe from row click events
-//         LeaderboardRow.OnRowClicked -= OnRowClicked;
-//     }
+    private void OnDestroy()
+    {
+        if (openButton != null)
+            openButton.onClick.RemoveListener(OnOpenButtonClicked);
 
-//     private void Update()
-//     {
-//         if (Input.GetKeyDown(toggleKey))
-//             SetVisible(!isVisible);
-//     }
+        if (closeButton != null)
+            closeButton.onClick.RemoveListener(OnCloseButtonClicked);
 
-//     public void SetVisible(bool visible)
-//     {
-//         isVisible = visible;
-//         if (panel != null) panel.SetActive(visible);
-//     }
+        LeaderboardRow.OnRowClicked -= OnRowClicked;
+    }
 
-//     public void ToggleVisible() => SetVisible(!isVisible);
+    private void Start()
+    {
+        SetVisible(false);
+    }
 
-//     private void OnRowClicked(CharacterBase character)
-//     {
-//         if (debugPanel != null)
-//         {
-//             debugPanel.Show(character);
-//         }
-//         else
-//         {
-//             Debug.LogWarning("[CharacterLeaderboardUI] Debug Panel chưa được gán!");
-//         }
-//     }
+    private void OnEnable()
+    {
+        if (CharacterManager.Instance != null)
+            CharacterManager.Instance.OnRankUpdated += RefreshUI;
 
-//     private void RefreshUI()
-//     {
-//         if (!isVisible) return;
+        LeaderboardRow.OnRowClicked += OnRowClicked;
+    }
 
-//         var ranked = CharacterManager.Instance.RankedCharacters;
-//         int count = ranked.Count;
+    private void OnDisable()
+    {
+        if (CharacterManager.Instance != null)
+            CharacterManager.Instance.OnRankUpdated -= RefreshUI;
 
-//         if (aliveCountText != null)
-//             aliveCountText.text = $"Alive: {count}";
+        LeaderboardRow.OnRowClicked -= OnRowClicked;
+    }
 
-//         // Tạo rows mới nếu cần (batch instantiate)
-//         int rowsToCreate = count - rows.Count;
-//         if (rowsToCreate > 0)
-//         {
-//             for (int i = 0; i < rowsToCreate; i++)
-//             {
-//                 LeaderboardRow row = Instantiate(rowPrefab, content);
-//                 row.gameObject.SetActive(false); // Tắt ngay để tránh layout recalc
-//                 rows.Add(row);
-//             }
-//         }
+    private void Update()
+    {
+        if (Input.GetKeyDown(toggleKey))
+            ToggleVisible();
+    }
 
-//         // Update rows (chỉ update khi cần)
-//         for (int i = 0; i < rows.Count; i++)
-//         {
-//             if (i < count)
-//             {
-//                 if (!rows[i].gameObject.activeSelf)
-//                     rows[i].gameObject.SetActive(true);
-//                 rows[i].SetData(ranked[i]);
-//             }
-//             else
-//             {
-//                 if (rows[i].gameObject.activeSelf)
-//                     rows[i].gameObject.SetActive(false);
-//             }
-//         }
-//     }
-// }
+    private void OnOpenButtonClicked()
+    {
+        SetVisible(true);
+    }
+
+    private void OnCloseButtonClicked()
+    {
+        SetVisible(false);
+    }
+
+    private void OnRowClicked(CharacterBase character)
+    {
+        if (actionMenu != null)
+            actionMenu.Show(character);
+    }
+
+    public void SetVisible(bool visible)
+    {
+        isVisible = visible;
+        
+        if (panel != null)
+            panel.SetActive(visible);
+
+        if (openButton != null)
+            openButton.gameObject.SetActive(!visible);
+
+        if (visible)
+            RefreshUI();
+    }
+
+    public void ToggleVisible() => SetVisible(!isVisible);
+
+    private void RefreshUI()
+    {
+        if (!isVisible) return;
+
+        var ranked = CharacterManager.Instance.RankedCharacters;
+        int count = ranked.Count;
+
+        if (aliveCountText != null)
+            aliveCountText.text = $"Alive: {count}";
+
+        int rowsToCreate = count - rows.Count;
+        if (rowsToCreate > 0)
+        {
+            for (int i = 0; i < rowsToCreate; i++)
+            {
+                LeaderboardRow row = Instantiate(rowPrefab, content);
+                row.gameObject.SetActive(false);
+                rows.Add(row);
+            }
+        }
+
+        for (int i = 0; i < rows.Count; i++)
+        {
+            if (i < count)
+            {
+                if (!rows[i].gameObject.activeSelf)
+                    rows[i].gameObject.SetActive(true);
+                rows[i].SetData(ranked[i]);
+            }
+            else
+            {
+                if (rows[i].gameObject.activeSelf)
+                    rows[i].gameObject.SetActive(false);
+            }
+        }
+    }
+}

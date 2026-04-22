@@ -11,6 +11,12 @@ public class LevelData
     
     [Tooltip("Thời gian duy trì level này (giây)")]
     public float duration;
+    
+    [Tooltip("Tốc độ di chuyển cho level này")]
+    public float speed = 5f;
+    
+    [Tooltip("Chỉ số scale cơ thể (1.0 = bình thường)")]
+    public float bodyScale = 1f;
 }
 
 [CreateAssetMenu(fileName = "CharacterLevelData", menuName = "Game/Character Level Data")]
@@ -42,6 +48,18 @@ public class CharacterLevelDataSO : ScriptableObject
     {
         LevelData data = GetLevelData(level);
         return data != null ? data.duration : 0f;
+    }
+
+    public float GetSpeed(int level)
+    {
+        LevelData data = GetLevelData(level);
+        return data != null ? data.speed : 5f;
+    }
+
+    public float GetBodyScale(int level)
+    {
+        LevelData data = GetLevelData(level);
+        return data != null ? data.bodyScale : 1f;
     }
 
     public int GetMaxLevel()

@@ -13,6 +13,7 @@ public struct CharacterRankData
     public float MaxHp;
     public int SwordCount;
     public int Level;
+    public float LevelTimeRemaining;
 }
 
 public class CharacterManager : Singleton<CharacterManager>
@@ -46,7 +47,8 @@ public class CharacterManager : Singleton<CharacterManager>
 
     public CharacterBase Spawn(Vector3 position, Quaternion rotation, string id, string name, Sprite avatarSprite, int level = 1)
     {
-        CharacterBase character = SimplePool.Spawn<CharacterBase>(PoolType.Character, position, rotation);
+        PoolType poolType = GetRandomCharacterPoolType();
+        CharacterBase character = SimplePool.Spawn<CharacterBase>(poolType, position, rotation);
         if (character != null)
         {
             character.TF.position = position;
@@ -56,6 +58,25 @@ public class CharacterManager : Singleton<CharacterManager>
             Register(character);
         }
         return character;
+    }
+
+    private PoolType GetRandomCharacterPoolType()
+    {
+        int randomIndex = UnityEngine.Random.Range(1, 10);
+        
+        return randomIndex switch
+        {
+            1 => PoolType.Character1,
+            2 => PoolType.Character2,
+            3 => PoolType.Character3,
+            4 => PoolType.Character4,
+            5 => PoolType.Character5,
+            6 => PoolType.Character6,
+            7 => PoolType.Character7,
+            8 => PoolType.Character8,
+            9 => PoolType.Character9,
+            _ => PoolType.Character1
+        };
     }
 
     public CharacterBase Spawn(Vector3 position, string id, string name, Sprite avatarSprite, int level = 1)
@@ -144,7 +165,8 @@ public class CharacterManager : Singleton<CharacterManager>
                 CurrentHp = c.CurrentHp,
                 MaxHp = c.MaxHp,
                 SwordCount = c.SwordCount,
-                Level = c.CurrentLevel
+                Level = c.CurrentLevel,
+                LevelTimeRemaining = c.LevelTimeRemaining
             });
         }
 

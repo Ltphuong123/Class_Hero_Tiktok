@@ -1,19 +1,24 @@
+using UnityEngine;
+
 public class DeadState : ICharacterState
 {
+    private float deathTimer;
+    private const float DEATH_DELAY = 1f;
+
     public void Enter(CharacterStateMachine sm)
     {
-        SwordOrbit orbit = sm.Orbit;
-        if (orbit != null)
-        {
-            int count = orbit.SwordCount;
-            for (int i = count - 1; i >= 0; i--)
-                orbit.DropSword(i);
-        }
-
-        sm.Owner.gameObject.SetActive(false);
+        deathTimer = 0f;
     }
 
-    public void Execute(CharacterStateMachine sm, float deltaTime) { }
+    public void Execute(CharacterStateMachine sm, float deltaTime)
+    {
+        deathTimer += deltaTime;
+
+        if (deathTimer >= DEATH_DELAY)
+        {
+            sm.Owner.OnDespawn();
+        }
+    }
 
     public void Exit(CharacterStateMachine sm) { }
 }

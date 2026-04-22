@@ -1,112 +1,90 @@
-// using UnityEngine;
-// using UnityEngine.UI;
-// using TMPro;
-// using UnityEngine.EventSystems;
+using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+using UnityEngine.EventSystems;
 
-// public class LeaderboardRow : MonoBehaviour, IPointerClickHandler
-// {
-//     [Header("Texts")]
-//     [SerializeField] private TextMeshProUGUI rankText;
-//     [SerializeField] private TextMeshProUGUI nameText;
-//     [SerializeField] private TextMeshProUGUI hpText;
-//     [SerializeField] private TextMeshProUGUI swordCountText;
-//     [SerializeField] private TextMeshProUGUI powerText;
-//     [SerializeField] private TextMeshProUGUI stateText;
+public class LeaderboardRow : MonoBehaviour, IPointerClickHandler
+{
+    [Header("Texts")]
+    [SerializeField] private TextMeshProUGUI nameText;
+    [SerializeField] private TextMeshProUGUI hpText;
+    [SerializeField] private TextMeshProUGUI swordCountText;
 
-//     [Header("Images")]
-//     [SerializeField] private Image avatarImage;
-//     [SerializeField] private Image hpBar;
-//     [SerializeField] private Image background;
+    [Header("Images")]
+    [SerializeField] private Image avatarImage;
+    [SerializeField] private Image levelIcon;
+    [SerializeField] private Image levelTimeFill;
 
-//     private static readonly Color GoldColor = new(1f, 0.84f, 0f, 0.3f);
-//     private static readonly Color SilverColor = new(0.75f, 0.75f, 0.75f, 0.25f);
-//     private static readonly Color BronzeColor = new(0.8f, 0.5f, 0.2f, 0.2f);
-//     private static readonly Color DefaultColor = new(1f, 1f, 1f, 0.1f);
+    [Header("Level Icons")]
+    [SerializeField] private Sprite[] levelSprites;
 
-//     private int cachedRank = -1;
-//     private float cachedHp = -1f;
-//     private int cachedSwordCount = -1;
-//     private CharacterBase currentCharacter;
+    private float cachedHp = -1f;
+    private int cachedSwordCount = -1;
+    private int cachedLevel = -1;
+    private CharacterBase currentCharacter;
 
-//     // Event để notify khi row được click
-//     public static event System.Action<CharacterBase> OnRowClicked;
+    public static event System.Action<CharacterBase> OnRowClicked;
 
-//     public void SetData(CharacterRankData data)
-//     {
-//         // Cache character reference
-//         currentCharacter = data.Character;
+    public void SetData(CharacterRankData data)
+    {
+        currentCharacter = data.Character;
 
-//         // Update rank (always, vì có thể thay đổi vị trí)
-//         if (rankText != null && cachedRank != data.Rank)
-//         {
-//             rankText.text = $"#{data.Rank}";
-//             cachedRank = data.Rank;
-//         }
+        if (nameText != null)
+            nameText.text = data.Name;
 
-//         // Update name (chỉ lần đầu)
-//         if (nameText != null && string.IsNullOrEmpty(nameText.text))
-//             nameText.text = data.Name;
+        if (levelIcon != null && cachedLevel != data.Level)
+        {
+            int index = data.Level - 1;
+            if (levelSprites != null && index >= 0 && index < levelSprites.Length)
+            {
+                levelIcon.sprite = levelSprites[index];
+                levelIcon.enabled = true;
+            }
+            else
+            {
+                levelIcon.enabled = false;
+            }
+            cachedLevel = data.Level;
+        }
 
-//         // Update HP (chỉ khi thay đổi)
-//         if (hpText != null && !Mathf.Approximately(cachedHp, data.CurrentHp))
-//         {
-//             hpText.text = $"{data.CurrentHp:F0}/{data.MaxHp:F0}";
-//             cachedHp = data.CurrentHp;
-//         }
-
-//         // Update sword count (chỉ khi thay đổi)
-//         if (swordCountText != null && cachedSwordCount != data.SwordCount)
-//         {
-//             swordCountText.text = data.SwordCount.ToString();
-//             cachedSwordCount = data.SwordCount;
-//         }
-
-//         // Update power (luôn update vì phụ thuộc HP + swords)
-//         if (powerText != null)
-//             powerText.text = $"{data.Power:F0}";
-
-//         // Update state (có thể thay đổi thường xuyên)
-//         if (stateText != null)
-//             stateText.text = data.StateName;
-
-//         // Update avatar (chỉ lần đầu)
-//         if (avatarImage != null && avatarImage.sprite != data.Avatar)
-//         {
-//             avatarImage.enabled = data.Avatar != null;
-//             if (data.Avatar != null) avatarImage.sprite = data.Avatar;
-//         }
-
-//         // Update HP bar
-//         if (hpBar != null)
-//         {
-//             float ratio = data.MaxHp > 0f ? data.CurrentHp / data.MaxHp : 0f;
-//             hpBar.fillAmount = ratio;
-//             hpBar.color = Color.Lerp(Color.red, Color.green, ratio);
-//         }
-
-//         // Update background color
-//         if (background != null)
-//         {
-//             Color targetColor = data.Rank switch
-//             {
-//                 1 => GoldColor,
-//                 2 => SilverColor,
-//                 3 => BronzeColor,
-//                 _ => DefaultColor
-//             };
+        if (levelTimeFill != null)
+        {
+            float duration = currentCharacter != null ? currentCharacter.GetLevelDuration() : 0f;
             
-//             if (background.color != targetColor)
-//                 background.color = targetColor;
-//         }
-//     }
+            if (duration > 0f && data.LevelTimeRemaining > 0f)
+            {
+                float ratio = 1-data.LevelTimeRemaining / duration;
+                levelTimeFill.fillAmount = ratio;
+                levelTimeFill.enabled = true;
+            }
+            else
+            {
+                levelTimeFill.enabled = false;
+            }
+        }
 
-//     // Implement IPointerClickHandler
-//     public void OnPointerClick(PointerEventData eventData)
-//     {
-//         if (currentCharacter != null)
-//         {
-//             Debug.Log($"[LeaderboardRow] Clicked on {currentCharacter.CharacterName}");
-//             OnRowClicked?.Invoke(currentCharacter);
-//         }
-//     }
-// }
+        if (hpText != null && !Mathf.Approximately(cachedHp, data.CurrentHp))
+        {
+            hpText.text = $"{data.CurrentHp:F0}/{data.MaxHp:F0}";
+            cachedHp = data.CurrentHp;
+        }
+
+        if (swordCountText != null && cachedSwordCount != data.SwordCount)
+        {
+            swordCountText.text = $"⚔ {data.SwordCount}";
+            cachedSwordCount = data.SwordCount;
+        }
+
+        if (avatarImage != null && avatarImage.sprite != data.Avatar)
+        {
+            avatarImage.enabled = data.Avatar != null;
+            if (data.Avatar != null) avatarImage.sprite = data.Avatar;
+        }
+    }
+
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        if (currentCharacter != null)
+            OnRowClicked?.Invoke(currentCharacter);
+    }
+}

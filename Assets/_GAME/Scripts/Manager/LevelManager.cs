@@ -48,7 +48,6 @@ public class LevelManager : Singleton<LevelManager>
             itemMgr.Spawn(pos);
         }
 
-        Debug.Log($"[LevelManager] Spawned {initialSwordCount} swords on the map.");
     }
 
     private void SpawnInitialCharacters()
@@ -83,12 +82,11 @@ public class LevelManager : Singleton<LevelManager>
             string id = $"char_{i:000}";
             string name = characterNames.Length > 0 ? characterNames[Random.Range(0, characterNames.Length)] : $"Character {i}";
             Sprite avatar = characterAvatars != null && characterAvatars.Length > 0 ? characterAvatars[Random.Range(0, characterAvatars.Length)] : null;
-            int level = Random.Range(1, 4);
+            int level = 1;
 
             charMgr.Spawn(pos, id, name, avatar, level);
         }
 
-        Debug.Log($"[LevelManager] Spawned {initialCharacterCount} characters on the map.");
     }
 
     private void OnInit()
