@@ -261,6 +261,8 @@ public class Sword : GameUnit
                 CharacterBase attacker = orbit.Owner;
                 character.TakeDamage(damage, attacker);
                 character.OnSwordInteraction(attacker);
+                
+                attacker?.GetAudioSource()?.PlayAttack();
             }
             return;
         }
@@ -278,6 +280,9 @@ public class Sword : GameUnit
         CharacterBase otherOwner = otherSword.orbit.Owner;
 
         TakeDamage(otherSword.damage, otherSword);
+        
+        myOwner?.GetAudioSource()?.PlayAttack();
+        
         otherSword.TakeDamage(damage, this);
 
         if (myOwner != null && otherOwner != null)
@@ -289,6 +294,9 @@ public class Sword : GameUnit
 
     public void TakeDamage(float dmg, Sword attackerSword = null)
     {
+        if (orbit != null && orbit.Owner != null && orbit.Owner.IsShieldActive)
+            return;
+
         currentHp -= dmg;
 
         if (spriteRenderer != null)
@@ -319,6 +327,7 @@ public class Sword : GameUnit
     public void KnockOff()
     {
         if (orbit == null) return;
+        if (orbit.Owner != null && orbit.Owner.IsShieldActive) return;
 
         state = SwordState.Animating;
         TF.DOKill();

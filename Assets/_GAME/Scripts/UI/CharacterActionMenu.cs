@@ -9,6 +9,10 @@ public class CharacterActionMenu : MonoBehaviour
 
     [Header("Buttons")]
     [SerializeField] private Button addSwordButton;
+    [SerializeField] private Button magnetBoosterButton;
+    [SerializeField] private Button shieldBoosterButton;
+    [SerializeField] private Button freezeBoosterButton;
+    [SerializeField] private Button meteorBoosterButton;
     [SerializeField] private Button level1Button;
     [SerializeField] private Button level2Button;
     [SerializeField] private Button level3Button;
@@ -28,6 +32,18 @@ public class CharacterActionMenu : MonoBehaviour
     {
         if (addSwordButton != null)
             addSwordButton.onClick.AddListener(OnAddSwordClicked);
+
+        if (magnetBoosterButton != null)
+            magnetBoosterButton.onClick.AddListener(OnMagnetBoosterClicked);
+
+        if (shieldBoosterButton != null)
+            shieldBoosterButton.onClick.AddListener(OnShieldBoosterClicked);
+
+        if (freezeBoosterButton != null)
+            freezeBoosterButton.onClick.AddListener(OnFreezeBoosterClicked);
+
+        if (meteorBoosterButton != null)
+            meteorBoosterButton.onClick.AddListener(OnMeteorBoosterClicked);
 
         if (level1Button != null)
             level1Button.onClick.AddListener(() => OnLevelButtonClicked(1));
@@ -54,6 +70,18 @@ public class CharacterActionMenu : MonoBehaviour
     {
         if (addSwordButton != null)
             addSwordButton.onClick.RemoveListener(OnAddSwordClicked);
+
+        if (magnetBoosterButton != null)
+            magnetBoosterButton.onClick.RemoveListener(OnMagnetBoosterClicked);
+
+        if (shieldBoosterButton != null)
+            shieldBoosterButton.onClick.RemoveListener(OnShieldBoosterClicked);
+
+        if (freezeBoosterButton != null)
+            freezeBoosterButton.onClick.RemoveListener(OnFreezeBoosterClicked);
+
+        if (meteorBoosterButton != null)
+            meteorBoosterButton.onClick.RemoveListener(OnMeteorBoosterClicked);
 
         if (level1Button != null)
             level1Button.onClick.RemoveAllListeners();
@@ -111,6 +139,30 @@ public class CharacterActionMenu : MonoBehaviour
             if (sword != null)
                 sword.Collect(currentCharacter);
         }
+    }
+
+    private void OnMagnetBoosterClicked()
+    {
+        if (currentCharacter == null) return;
+        currentCharacter.ActivateMagnetBooster();
+    }
+
+    private void OnShieldBoosterClicked()
+    {
+        if (currentCharacter == null) return;
+        currentCharacter.ActivateShieldBooster();
+    }
+
+    private void OnFreezeBoosterClicked()
+    {
+        if (currentCharacter == null) return;
+        currentCharacter.ActivateFreezeBooster();
+    }
+
+    private void OnMeteorBoosterClicked()
+    {
+        if (currentCharacter == null) return;
+        currentCharacter.ActivateMeteorBooster();
     }
 
     private void OnLevelButtonClicked(int level)

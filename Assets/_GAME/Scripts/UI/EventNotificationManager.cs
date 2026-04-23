@@ -25,11 +25,8 @@ public class EventNotificationManager : Singleton<EventNotificationManager>
         
         foreach (var data in rankedCharacters)
         {
-            if (lastKnownLevels.TryGetValue(data.Id, out int lastLevel))
-            {
-                if (data.Level > lastLevel)
-                    ShowLevelUpNotification(data.Name, data.Level);
-            }
+            if (lastKnownLevels.TryGetValue(data.Id, out int lastLevel) && data.Level > lastLevel)
+                ShowLevelUpNotification(data.Name, data.Level);
             
             lastKnownLevels[data.Id] = data.Level;
         }
@@ -38,18 +35,18 @@ public class EventNotificationManager : Singleton<EventNotificationManager>
     public void ShowCharacterJoinedNotification(string characterName)
     {
         if (notificationUI != null)
-            notificationUI.ShowNotification($"<color=#00FF00>{characterName}</color> đã tham gia!");
+            notificationUI.ShowNotification($"<color=#00FF00>{characterName}</color> has joined!");
     }
 
     public void ShowLevelUpNotification(string characterName, int newLevel)
     {
         if (notificationUI != null)
-            notificationUI.ShowNotification($"<color=#FFD700>{characterName}</color> đã lên cấp {newLevel}!");
+            notificationUI.ShowNotification($"<color=#FFD700>{characterName}</color> reached level {newLevel}!");
     }
 
     public void ShowKillNotification(string killerName, string victimName)
     {
         if (notificationUI != null)
-            notificationUI.ShowNotification($"<color=#FF0000>{killerName}</color> đã tiêu diệt <color=#888888>{victimName}</color>");
+            notificationUI.ShowNotification($"<color=#00FF00>{killerName}</color> eliminated <color=#FF0000>{victimName}</color>");
     }
 }

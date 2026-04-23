@@ -144,6 +144,7 @@ public class CameraController : MonoBehaviour
 
     public void SetTarget(Transform newTarget) => target = newTarget;
     public void SetZoom(float zoom) => targetZoom = Mathf.Clamp(zoom, minZoom, maxZoom);
+    public float GetTargetFollowZoom() => targetFollowZoom;
 
     public void SetBounds(Vector2 min, Vector2 max)
     {

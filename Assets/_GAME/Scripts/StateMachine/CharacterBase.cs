@@ -1,6 +1,5 @@
 using UnityEngine;
-
-using UnityEngine;
+using System.Collections;
 
 public class CharacterBase : GameUnit, IManagedUpdate
 {
@@ -23,9 +22,30 @@ public class CharacterBase : GameUnit, IManagedUpdate
     [SerializeField] private CharacterStateMachine stateMachine;
     [SerializeField] private CharacterLevelDataSO levelData;
     [SerializeField] private Animator animator;
+    [SerializeField] private CharacterAudioSource audioSource;
 
     [Header("Particles")]
     [SerializeField] private LevelParticleSet[] levelParticleSets;
+    
+    [Header("Magnet Booster")]
+    [SerializeField] private float magnetRadius = 10f;
+    [SerializeField] private float magnetDuration = 5f;
+    [SerializeField] private float magnetPullSpeed = 50f;
+    [SerializeField] private ParticleSystem magnetParticle;
+    
+    [Header("Shield Booster")]
+    [SerializeField] private float shieldDuration = 5f;
+    [SerializeField] private ParticleSystem shieldParticle;
+    
+    [Header("Freeze Booster")]
+    [SerializeField] private float freezeDuration = 5f;
+    [SerializeField] private ParticleSystem freezeParticle;
+    
+    [Header("Meteor Booster")]
+    [SerializeField] private float meteorRadius = 23f;
+    [SerializeField] private float meteorDamage = 1000f;
+    [SerializeField] private ParticleSystem meteorChargeParticle;
+    [SerializeField] private ParticleUnit meteorImpactParticlePrefab;
     
     private float currentHp;
     private float lastFrameX;
@@ -41,6 +61,15 @@ public class CharacterBase : GameUnit, IManagedUpdate
     private bool has20SwordsActive;
     private LevelParticleSet currentParticleSet;
     private bool isDead;
+    private Vector3 lastPosition;
+    private bool isMoving;
+    private MapManager cachedMap;
+    private bool isMagnetActive;
+    private float magnetTimer;
+    private bool isShieldActive;
+    private float shieldTimer;
+    private bool isFrozen;
+    private float frozenTimer;
 
     public float CurrentHp => currentHp;
     public float MaxHp => maxHp;
@@ -53,6 +82,12 @@ public class CharacterBase : GameUnit, IManagedUpdate
     public int CurrentLevel => currentLevel;
     public bool IsKnockedBack => isKnockedBack;
     public bool IsDead => isDead;
+    public bool IsMagnetActive => isMagnetActive;
+    public float MagnetTimeRemaining => isMagnetActive ? Mathf.Max(0f, magnetTimer) : 0f;
+    public bool IsShieldActive => isShieldActive;
+    public float ShieldTimeRemaining => isShieldActive ? Mathf.Max(0f, shieldTimer) : 0f;
+    public bool IsFrozen => isFrozen;
+    public float FrozenTimeRemaining => isFrozen ? Mathf.Max(0f, frozenTimer) : 0f;
     public float LevelTimeRemaining
     {
         get
@@ -64,11 +99,9 @@ public class CharacterBase : GameUnit, IManagedUpdate
     public SwordOrbit GetSwordOrbit() => swordOrbit;
     public CharacterStateMachine GetStateMachine() => stateMachine;
     public Animator GetAnimator() => animator;
+    public CharacterAudioSource GetAudioSource() => audioSource;
 
-    public void OnInit()
-    {
-        OnInit(characterId, characterName, avatar, characterLevel);
-    }
+    public void OnInit() => OnInit(characterId, characterName, avatar, characterLevel);
 
     public void OnInit(string id, string name, Sprite avatarSprite, int level = 1)
     {
@@ -81,30 +114,38 @@ public class CharacterBase : GameUnit, IManagedUpdate
         currentLevel = 1;
         levelTimer = 0f;
         lastFrameX = TF.position.x;
+        lastPosition = TF.position;
+        isMoving = false;
         lastKnockbackTime = -knockbackCooldown;
         lastSwordCount = 0;
         has10SwordsActive = false;
         has20SwordsActive = false;
         isDead = false;
+        isMagnetActive = false;
+        magnetTimer = 0f;
+        isShieldActive = false;
+        shieldTimer = 0f;
+        isFrozen = false;
+        frozenTimer = 0f;
         
         if (levelData != null)
-        {
-            int maxLevel = levelData.GetMaxLevel();
-            levelReserveTime = new float[maxLevel + 1];
-        }
+            levelReserveTime = new float[levelData.GetMaxLevel() + 1];
         
         if (stateMachine == null) stateMachine = GetComponent<CharacterStateMachine>();
         if (animator == null) animator = GetComponentInChildren<Animator>();
-        if (swordOrbit != null) swordOrbit.OnInit();
-        if (stateMachine != null) stateMachine.OnInit();
+        if (audioSource == null) audioSource = GetComponent<CharacterAudioSource>();
+        if (cachedMap == null) cachedMap = MapManager.Instance;
+        
+        swordOrbit?.OnInit();
+        stateMachine?.OnInit();
+        
         if (infoUI != null)
         {
             infoUI.Init(characterName, avatar, currentHp, maxHp);
             infoUI.SetCharacter(this);
         }
         
-        if (animator != null)
-            animator.SetTrigger("walk");
+        animator?.SetTrigger("walk");
         
         UpdateLevelStats();
         CharacterManager.Instance.Register(this);
@@ -112,8 +153,19 @@ public class CharacterBase : GameUnit, IManagedUpdate
 
     public void OnDespawn()
     {
-        if (swordOrbit != null) swordOrbit.OnDespawn();
-        if (stateMachine != null) stateMachine.OnDespawn();
+        audioSource?.StopFootstep();
+        
+        if (magnetParticle != null)
+            magnetParticle.Stop();
+        
+        if (shieldParticle != null)
+            shieldParticle.Stop();
+        
+        if (freezeParticle != null)
+            freezeParticle.Stop();
+        
+        swordOrbit?.OnDespawn();
+        stateMachine?.OnDespawn();
         CharacterManager.Instance.Despawn(this);
     }
 
@@ -121,8 +173,17 @@ public class CharacterBase : GameUnit, IManagedUpdate
     {
         if (isDead)
         {
-            if (stateMachine != null)
-                stateMachine.ManagedUpdate(deltaTime);
+            audioSource?.StopFootstep();
+            stateMachine?.ManagedUpdate(deltaTime);
+            return;
+        }
+
+        if (isFrozen)
+        {
+            frozenTimer -= deltaTime;
+            if (frozenTimer <= 0f)
+                Unfreeze();
+            
             return;
         }
 
@@ -137,10 +198,10 @@ public class CharacterBase : GameUnit, IManagedUpdate
             else
             {
                 Vector3 newPos = TF.position + knockbackVelocity * deltaTime;
-                if (MapManager.Instance != null)
+                if (cachedMap != null)
                 {
-                    newPos = MapManager.Instance.ClampToMap(newPos);
-                    if (!MapManager.Instance.IsBlockedWorld(newPos))
+                    newPos = cachedMap.ClampToMap(newPos);
+                    if (!cachedMap.IsBlockedWorld(newPos))
                         TF.position = newPos;
                     else
                         isKnockedBack = false;
@@ -154,11 +215,14 @@ public class CharacterBase : GameUnit, IManagedUpdate
 
         UpdateLevelTimer(deltaTime);
         CheckSwordCountParticles();
+        UpdateMagnetBooster(deltaTime);
+        UpdateShieldBooster(deltaTime);
 
         if (stateMachine != null && !isKnockedBack) 
             stateMachine.ManagedUpdate(deltaTime);
         
         UpdateFacing();
+        UpdateFootstepSound();
     }
 
     private void UpdateLevelTimer(float deltaTime)
@@ -217,17 +281,12 @@ public class CharacterBase : GameUnit, IManagedUpdate
     {
         if (levelData == null) return;
 
-        if (swordOrbit != null)
-            swordOrbit.SetSwordType(levelData.GetSwordType(currentLevel));
-
+        swordOrbit?.SetSwordType(levelData.GetSwordType(currentLevel));
         moveSpeed = levelData.GetSpeed(currentLevel);
 
         float scale = levelData.GetBodyScale(currentLevel);
-        
-        // Scale toàn bộ character (bao gồm collider, orbit)
         TF.localScale = Vector3.one * scale;
         
-        // Nếu có visualTransform riêng, reset về 1 để tránh double scale
         if (visualTransform != null && visualTransform != TF)
         {
             Vector3 currentScale = visualTransform.localScale;
@@ -248,6 +307,249 @@ public class CharacterBase : GameUnit, IManagedUpdate
             s.x = delta > 0f ? -Mathf.Abs(s.x) : Mathf.Abs(s.x);
             visualTransform.localScale = s;
             lastFrameX = TF.position.x;
+        }
+    }
+
+    private void UpdateFootstepSound()
+    {
+        if (audioSource == null) return;
+
+        Vector3 currentPos = TF.position;
+        float dx = currentPos.x - lastPosition.x;
+        float dy = currentPos.y - lastPosition.y;
+        float distanceSq = dx * dx + dy * dy;
+        
+        bool wasMoving = isMoving;
+        isMoving = distanceSq > 0.0001f;
+        
+        if (isMoving != wasMoving)
+        {
+            if (isMoving)
+                audioSource.PlayFootstep();
+            else
+                audioSource.StopFootstep();
+        }
+        
+        lastPosition = currentPos;
+    }
+
+    private void UpdateMagnetBooster(float deltaTime)
+    {
+        if (!isMagnetActive) return;
+
+        magnetTimer -= deltaTime;
+        if (magnetTimer <= 0f)
+        {
+            isMagnetActive = false;
+            
+            if (magnetParticle != null)
+                magnetParticle.Stop();
+            
+            return;
+        }
+
+        ItemManager itemMgr = ItemManager.Instance;
+        if (itemMgr == null) return;
+
+        var nearbySwords = new System.Collections.Generic.List<Sword>();
+        itemMgr.GetNearbySwords(TF.position, magnetRadius, nearbySwords);
+
+        foreach (var sword in nearbySwords)
+        {
+            if (sword.State != SwordState.Dropped) continue;
+
+            Vector3 toCharacter = TF.position - sword.TF.position;
+            float distanceSq = toCharacter.x * toCharacter.x + toCharacter.y * toCharacter.y;
+            
+            if (distanceSq < 1f)
+            {
+                sword.Collect(this);
+                continue;
+            }
+
+            float distance = Mathf.Sqrt(distanceSq);
+            Vector3 direction = toCharacter / distance;
+            float moveAmount = Mathf.Min(magnetPullSpeed * deltaTime, distance);
+            Vector3 newPos = sword.TF.position + direction * moveAmount;
+            
+            if (cachedMap != null)
+                newPos = cachedMap.ClampToMap(newPos);
+            
+            sword.TF.position = newPos;
+        }
+    }
+
+    public void ActivateMagnetBooster()
+    {
+        isMagnetActive = true;
+        magnetTimer = magnetDuration;
+        
+        if (magnetParticle != null)
+            magnetParticle.Play();
+    }
+
+    private void UpdateShieldBooster(float deltaTime)
+    {
+        if (!isShieldActive) return;
+
+        shieldTimer -= deltaTime;
+        if (shieldTimer <= 0f)
+        {
+            isShieldActive = false;
+            
+            if (shieldParticle != null)
+                shieldParticle.Stop();
+        }
+    }
+
+    public void ActivateShieldBooster()
+    {
+        isShieldActive = true;
+        shieldTimer = shieldDuration;
+        
+        if (shieldParticle != null)
+            shieldParticle.Play();
+    }
+
+    public void Freeze(float duration)
+    {
+        if (isFrozen) return;
+        
+        isFrozen = true;
+        frozenTimer = duration;
+        
+        if (animator != null)
+            animator.speed = 0f;
+        
+        if (swordOrbit != null)
+            swordOrbit.SetPaused(true);
+        
+        if (audioSource != null)
+            audioSource.StopFootstep();
+        
+        if (freezeParticle != null)
+            freezeParticle.Play();
+    }
+
+    public void Unfreeze()
+    {
+        isFrozen = false;
+        
+        if (animator != null)
+            animator.speed = 1f;
+        
+        if (swordOrbit != null)
+            swordOrbit.SetPaused(false);
+        
+        if (freezeParticle != null)
+            freezeParticle.Stop();
+    }
+
+    public void ActivateFreezeBooster()
+    {
+        CharacterManager charMgr = CharacterManager.Instance;
+        if (charMgr == null) return;
+
+        var nearbyCharacters = new System.Collections.Generic.List<CharacterBase>();
+        charMgr.GetNearbyCharacters(TF.position, 1000f, nearbyCharacters);
+
+        foreach (var character in nearbyCharacters)
+        {
+            if (character == this) continue;
+            if (character.IsDead) continue;
+            
+            character.Freeze(freezeDuration);
+        }
+    }
+
+    public void ActivateMeteorBooster()
+    {
+        StartCoroutine(MeteorBoosterSequence());
+    }
+
+    private IEnumerator MeteorBoosterSequence()
+    {
+        CameraController camController = Camera.main?.GetComponent<CameraController>();
+        if (camController == null) yield break;
+
+        Vector3 originalPosition = TF.position;
+        Vector3 originalScale = TF.localScale;
+        float originalBodyScale = levelData != null ? levelData.GetBodyScale(currentLevel) : 1f;
+
+        TF.position = Vector3.zero;
+        TF.localScale = Vector3.one * 3f;
+        camController.SetTarget(TF);
+        camController.SetZoom(30f);
+
+        yield return new WaitForSeconds(0.1f);
+
+        CharacterManager charMgr = CharacterManager.Instance;
+        var enemies = new System.Collections.Generic.List<CharacterBase>();
+        if (charMgr != null)
+        {
+            charMgr.GetNearbyCharacters(TF.position, 1000f, enemies);
+            foreach (var enemy in enemies)
+            {
+                if (enemy == this) continue;
+                if (enemy.IsDead) continue;
+                enemy.Freeze(10f);
+            }
+        }
+
+        if (meteorChargeParticle != null)
+            meteorChargeParticle.Play();
+
+        yield return new WaitForSeconds(0.5f);
+
+        StartCoroutine(SpawnMeteorImpacts());
+
+        yield return new WaitForSeconds(1f);
+
+        var targets = new System.Collections.Generic.List<CharacterBase>();
+        if (charMgr != null)
+        {
+            charMgr.GetCharactersInRadius(TF.position, meteorRadius, targets);
+            foreach (var target in targets)
+            {
+                if (target == this) continue;
+                if (target.IsDead) continue;
+                target.TakeDamage(meteorDamage, this);
+            }
+        }
+
+        foreach (var enemy in enemies)
+        {
+            if (enemy == null || enemy.IsDead) continue;
+            enemy.Unfreeze();
+        }
+
+        yield return new WaitForSeconds(1f);
+
+        if (meteorChargeParticle != null)
+            meteorChargeParticle.Stop();
+
+        if (camController != null)
+            camController.SetZoom(camController.GetTargetFollowZoom());
+
+        TF.localScale = Vector3.one * originalBodyScale;
+    }
+
+    private IEnumerator SpawnMeteorImpacts()
+    {
+        if (meteorImpactParticlePrefab == null) yield break;
+
+        int totalImpacts = 300;
+        float duration = 2f;
+        float interval = duration / totalImpacts;
+
+        for (int i = 0; i < totalImpacts; i++)
+        {
+            Vector2 randomOffset = Random.insideUnitCircle * meteorRadius;
+            Vector3 spawnPos = TF.position + new Vector3(randomOffset.x, randomOffset.y, 0f);
+
+            ParticlePool.Spawn(meteorImpactParticlePrefab.ParticleType, spawnPos, Quaternion.identity);
+
+            yield return new WaitForSeconds(interval);
         }
     }
 
@@ -277,20 +579,15 @@ public class CharacterBase : GameUnit, IManagedUpdate
         UpdateLevelStats();
         
         if (oldLevel != currentLevel)
+        {
             SwitchLevelParticles(oldLevel);
+            if (currentLevel > oldLevel)
+                audioSource?.PlayLevelUp();
+        }
     }
 
-    public int GetMaxLevel()
-    {
-        if (levelData == null) return 1;
-        return levelData.GetMaxLevel();
-    }
-
-    public CharacterLevelDataSO GetLevelData()
-    {
-        return levelData;
-    }
-
+    public int GetMaxLevel() => levelData?.GetMaxLevel() ?? 1;
+    public CharacterLevelDataSO GetLevelData() => levelData;
     public float GetLevelDuration()
     {
         if (levelData == null || levelReserveTime == null || currentLevel >= levelReserveTime.Length) return 0f;
@@ -301,41 +598,31 @@ public class CharacterBase : GameUnit, IManagedUpdate
     {
         int swordCount = SwordCount;
         
-        if (swordCount != lastSwordCount)
+        if (swordCount == lastSwordCount || currentParticleSet == null) return;
+
+        if (swordCount >= 20 && !has20SwordsActive)
         {
-            if (currentParticleSet != null)
-            {
-                // Check 20 swords
-                if (swordCount >= 20 && !has20SwordsActive)
-                {
-                    has20SwordsActive = true;
-                    if (currentParticleSet.sword20Particle != null)
-                        currentParticleSet.sword20Particle.Play();
-                }
-                else if (swordCount < 20 && has20SwordsActive)
-                {
-                    has20SwordsActive = false;
-                    if (currentParticleSet.sword20Particle != null)
-                        currentParticleSet.sword20Particle.Stop();
-                }
-                
-                // Check 10 swords
-                if (swordCount >= 10 && !has10SwordsActive)
-                {
-                    has10SwordsActive = true;
-                    if (currentParticleSet.sword10Particle != null)
-                        currentParticleSet.sword10Particle.Play();
-                }
-                else if (swordCount < 10 && has10SwordsActive)
-                {
-                    has10SwordsActive = false;
-                    if (currentParticleSet.sword10Particle != null)
-                        currentParticleSet.sword10Particle.Stop();
-                }
-            }
-            
-            lastSwordCount = swordCount;
+            has20SwordsActive = true;
+            currentParticleSet.sword20Particle?.Play();
         }
+        else if (swordCount < 20 && has20SwordsActive)
+        {
+            has20SwordsActive = false;
+            currentParticleSet.sword20Particle?.Stop();
+        }
+        
+        if (swordCount >= 10 && !has10SwordsActive)
+        {
+            has10SwordsActive = true;
+            currentParticleSet.sword10Particle?.Play();
+        }
+        else if (swordCount < 10 && has10SwordsActive)
+        {
+            has10SwordsActive = false;
+            currentParticleSet.sword10Particle?.Stop();
+        }
+        
+        lastSwordCount = swordCount;
     }
 
     private void SwitchLevelParticles(int oldLevel)
@@ -345,34 +632,28 @@ public class CharacterBase : GameUnit, IManagedUpdate
         LevelParticleSet oldParticleSet = GetParticleSetForLevel(oldLevel);
         if (oldParticleSet != null)
         {
-            if (oldParticleSet.levelParticle != null)
-                oldParticleSet.levelParticle.Stop();
-            if (oldParticleSet.sword10Particle != null)
-                oldParticleSet.sword10Particle.Stop();
-            if (oldParticleSet.sword20Particle != null)
-                oldParticleSet.sword20Particle.Stop();
+            oldParticleSet.levelParticle?.Stop();
+            oldParticleSet.sword10Particle?.Stop();
+            oldParticleSet.sword20Particle?.Stop();
         }
         
         currentParticleSet = GetParticleSetForLevel(currentLevel);
         
         if (currentParticleSet != null)
         {
-            if (currentParticleSet.levelParticle != null)
-                currentParticleSet.levelParticle.Play();
+            currentParticleSet.levelParticle?.Play();
             
             int swordCount = SwordCount;
             
             if (swordCount >= 10)
             {
-                if (currentParticleSet.sword10Particle != null)
-                    currentParticleSet.sword10Particle.Play();
+                currentParticleSet.sword10Particle?.Play();
                 has10SwordsActive = true;
             }
             
             if (swordCount >= 20)
             {
-                if (currentParticleSet.sword20Particle != null)
-                    currentParticleSet.sword20Particle.Play();
+                currentParticleSet.sword20Particle?.Play();
                 has20SwordsActive = true;
             }
         }
@@ -393,10 +674,11 @@ public class CharacterBase : GameUnit, IManagedUpdate
 
     public void TakeDamage(float damage, CharacterBase attacker = null)
     {
-        if (isDead) return;
+        if (isDead || isShieldActive) return;
 
         currentHp = Mathf.Max(0f, currentHp - damage);
-        if (infoUI != null) infoUI.UpdateHp(currentHp, maxHp);
+        infoUI?.UpdateHp(currentHp, maxHp);
+        
         if (currentHp <= 0f)
         {
             OnKilledBy(attacker);
@@ -407,50 +689,41 @@ public class CharacterBase : GameUnit, IManagedUpdate
     public void Heal(float amount)
     {
         if (isDead) return;
-
         currentHp = Mathf.Min(maxHp, currentHp + amount);
-        if (infoUI != null) infoUI.UpdateHp(currentHp, maxHp);
+        infoUI?.UpdateHp(currentHp, maxHp);
     }
 
     public void MultiplySpeed(float multiplier) => moveSpeed *= multiplier;
 
     public void OnSwordInteraction(CharacterBase attacker)
     {
-        if (isDead || attacker == null) return;
+        if (isDead || isShieldActive || attacker == null) return;
 
         float currentTime = Time.time;
-        bool canKnockback = currentTime - lastKnockbackTime >= knockbackCooldown;
+        if (isKnockedBack || currentTime - lastKnockbackTime < knockbackCooldown) return;
         
-        if (!isKnockedBack && canKnockback)
-        {
-            Vector3 direction = (TF.position - attacker.TF.position).normalized;
-            ApplyKnockback(direction, characterKnockbackMultiplier);
-            lastKnockbackTime = currentTime;
-            
-            if (stateMachine != null)
-                stateMachine.OnUnderAttack(attacker);
-        }
+        Vector3 direction = (TF.position - attacker.TF.position).normalized;
+        ApplyKnockback(direction, characterKnockbackMultiplier);
+        lastKnockbackTime = currentTime;
+        
+        stateMachine?.OnUnderAttack(attacker);
     }
 
     public void OnSwordToSwordKnockback(CharacterBase attacker)
     {
-        if (isDead || attacker == null) return;
+        if (isDead || isShieldActive || attacker == null) return;
 
         float currentTime = Time.time;
-        bool canKnockback = currentTime - lastKnockbackTime >= knockbackCooldown;
+        if (isKnockedBack || currentTime - lastKnockbackTime < knockbackCooldown) return;
         
-        if (!isKnockedBack && canKnockback)
-        {
-            Vector3 direction = (TF.position - attacker.TF.position).normalized;
-            ApplyKnockback(direction, 1f);
-            lastKnockbackTime = currentTime;
-            
-            if (stateMachine != null)
-                stateMachine.OnUnderAttack(attacker);
-        }
+        Vector3 direction = (TF.position - attacker.TF.position).normalized;
+        ApplyKnockback(direction, 1f);
+        lastKnockbackTime = currentTime;
+        
+        stateMachine?.OnUnderAttack(attacker);
     }
 
-    private void ApplyKnockback(Vector3 direction, float multiplier = 1f)
+    private void ApplyKnockback(Vector3 direction, float multiplier)
     {
         isKnockedBack = true;
         knockbackVelocity = direction * knockbackForce * multiplier;
@@ -461,6 +734,8 @@ public class CharacterBase : GameUnit, IManagedUpdate
     {
         isDead = true;
 
+        audioSource?.PlayDeath();
+
         if (swordOrbit != null)
         {
             int count = swordOrbit.SwordCount;
@@ -468,10 +743,7 @@ public class CharacterBase : GameUnit, IManagedUpdate
                 swordOrbit.DropSword(i);
         }
 
-        if (animator != null)
-        {
-            animator.SetTrigger("die");
-        }
+        animator?.SetTrigger("die");
 
         if (stateMachine != null)
             stateMachine.ChangeState(stateMachine.Dead);
@@ -485,3 +757,14 @@ public class CharacterBase : GameUnit, IManagedUpdate
             EventNotificationManager.Instance.ShowKillNotification(killer.CharacterName, characterName);
     }
 }
+// viết 1 booster thả thiên thạch như sau kích hoạt bằng CharacterActionMenu thự hiện các bước như sau: 
+
+// - bước 1: cho nó về vị trí 0,0  và cho nó TF.localScale lên 3 và cho camera target vào nó và cho camera zoom lên 30
+
+// - bước 2: cho đóng băng tất cả kẻ địch  sau đó chạy 1 partical A chỉ cần chạy lên thôi tôi sẽ để sẵn.
+
+//  -bước 3: sau 0.5 giây cho spawn  ranbom 300 partical B trong vòng 2 giây bằng hệ thống ParticlePool spawn random vị trí đảm bảo trong vùng bán kính 23 so với người 
+
+// -bước 4: tìm các các kẻ địch xung quanh bán kính 23  sau 1 giây thì gây 1000 sát thương lên các kẻ địch đó và sau đó tắt đóng băng kertaats cả kẻ địch
+
+// -bước 5: sau 1 giây tắt  partical A và  cho camera zoom về targetFollowZoom và cho TF.localScale về levelData.GetBodyScale(currentLevel) hiện tại gema chạy như bình thường

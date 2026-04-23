@@ -17,6 +17,7 @@ public class SwordOrbit : MonoBehaviour
     private readonly List<Sword> swords = new();
     private const float TWO_PI = Mathf.PI * 2f;
     private const float RAD_TO_DEG = Mathf.Rad2Deg;
+    private bool isPaused;
     
     public float RotateSpeed => rotateSpeed;
     public float Radius => radius;
@@ -26,6 +27,7 @@ public class SwordOrbit : MonoBehaviour
     public void OnInit()
     {
         swords.Clear();
+        isPaused = false;
     }
 
     public void OnDespawn()
@@ -100,6 +102,9 @@ public class SwordOrbit : MonoBehaviour
 
         swords.Add(sword);
 
+        if (owner != null)
+            owner.GetAudioSource()?.PlayCollectSword();
+
         float step = TWO_PI / swords.Count;
         int count = swords.Count - 1;
 
@@ -137,6 +142,12 @@ public class SwordOrbit : MonoBehaviour
 
     private void Update()
     {
+        if (isPaused) return;
         transform.Rotate(0f, 0f, rotateSpeed * Time.deltaTime);
+    }
+
+    public void SetPaused(bool paused)
+    {
+        isPaused = paused;
     }
 }
