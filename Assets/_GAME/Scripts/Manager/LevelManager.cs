@@ -16,6 +16,12 @@ public class LevelManager : Singleton<LevelManager>
         SpawnInitialCharacters();
     }
 
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Q))
+            SpawnRandomCharacter();
+    }
+
     private void SpawnInitialSwords()
     {
         MapManager map = MapManager.Instance;
@@ -87,6 +93,27 @@ public class LevelManager : Singleton<LevelManager>
             charMgr.Spawn(pos, id, name, avatar, level);
         }
 
+    }
+
+    private void SpawnRandomCharacter()
+    {
+        MapManager map = MapManager.Instance;
+        CharacterManager charMgr = CharacterManager.Instance;
+        
+        if (map == null || charMgr == null) return;
+
+        Vector3 pos = FindOpenPosition(map.MapMin, map.MapMax, map.CellSize * 2f, map);
+        if (pos.z < 0f) return;
+
+        string id = $"char_{System.Guid.NewGuid():N}";
+        string name = characterNames.Length > 0 ? characterNames[Random.Range(0, characterNames.Length)] : "Character";
+        Sprite avatar = characterAvatars != null && characterAvatars.Length > 0 ? characterAvatars[Random.Range(0, characterAvatars.Length)] : null;
+        int level = 1;
+
+        charMgr.Spawn(pos, id, name, avatar, level);
+        
+        if (EventNotificationManager.Instance != null)
+            EventNotificationManager.Instance.ShowCharacterJoinedNotification(name);
     }
 
     private void OnInit()

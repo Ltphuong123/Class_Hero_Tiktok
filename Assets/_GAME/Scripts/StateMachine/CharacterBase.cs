@@ -2,22 +2,6 @@ using UnityEngine;
 
 using UnityEngine;
 
-[System.Serializable]
-public class LevelParticleSet
-{
-    [Tooltip("Level này (1, 2, 3, ...)")]
-    public int level;
-    
-    [Tooltip("Particle system cho level này")]
-    public ParticleSystem levelParticle;
-    
-    [Tooltip("Particle khi có 10 kiếm")]
-    public ParticleSystem sword10Particle;
-    
-    [Tooltip("Particle khi có 20 kiếm")]
-    public ParticleSystem sword20Particle;
-}
-
 public class CharacterBase : GameUnit, IManagedUpdate
 {
     [Header("Character Info")]
@@ -413,7 +397,11 @@ public class CharacterBase : GameUnit, IManagedUpdate
 
         currentHp = Mathf.Max(0f, currentHp - damage);
         if (infoUI != null) infoUI.UpdateHp(currentHp, maxHp);
-        if (currentHp <= 0f) OnDeath();
+        if (currentHp <= 0f)
+        {
+            OnKilledBy(attacker);
+            OnDeath();
+        }
     }
 
     public void Heal(float amount)
@@ -489,5 +477,11 @@ public class CharacterBase : GameUnit, IManagedUpdate
             stateMachine.ChangeState(stateMachine.Dead);
         else
             OnDespawn();
+    }
+
+    public void OnKilledBy(CharacterBase killer)
+    {
+        if (killer != null && EventNotificationManager.Instance != null)
+            EventNotificationManager.Instance.ShowKillNotification(killer.CharacterName, characterName);
     }
 }

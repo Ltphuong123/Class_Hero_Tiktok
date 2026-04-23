@@ -34,7 +34,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -40, y: -45.000042}
+  m_AnchoredPosition: {x: -62, y: -43}
   m_SizeDelta: {x: 100, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &230408696160028868
@@ -236,14 +236,14 @@ RectTransform:
   m_GameObject: {fileID: 3410029535296022349}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.8, y: 0.8, z: 0.8}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 5029142021891024491}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 5, y: -41.6}
+  m_AnchoredPosition: {x: -33, y: -41.6}
   m_SizeDelta: {x: 60, y: 60}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &8468051222593920202
@@ -393,7 +393,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 227, y: 11.2}
+  m_AnchoredPosition: {x: 225.39995, y: 2.1000032}
   m_SizeDelta: {x: 91.909935, y: 69.84776}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &3918481831377976858
@@ -468,7 +468,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 226.6, y: 16.1}
+  m_AnchoredPosition: {x: 225, y: 7}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &7595978297576541396
@@ -536,14 +536,14 @@ RectTransform:
   m_GameObject: {fileID: 7417541239610485449}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.8, y: 0.8, z: 0.8}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 5029142021891024491}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -131.06999, y: -40.9}
+  m_AnchoredPosition: {x: -139, y: -40.9}
   m_SizeDelta: {x: 60, y: 60}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &4254201733228010789
@@ -652,7 +652,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 0.7424414, b: 0, a: 1}
+  m_Color: {r: 0.8352942, g: 0.9725491, b: 0.8196079, a: 0.5882353}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -684,6 +684,7 @@ MonoBehaviour:
   nameText: {fileID: 6307564965594596605}
   hpText: {fileID: 6564235877285932452}
   swordCountText: {fileID: 4492280804649209536}
+  backgroundImage: {fileID: 1990951475660653680}
   avatarImage: {fileID: 5381325846164246856}
   levelIcon: {fileID: 8628452909907951167}
   levelTimeFill: {fileID: 6097124017627347302}
@@ -693,6 +694,13 @@ MonoBehaviour:
   - {fileID: 21300000, guid: e7d42002ffdc5c34fa789b8ed9a39904, type: 2}
   - {fileID: 21300000, guid: 27e6c3b7a5779164b984738261e0aec3, type: 2}
   - {fileID: 21300000, guid: e7b4c2f0ac01087448cbfc64469e7f2b, type: 2}
+  rank1Color: {r: 0.8355687, g: 0.9716981, b: 0.8204432, a: 0.5882353}
+  rank2Color: {r: 0.6, g: 0.90196085, b: 0.6, a: 0.5882353}
+  rank3Color: {r: 0.43529415, g: 0.72156864, b: 0.3529412, a: 0.5882353}
+  rank4Color: {r: 0.25882354, g: 0.6392157, b: 0.16078432, a: 0.5882353}
+  rank5Color: {r: 0.13333334, g: 0.5411765, b: 0.16862746, a: 0.5882353}
+  normalRankColor: {r: 0.10980393, g: 0.38431376, b: 0.13725491, a: 0.5882353}
+  topRankCount: 5
 --- !u!1 &8561235532520576716
 GameObject:
   m_ObjectHideFlags: 0
@@ -861,7 +869,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 144, y: -44}
+  m_AnchoredPosition: {x: 95, y: -42}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &528284592801647797
@@ -892,7 +900,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 100/100
+  m_text: 1090/1000
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8a89fa14b10d46a99122fd4f73fca9a2, type: 2}
   m_sharedMaterial: {fileID: 2140474, guid: 8a89fa14b10d46a99122fd4f73fca9a2, type: 2}
