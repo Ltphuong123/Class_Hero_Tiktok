@@ -14,6 +14,7 @@ public class CharacterBase : GameUnit, IManagedUpdate
     [SerializeField] private float knockbackDuration = 0.3f;
     [SerializeField] private float knockbackCooldown = 0.5f;
     [SerializeField] private float characterKnockbackMultiplier = 2f;
+    [SerializeField] private int maxSwordCount = 30;
 
     [Header("References")]
     [SerializeField] private SwordOrbit swordOrbit;
@@ -42,7 +43,7 @@ public class CharacterBase : GameUnit, IManagedUpdate
     [SerializeField] private ParticleSystem freezeParticle;
     
     [Header("Meteor Booster")]
-    [SerializeField] private float meteorRadius = 23f;
+    private float meteorRadius = 10f;
     [SerializeField] private float meteorDamage = 1000f;
     [SerializeField] private ParticleSystem meteorChargeParticle;
     [SerializeField] private ParticleUnit meteorImpactParticlePrefab;
@@ -70,6 +71,7 @@ public class CharacterBase : GameUnit, IManagedUpdate
     private float shieldTimer;
     private bool isFrozen;
     private float frozenTimer;
+    private bool isCastingMeteor;
 
     public float CurrentHp => currentHp;
     public float MaxHp => maxHp;
@@ -78,10 +80,13 @@ public class CharacterBase : GameUnit, IManagedUpdate
     public string CharacterName => characterName;
     public Sprite Avatar => avatar;
     public int SwordCount => swordOrbit?.SwordCount ?? 0;
+    public int MaxSwordCount => maxSwordCount;
+    public bool IsSwordFull => SwordCount >= maxSwordCount;
     public string CurrentStateName => stateMachine?.CurrentState.GetType().Name ?? "None";
     public int CurrentLevel => currentLevel;
     public bool IsKnockedBack => isKnockedBack;
     public bool IsDead => isDead;
+    public bool IsCastingMeteor => isCastingMeteor;
     public bool IsMagnetActive => isMagnetActive;
     public float MagnetTimeRemaining => isMagnetActive ? Mathf.Max(0f, magnetTimer) : 0f;
     public bool IsShieldActive => isShieldActive;
@@ -149,6 +154,10 @@ public class CharacterBase : GameUnit, IManagedUpdate
         
         UpdateLevelStats();
         CharacterManager.Instance.Register(this);
+        
+        // Kích hoạt Shield Booster một lần khi spawn
+        ActivateShieldBooster();
+        Debug.Log($"[CharacterBase] {characterName} spawned with Shield Booster activated");
     }
 
     public void OnDespawn()
@@ -184,6 +193,13 @@ public class CharacterBase : GameUnit, IManagedUpdate
             if (frozenTimer <= 0f)
                 Unfreeze();
             
+            return;
+        }
+
+        // Block movement khi đang cast Meteor
+        if (isCastingMeteor)
+        {
+            audioSource?.StopFootstep();
             return;
         }
 
@@ -348,6 +364,9 @@ public class CharacterBase : GameUnit, IManagedUpdate
             return;
         }
 
+        // Nếu đã đủ kiếm, không hút nữa
+        if (IsSwordFull) return;
+
         ItemManager itemMgr = ItemManager.Instance;
         if (itemMgr == null) return;
 
@@ -364,6 +383,10 @@ public class CharacterBase : GameUnit, IManagedUpdate
             if (distanceSq < 1f)
             {
                 sword.Collect(this);
+                
+                // Kiểm tra nếu đã đủ kiếm sau khi collect
+                if (IsSwordFull) break;
+                
                 continue;
             }
 
@@ -451,7 +474,7 @@ public class CharacterBase : GameUnit, IManagedUpdate
         if (charMgr == null) return;
 
         var nearbyCharacters = new System.Collections.Generic.List<CharacterBase>();
-        charMgr.GetNearbyCharacters(TF.position, 1000f, nearbyCharacters);
+        charMgr.GetNearbyCharacters(TF.position, 10f, nearbyCharacters);
 
         foreach (var character in nearbyCharacters)
         {
@@ -469,77 +492,78 @@ public class CharacterBase : GameUnit, IManagedUpdate
 
     private IEnumerator MeteorBoosterSequence()
     {
-        CameraController camController = Camera.main?.GetComponent<CameraController>();
-        if (camController == null) yield break;
+        // Bắt đầu cast meteor - block movement
+        isCastingMeteor = true;
+        
 
-        Vector3 originalPosition = TF.position;
-        Vector3 originalScale = TF.localScale;
-        float originalBodyScale = levelData != null ? levelData.GetBodyScale(currentLevel) : 1f;
-
-        TF.position = Vector3.zero;
-        TF.localScale = Vector3.one * 3f;
-        camController.SetTarget(TF);
-        camController.SetZoom(30f);
-
+        
         yield return new WaitForSeconds(0.1f);
-
-        CharacterManager charMgr = CharacterManager.Instance;
-        var enemies = new System.Collections.Generic.List<CharacterBase>();
-        if (charMgr != null)
+        
+        if (isDead)
         {
-            charMgr.GetNearbyCharacters(TF.position, 1000f, enemies);
-            foreach (var enemy in enemies)
-            {
-                if (enemy == this) continue;
-                if (enemy.IsDead) continue;
-                enemy.Freeze(10f);
-            }
+            isCastingMeteor = false;
+            yield break;
         }
-
+        
         if (meteorChargeParticle != null)
             meteorChargeParticle.Play();
-
-        yield return new WaitForSeconds(0.5f);
-
+            
+        yield return new WaitForSeconds(0.1f);
+        
+        if (isDead)
+        {
+            if (meteorChargeParticle != null)
+                meteorChargeParticle.Stop();
+            isCastingMeteor = false;
+            yield break;
+        }
+        
         StartCoroutine(SpawnMeteorImpacts());
 
-        yield return new WaitForSeconds(1f);
+        
+        yield return new WaitForSeconds(1.5f);
+        // Phát âm thanh Meteor Booster qua CharacterAudioSource
+        if (audioSource != null)
+        {
+            audioSource.PlayMeteorBooster();
+        }
+        if (isDead)
+        {
+            if (meteorChargeParticle != null)
+                meteorChargeParticle.Stop();
+            isCastingMeteor = false;
+            yield break;
+        }
 
+        CharacterManager charMgr = CharacterManager.Instance;
         var targets = new System.Collections.Generic.List<CharacterBase>();
         if (charMgr != null)
         {
-            charMgr.GetCharactersInRadius(TF.position, meteorRadius, targets);
-            foreach (var target in targets)
-            {
-                if (target == this) continue;
-                if (target.IsDead) continue;
-                target.TakeDamage(meteorDamage, this);
-            }
+            charMgr.GetCharactersInRadius(TF.position, meteorRadius, targets); 
         }
-
-        foreach (var enemy in enemies)
+        
+        foreach (var target in targets)
         {
-            if (enemy == null || enemy.IsDead) continue;
-            enemy.Unfreeze();
+            if (target == this) continue;
+            if (target.IsDead) continue;
+            target.TakeDamage(meteorDamage, this);
         }
 
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(0.5f);
 
         if (meteorChargeParticle != null)
             meteorChargeParticle.Stop();
-
-        if (camController != null)
-            camController.SetZoom(camController.GetTargetFollowZoom());
-
-        TF.localScale = Vector3.one * originalBodyScale;
+        
+        // Kết thúc cast meteor - cho phép di chuyển lại
+        isCastingMeteor = false;
     }
 
     private IEnumerator SpawnMeteorImpacts()
     {
         if (meteorImpactParticlePrefab == null) yield break;
 
-        int totalImpacts = 300;
-        float duration = 2f;
+        int totalImpacts = 50;
+        float duration = 0.2f;
         float interval = duration / totalImpacts;
 
         for (int i = 0; i < totalImpacts; i++)
@@ -632,28 +656,36 @@ public class CharacterBase : GameUnit, IManagedUpdate
         LevelParticleSet oldParticleSet = GetParticleSetForLevel(oldLevel);
         if (oldParticleSet != null)
         {
-            oldParticleSet.levelParticle?.Stop();
-            oldParticleSet.sword10Particle?.Stop();
-            oldParticleSet.sword20Particle?.Stop();
+            if (oldParticleSet.levelParticle != null)
+                oldParticleSet.levelParticle.Stop();
+            
+            if (oldParticleSet.sword10Particle != null)
+                oldParticleSet.sword10Particle.Stop();
+            
+            if (oldParticleSet.sword20Particle != null)
+                oldParticleSet.sword20Particle.Stop();
         }
         
         currentParticleSet = GetParticleSetForLevel(currentLevel);
         
         if (currentParticleSet != null)
         {
-            currentParticleSet.levelParticle?.Play();
+            if (currentParticleSet.levelParticle != null)
+                currentParticleSet.levelParticle.Play();
             
             int swordCount = SwordCount;
             
             if (swordCount >= 10)
             {
-                currentParticleSet.sword10Particle?.Play();
+                if (currentParticleSet.sword10Particle != null)
+                    currentParticleSet.sword10Particle.Play();
                 has10SwordsActive = true;
             }
             
             if (swordCount >= 20)
             {
-                currentParticleSet.sword20Particle?.Play();
+                if (currentParticleSet.sword20Particle != null)
+                    currentParticleSet.sword20Particle.Play();
                 has20SwordsActive = true;
             }
         }
@@ -757,14 +789,3 @@ public class CharacterBase : GameUnit, IManagedUpdate
             EventNotificationManager.Instance.ShowKillNotification(killer.CharacterName, characterName);
     }
 }
-// viết 1 booster thả thiên thạch như sau kích hoạt bằng CharacterActionMenu thự hiện các bước như sau: 
-
-// - bước 1: cho nó về vị trí 0,0  và cho nó TF.localScale lên 3 và cho camera target vào nó và cho camera zoom lên 30
-
-// - bước 2: cho đóng băng tất cả kẻ địch  sau đó chạy 1 partical A chỉ cần chạy lên thôi tôi sẽ để sẵn.
-
-//  -bước 3: sau 0.5 giây cho spawn  ranbom 300 partical B trong vòng 2 giây bằng hệ thống ParticlePool spawn random vị trí đảm bảo trong vùng bán kính 23 so với người 
-
-// -bước 4: tìm các các kẻ địch xung quanh bán kính 23  sau 1 giây thì gây 1000 sát thương lên các kẻ địch đó và sau đó tắt đóng băng kertaats cả kẻ địch
-
-// -bước 5: sau 1 giây tắt  partical A và  cho camera zoom về targetFollowZoom và cho TF.localScale về levelData.GetBodyScale(currentLevel) hiện tại gema chạy như bình thường

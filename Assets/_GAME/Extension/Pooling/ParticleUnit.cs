@@ -14,6 +14,7 @@ public class ParticleUnit : MonoBehaviour
     {
         get
         {
+            if (this == null || gameObject == null) return null;
             if (tf == null) tf = transform;
             return tf;
         }
@@ -33,6 +34,8 @@ public class ParticleUnit : MonoBehaviour
 
     public void OnSpawn()
     {
+        if (this == null || gameObject == null) return;
+        
         gameObject.SetActive(true);
         if (particleSystem != null) particleSystem.Play();
         Invoke(nameof(AutoDespawn), duration);
@@ -40,11 +43,14 @@ public class ParticleUnit : MonoBehaviour
 
     private void AutoDespawn()
     {
+        if (this == null || gameObject == null) return;
         ParticlePool.Despawn(this);
     }
 
     public void OnDespawn()
     {
+        if (this == null || gameObject == null) return;
+        
         if (particleSystem != null) particleSystem.Stop();
         CancelInvoke(nameof(AutoDespawn));
         gameObject.SetActive(false);

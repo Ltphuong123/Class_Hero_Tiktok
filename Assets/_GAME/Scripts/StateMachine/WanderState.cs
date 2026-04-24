@@ -42,12 +42,16 @@ public class WanderState : ICharacterState
                 }
             }
 
-            Sword sword = sm.FindBestSword();
-            if (sword != null)
+            // Chỉ tìm kiếm nếu chưa đủ kiếm
+            if (!sm.Owner.IsSwordFull)
             {
-                sm.CollectSword.SetTargetSword(sword);
-                sm.ChangeState(sm.CollectSword);
-                return;
+                Sword sword = sm.FindBestSword();
+                if (sword != null)
+                {
+                    sm.CollectSword.SetTargetSword(sword);
+                    sm.ChangeState(sm.CollectSword);
+                    return;
+                }
             }
         }
 

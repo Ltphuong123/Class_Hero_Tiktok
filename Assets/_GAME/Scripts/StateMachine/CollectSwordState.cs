@@ -19,6 +19,13 @@ public class CollectSwordState : ICharacterState
         retargetTimer = RetargetInterval;
         pathIndex = 0;
 
+        // Nếu đã đủ kiếm, chuyển sang Wander
+        if (sm.Owner.IsSwordFull)
+        {
+            sm.ChangeState(sm.Wander);
+            return;
+        }
+
         if (targetSword == null || targetSword.State != SwordState.Dropped)
             targetSword = sm.FindBestSword();
 
@@ -31,6 +38,23 @@ public class CollectSwordState : ICharacterState
     public void Execute(CharacterStateMachine sm, float deltaTime)
     {
         if (sm.Owner.IsKnockedBack) return;
+
+        // Nếu đã đủ kiếm, chuyển sang Wander hoặc Attack
+        if (sm.Owner.IsSwordFull)
+        {
+            if (sm.MySwordCount > 0)
+            {
+                CharacterBase target = sm.FindWeakerTarget();
+                if (target != null)
+                {
+                    sm.Attack.SetTarget(target);
+                    sm.ChangeState(sm.Attack);
+                    return;
+                }
+            }
+            sm.ChangeState(sm.Wander);
+            return;
+        }
 
         if ((rescanTimer -= deltaTime) <= 0f)
         {

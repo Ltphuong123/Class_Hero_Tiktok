@@ -1,10 +1,14 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class PoolControl : MonoBehaviour
 {
     [SerializeField] private PoolAmount[] poolAmounts;
 
-    private void Awake() {
+    private void Awake()
+    {
+        // Cleanup invalid pools trước khi init
+        SimplePool.CleanupInvalidPools();
 
         GameUnit[] gameUnits = Resources.LoadAll<GameUnit>("Pool/");
         for (int i = 0; i < gameUnits.Length; i++)
@@ -17,13 +21,21 @@ public class PoolControl : MonoBehaviour
 
         for (int i = 0; i < poolAmounts.Length; i++)
         {
-            if (!SimplePool.GetPool(gameUnits[i].PoolType))
+            if (!SimplePool.GetPool(poolAmounts[i].prefab.PoolType))
             {
                 SimplePool.Preload(poolAmounts[i].prefab, poolAmounts[i].amount, poolAmounts[i].parent);
             }
         }
     }
 
+    private void OnDestroy()
+    {
+        // Cleanup khi scene bị destroy
+        if (Application.isPlaying)
+        {
+            SimplePool.CollectAll();
+        }
+    }
 }
 
 

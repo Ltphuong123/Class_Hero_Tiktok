@@ -7,6 +7,9 @@ public class ParticlePoolControl : MonoBehaviour
 
     private void Awake()
     {
+        // Cleanup invalid pools trước khi init
+        ParticlePool.CleanupInvalidPools();
+        
         if (particleParent == null)
         {
             GameObject parentObj = new GameObject("ParticlePool");
@@ -47,7 +50,11 @@ public class ParticlePoolControl : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (!Application.isPlaying) return;
+        // Cleanup khi scene bị destroy
+        if (Application.isPlaying)
+        {
+            ParticlePool.CollectAll();
+        }
     }
 
     private void OnApplicationQuit()

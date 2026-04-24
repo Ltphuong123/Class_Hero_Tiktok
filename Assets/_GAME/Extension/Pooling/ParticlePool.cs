@@ -36,6 +36,15 @@ public static class ParticlePool
             Debug.LogWarning($"[ParticlePool] {type} is not preloaded");
             return null;
         }
+        
+        // Validate pool trước khi spawn
+        if (!pools[type].IsValid())
+        {
+            Debug.LogWarning($"[ParticlePool] {type} is invalid, removing...");
+            pools.Remove(type);
+            return null;
+        }
+        
         return pools[type].Spawn(position, rotation);
     }
 
@@ -103,6 +112,28 @@ public static class ParticlePool
         isQuitting = true;
         pools.Clear();
     }
+    
+    // Cleanup invalid pools (gọi khi chuyển scene)
+    public static void CleanupInvalidPools()
+    {
+        if (isQuitting) return;
+        
+        List<ParticleType> toRemove = new List<ParticleType>();
+        
+        foreach (var kvp in pools)
+        {
+            if (kvp.Value == null || !kvp.Value.IsValid())
+            {
+                toRemove.Add(kvp.Key);
+            }
+        }
+        
+        foreach (var type in toRemove)
+        {
+            Debug.Log($"[ParticlePool] Removing invalid pool: {type}");
+            pools.Remove(type);
+        }
+    }
 
     public static bool HasPool(ParticleType type)
     {
@@ -140,8 +171,19 @@ public class ParticlePoolInstance
     {
         ParticleUnit unit;
 
+        // Cleanup null objects trong queue
+        while (inactives.Count > 0 && inactives.Peek() == null)
+        {
+            inactives.Dequeue();
+        }
+
         if (inactives.Count <= 0)
         {
+            if (prefab == null)
+            {
+                Debug.LogError("ParticleUnit prefab is null!");
+                return null;
+            }
             unit = Object.Instantiate(prefab, parent);
         }
         else
@@ -149,7 +191,18 @@ public class ParticlePoolInstance
             unit = inactives.Dequeue();
         }
 
-        unit.TF.SetPositionAndRotation(position, rotation);
+        if (unit == null || unit.gameObject == null)
+        {
+            Debug.LogError("Spawned ParticleUnit is null!");
+            return null;
+        }
+
+        Transform unitTF = unit.TF;
+        if (unitTF != null)
+        {
+            unitTF.SetPositionAndRotation(position, rotation);
+        }
+        
         actives.Add(unit);
         unit.OnSpawn();
 
@@ -160,25 +213,47 @@ public class ParticlePoolInstance
     {
         if (unit == null) return;
 
-        if (actives.Remove(unit))
+        // Luôn remove khỏi actives trước
+        bool wasActive = actives.Remove(unit);
+
+        // Chỉ xử lý nếu object còn tồn tại
+        if (unit.gameObject != null)
         {
             unit.OnDespawn();
-            unit.TF.SetParent(parent);
-            inactives.Enqueue(unit);
-        }
-        else if (!inactives.Contains(unit))
-        {
-            unit.OnDespawn();
-            unit.TF.SetParent(parent);
-            inactives.Enqueue(unit);
+            
+            Transform unitTF = unit.TF;
+            if (unitTF != null && parent != null)
+            {
+                unitTF.SetParent(parent);
+            }
+            
+            // Chỉ enqueue nếu đã remove thành công từ actives
+            if (wasActive)
+            {
+                inactives.Enqueue(unit);
+            }
         }
     }
 
     public void Collect()
     {
-        while (actives.Count > 0)
+        // Cleanup null references
+        actives.RemoveAll(unit => unit == null);
+        
+        // Sử dụng for loop ngược để tránh vô hạn
+        for (int i = actives.Count - 1; i >= 0; i--)
         {
-            Despawn(actives[0]);
+            if (i < actives.Count)
+            {
+                Despawn(actives[i]);
+            }
+        }
+        
+        // Fallback: Clear nếu vẫn còn
+        if (actives.Count > 0)
+        {
+            Debug.LogWarning($"Force clearing {actives.Count} active particles");
+            actives.Clear();
         }
     }
 
@@ -192,5 +267,11 @@ public class ParticlePoolInstance
                 Object.Destroy(unit.gameObject);
         }
         inactives.Clear();
+    }
+    
+    // Kiểm tra pool còn valid không
+    public bool IsValid()
+    {
+        return prefab != null && parent != null;
     }
 }

@@ -117,6 +117,9 @@ public class Sword : GameUnit
         SwordOrbit targetOrbit = collector.GetSwordOrbit();
         if (targetOrbit == null) return false;
 
+        // Kiểm tra giới hạn số kiếm
+        if (collector.IsSwordFull) return false;
+
         state = SwordState.Animating;
         ItemManager.Instance?.Unregister(this);
         
@@ -241,6 +244,9 @@ public class Sword : GameUnit
         {
             if (character != null)
             {
+                // Kiểm tra giới hạn số kiếm trước khi nhặt
+                if (character.IsSwordFull) return;
+                
                 state = SwordState.Animating;
                 ItemManager.Instance?.Unregister(this);
                 character.GetSwordOrbit().AddSword(this);

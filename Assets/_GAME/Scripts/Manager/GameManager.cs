@@ -1,15 +1,30 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using System;
 
 public enum GameState {MainMenu=1, GamePlay = 2, Win = 3, Lose = 4, Setting = 5, Pause =6}
 
 public class GameManager : Singleton<GameManager>
 {
+    [Header("Game Timer")]
+    [SerializeField] private float gameTimeInSeconds = 300f; // 5 phút mặc định
+    
     private static GameState gameState;
+    private float currentGameTime;
+    private bool isGameRunning;
+    
+    public float CurrentGameTime => currentGameTime;
+    public float GameTimeInSeconds => gameTimeInSeconds;
+    public bool IsGameRunning => isGameRunning;
+    public event Action OnGameTimeUp;
+    
     protected override void Awake()
     {
         base.Awake();
+        
+        Debug.Log("GameManager Awake called!");
 
         //tranh viec nguoi choi cham da diem vao man hinh
         Input.multiTouchEnabled = false;
@@ -27,10 +42,30 @@ public class GameManager : Singleton<GameManager>
         }
     }
 
+    private void Update()
+    {
+        // Debug để xem Update có chạy không
+        if (Time.frameCount % 60 == 0) // Log mỗi 60 frames
+        {
+            Debug.Log($"Update: isGameRunning={isGameRunning}, gameState={gameState}, currentTime={currentGameTime}");
+        }
+        
+        if (isGameRunning && gameState == GameState.GamePlay)
+        {
+            currentGameTime -= Time.deltaTime;
+            
+            if (currentGameTime <= 0f)
+            {
+                currentGameTime = 0f;
+                OnTimeUp();
+            }
+        }
+    }
     
     public void ChangeState(GameState state)
     {
         gameState = state;
+        Debug.Log($"GameState changed to: {state}");
     }
     public bool IsState(GameState state) => gameState == state;
     public GameState GetState()
@@ -41,40 +76,130 @@ public class GameManager : Singleton<GameManager>
     //vao game
     private void Start()
     {
-
+        Debug.Log("GameManager Start called!");
+        
+        // Đảm bảo timeScale = 1
+        Time.timeScale = 1f;
+        
+        // Tự động bắt đầu đếm thời gian khi game start
+        currentGameTime = gameTimeInSeconds;
+        isGameRunning = true;
+        ChangeState(GameState.GamePlay);
+        Debug.Log($"Game started! Time: {currentGameTime}, Running: {isGameRunning}, State: {gameState}, TimeScale: {Time.timeScale}");
     }
 
     // bat dau game
     public void GamePlay()
     {
+        if (!isGameRunning)
+        {
+            currentGameTime = gameTimeInSeconds;
+            isGameRunning = true;
+            ChangeState(GameState.GamePlay);
+        }
     }
 
 
     // bat dau game
     public void GameStart()
     {
+        currentGameTime = gameTimeInSeconds;
+        isGameRunning = true;
+        ChangeState(GameState.GamePlay);
     }
 
     //dung game
     public void GamePause()
     {
+        isGameRunning = false;
+        ChangeState(GameState.Pause);
+        Time.timeScale = 0f;
     }
 
     //tiep tuc game
     public void GameResume()
     {
+        isGameRunning = true;
+        ChangeState(GameState.GamePlay);
+        Time.timeScale = 1f;
     }
 
     //thang
     public void GameWin()
     {
+        isGameRunning = false;
+        ChangeState(GameState.Win);
     }
 
     //thua
     public void GameLose()
     {
+        isGameRunning = false;
+        ChangeState(GameState.Lose);
     }
 
+    private void OnTimeUp()
+    {
+        Debug.Log("Time is up!");
+        isGameRunning = false;
+        
+        // Lưu top 3 characters vào GameEndData
+        if (CharacterManager.Instance != null)
+        {
+            var rankedCharacters = CharacterManager.Instance.RankedCharacters;
+            GameEndData.SetTopCharacters(new List<CharacterRankData>(rankedCharacters));
+            Debug.Log($"[GameManager] Saved top {GameEndData.TopCharacters.Count} characters to GameEndData");
+        }
+        else
+        {
+            Debug.LogWarning("[GameManager] CharacterManager not found! Cannot save top characters.");
+        }
+        
+        // Tạm dừng game ngay lập tức
+        Time.timeScale = 0f;
+        
+        // Chờ 1 giây rồi mới fade và chuyển scene
+        StartCoroutine(FadeToGameEndCoroutine());
+    }
+    
+    private IEnumerator FadeToGameEndCoroutine()
+    {
+        // Chờ 1 giây (sử dụng unscaled time vì game đã pause)
+        float waitTime = 0f;
+        while (waitTime < 1f)
+        {
+            waitTime += Time.unscaledDeltaTime;
+            yield return null;
+        }
+        
+        // Sau 1 giây, kiểm tra xem có CanvasFade không
+        bool hasFadeCanvas = false;
+        try
+        {
+            CanvasFade fadeCanvas = UIManager.Instance.GetUI<CanvasFade>();
+            if (fadeCanvas != null)
+            {
+                hasFadeCanvas = true;
+                fadeCanvas.gameObject.SetActive(true);
+                fadeCanvas.FadeToBlackAndLoadScene("GameEnd", 1f);
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogWarning($"[GameManager] CanvasFade not found: {e.Message}");
+            hasFadeCanvas = false;
+        }
+        
+        if (!hasFadeCanvas)
+        {
+            // Fallback nếu không có fade canvas
+            Debug.LogWarning("[GameManager] CanvasFade not available! Loading scene directly...");
+            
+            // Reset timeScale trước khi load scene
+            Time.timeScale = 1f;
+            LoadScene("GameEnd");
+        }
+    }
 
     // cai dat
     public void GameSettings()
@@ -84,6 +209,22 @@ public class GameManager : Singleton<GameManager>
     //tro ve home
     public void GameHome()
     {
+    }
+    
+    // Load scene
+    public void LoadScene(string sceneName)
+    {
+        SceneManager.LoadScene(sceneName);
+    }
+    
+    public void LoadGamePlayScene()
+    {
+        LoadScene("GamePlay");
+    }
+    
+    public void LoadMainMenuScene()
+    {
+        LoadScene("MainMenu");
     }
 
 }
