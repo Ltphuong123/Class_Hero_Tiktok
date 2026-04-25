@@ -6,6 +6,8 @@ using System;
 
 public class EventNotification : MonoBehaviour
 {
+    [SerializeField] private Image backgroundImage;
+    [SerializeField] private Image iconImage;
     [SerializeField] private TextMeshProUGUI messageText;
     [SerializeField] private CanvasGroup canvasGroup;
     [SerializeField] private RectTransform rectTransform;
@@ -32,9 +34,29 @@ public class EventNotification : MonoBehaviour
             originalHeight = rectTransform.sizeDelta.y;
     }
 
-    public void Show(string message)
+    public void Show(string message, Sprite icon = null, Color? backgroundColor = null)
     {
         if (messageText != null) messageText.text = message;
+        
+        // Hiển thị icon nếu có
+        if (iconImage != null)
+        {
+            if (icon != null)
+            {
+                iconImage.sprite = icon;
+                iconImage.enabled = true;
+            }
+            else
+            {
+                iconImage.enabled = false;
+            }
+        }
+        
+        // Đổi màu background nếu có
+        if (backgroundImage != null && backgroundColor.HasValue)
+        {
+            backgroundImage.color = backgroundColor.Value;
+        }
         
         gameObject.SetActive(true);
         isHiding = false;

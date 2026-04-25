@@ -7,9 +7,25 @@ using DG.Tweening;
 public class LeaderboardRow : MonoBehaviour, IPointerClickHandler
 {
     [Header("Texts")]
+    [SerializeField] private TextMeshProUGUI rankText;
     [SerializeField] private TextMeshProUGUI nameText;
     [SerializeField] private TextMeshProUGUI hpText;
     [SerializeField] private TextMeshProUGUI swordCountText;
+    
+    [Header("Booster Texts")]
+    [SerializeField] private TextMeshProUGUI magnetCountText;
+    [SerializeField] private TextMeshProUGUI shieldCountText;
+    [SerializeField] private TextMeshProUGUI meteorCountText;
+    
+    [Header("Booster Fill Images")]
+    [SerializeField] private Image magnetTimeFill;
+    [SerializeField] private Image shieldTimeFill;
+    [SerializeField] private Image meteorTimeFill;
+    
+    // Text components trên fill images (fallback khi không có text riêng)
+    private TextMeshProUGUI magnetFillText;
+    private TextMeshProUGUI shieldFillText;
+    private TextMeshProUGUI meteorFillText;
 
     [Header("Images")]
     [SerializeField] private Image backgroundImage;
@@ -35,13 +51,37 @@ public class LeaderboardRow : MonoBehaviour, IPointerClickHandler
     private float cachedHp = -1f;
     private int cachedSwordCount = -1;
     private int cachedLevel = -1;
+    private int cachedRank = -1;
+    private int cachedMagnetStack = -1;
+    private int cachedShieldStack = -1;
+    private int cachedMeteorStack = -1;
     private CharacterBase currentCharacter;
 
     public static event System.Action<CharacterBase> OnRowClicked;
 
+    private void Awake()
+    {
+        // Tìm text components trên fill images
+        if (magnetTimeFill != null)
+            magnetFillText = magnetTimeFill.GetComponentInChildren<TextMeshProUGUI>();
+        
+        if (shieldTimeFill != null)
+            shieldFillText = shieldTimeFill.GetComponentInChildren<TextMeshProUGUI>();
+        
+        if (meteorTimeFill != null)
+            meteorFillText = meteorTimeFill.GetComponentInChildren<TextMeshProUGUI>();
+    }
+
     public void SetData(CharacterRankData data)
     {
         currentCharacter = data.Character;
+
+        // Hiển thị Rank
+        if (rankText != null && cachedRank != data.Rank)
+        {
+            rankText.text = $"#{data.Rank}";
+            cachedRank = data.Rank;
+        }
 
         if (nameText != null)
             nameText.text = data.Name;
@@ -101,6 +141,123 @@ public class LeaderboardRow : MonoBehaviour, IPointerClickHandler
         {
             swordCountText.text = $"{data.SwordCount}";
             cachedSwordCount = data.SwordCount;
+        }
+        
+        // Hiển thị Magnet count
+        if (cachedMagnetStack != data.MagnetStackCount)
+        {
+            // Ưu tiên text riêng, fallback sang text trên fill
+            TextMeshProUGUI targetText = magnetCountText != null ? magnetCountText : magnetFillText;
+            
+            if (targetText != null)
+            {
+                if (data.MagnetStackCount > 0)
+                {
+                    targetText.text = $"{data.MagnetStackCount}";
+                    targetText.enabled = true;
+                }
+                else
+                {
+                    targetText.text = "0";
+                    targetText.enabled = true;
+                }
+            }
+            
+            cachedMagnetStack = data.MagnetStackCount;
+        }
+        
+        // Hiển thị Magnet time fill
+        if (magnetTimeFill != null && currentCharacter != null)
+        {
+            if (currentCharacter.IsMagnetActive && data.MagnetTimeRemaining > 0f)
+            {
+                float duration = currentCharacter.MagnetDuration;
+                float ratio = data.MagnetTimeRemaining / duration;
+                magnetTimeFill.fillAmount = ratio;
+                magnetTimeFill.enabled = true;
+            }
+            else
+            {
+                magnetTimeFill.enabled = false;
+            }
+        }
+        
+        // Hiển thị Shield count
+        if (cachedShieldStack != data.ShieldStackCount)
+        {
+            // Ưu tiên text riêng, fallback sang text trên fill
+            TextMeshProUGUI targetText = shieldCountText != null ? shieldCountText : shieldFillText;
+            
+            if (targetText != null)
+            {
+                if (data.ShieldStackCount > 0)
+                {
+                    targetText.text = $"{data.ShieldStackCount}";
+                    targetText.enabled = true;
+                }
+                else
+                {
+                    targetText.text = "0";
+                    targetText.enabled = true;
+                }
+            }
+            
+            cachedShieldStack = data.ShieldStackCount;
+        }
+        
+        // Hiển thị Shield time fill
+        if (shieldTimeFill != null && currentCharacter != null)
+        {
+            if (currentCharacter.IsShieldActive && data.ShieldTimeRemaining > 0f)
+            {
+                float duration = currentCharacter.ShieldDuration;
+                float ratio = data.ShieldTimeRemaining / duration;
+                shieldTimeFill.fillAmount = ratio;
+                shieldTimeFill.enabled = true;
+            }
+            else
+            {
+                shieldTimeFill.enabled = false;
+            }
+        }
+        
+        // Hiển thị Meteor count
+        if (cachedMeteorStack != data.MeteorStackCount)
+        {
+            // Ưu tiên text riêng, fallback sang text trên fill
+            TextMeshProUGUI targetText = meteorCountText != null ? meteorCountText : meteorFillText;
+            
+            if (targetText != null)
+            {
+                if (data.MeteorStackCount > 0)
+                {
+                    targetText.text = $"{data.MeteorStackCount}";
+                    targetText.enabled = true;
+                }
+                else
+                {
+                    targetText.text = "0";
+                    targetText.enabled = true;
+                }
+            }
+            
+            cachedMeteorStack = data.MeteorStackCount;
+        }
+        
+        // Hiển thị Meteor cast time fill
+        if (meteorTimeFill != null && currentCharacter != null)
+        {
+            if (currentCharacter.IsCastingMeteor && data.MeteorCastTimeRemaining > 0f)
+            {
+                float duration = currentCharacter.MeteorCastDuration;
+                float ratio = data.MeteorCastTimeRemaining / duration;
+                meteorTimeFill.fillAmount = ratio;
+                meteorTimeFill.enabled = true;
+            }
+            else
+            {
+                meteorTimeFill.enabled = false;
+            }
         }
 
         if (avatarImage != null && avatarImage.sprite != data.Avatar)

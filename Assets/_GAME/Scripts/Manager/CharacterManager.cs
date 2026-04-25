@@ -14,6 +14,14 @@ public struct CharacterRankData
     public int SwordCount;
     public int Level;
     public float LevelTimeRemaining;
+    
+    public int MagnetStackCount;
+    public int ShieldStackCount;
+    public int MeteorStackCount;
+    
+    public float MagnetTimeRemaining;
+    public float ShieldTimeRemaining;
+    public float MeteorCastTimeRemaining;
 }
 
 public class CharacterManager : Singleton<CharacterManager>
@@ -25,6 +33,8 @@ public class CharacterManager : Singleton<CharacterManager>
     private readonly List<CharacterBase> pendingAdd = new();
     private readonly List<CharacterBase> pendingRemove = new();
     private readonly HashSet<CharacterBase> characterSet = new();
+    private readonly Dictionary<string, CharacterBase> characterIdMap = new();
+    private readonly HashSet<string> spawnedCharacterIds = new();
     private MapManager cachedMap;
     private bool isUpdating;
 
@@ -166,7 +176,13 @@ public class CharacterManager : Singleton<CharacterManager>
                 MaxHp = c.MaxHp,
                 SwordCount = c.SwordCount,
                 Level = c.CurrentLevel,
-                LevelTimeRemaining = c.LevelTimeRemaining
+                LevelTimeRemaining = c.LevelTimeRemaining,
+                MagnetStackCount = c.MagnetStackCount,
+                ShieldStackCount = c.ShieldStackCount,
+                MeteorStackCount = c.MeteorStackCount,
+                MagnetTimeRemaining = c.MagnetTimeRemaining,
+                ShieldTimeRemaining = c.ShieldTimeRemaining,
+                MeteorCastTimeRemaining = c.MeteorCastTimeRemaining
             });
         }
 
@@ -201,6 +217,12 @@ public class CharacterManager : Singleton<CharacterManager>
             {
                 characters.Add(c);
                 grid.Add(c, c.transform.position);
+                
+                if (!string.IsNullOrEmpty(c.CharacterId))
+                {
+                    characterIdMap[c.CharacterId] = c;
+                    spawnedCharacterIds.Add(c.CharacterId);
+                }
             }
         }
         if (addCount > 0) pendingAdd.Clear();
@@ -219,6 +241,11 @@ public class CharacterManager : Singleton<CharacterManager>
                     characters.RemoveAt(last);
                 }
                 grid.Remove(c);
+                
+                if (!string.IsNullOrEmpty(c.CharacterId))
+                {
+                    characterIdMap.Remove(c.CharacterId);
+                }
             }
         }
         if (removeCount > 0) pendingRemove.Clear();
@@ -240,6 +267,12 @@ public class CharacterManager : Singleton<CharacterManager>
         
         if (grid != null)
             grid.Add(character, character.transform.position);
+        
+        if (!string.IsNullOrEmpty(character.CharacterId))
+        {
+            characterIdMap[character.CharacterId] = character;
+            spawnedCharacterIds.Add(character.CharacterId);
+        }
         
         rankDirty = true;
     }
@@ -263,6 +296,12 @@ public class CharacterManager : Singleton<CharacterManager>
             characters.RemoveAt(last);
         }
         grid.Remove(character);
+        
+        if (!string.IsNullOrEmpty(character.CharacterId))
+        {
+            characterIdMap.Remove(character.CharacterId);
+        }
+        
         rankDirty = true;
     }
 
@@ -287,5 +326,228 @@ public class CharacterManager : Singleton<CharacterManager>
             float dB = (b.transform.position - center).sqrMagnitude;
             return dA.CompareTo(dB);
         });
+    }
+
+    public CharacterBase SpawnFromTikTok(string userId, string nickname, Sprite avatar = null, int level = 1)
+    {
+        if (HasCharacterBeenSpawned(userId))
+            return null;
+
+        MapManager map = MapManager.Instance;
+        if (map == null)
+            return null;
+
+        Vector3 spawnPos = FindOpenSpawnPosition(map);
+        CharacterBase character = Spawn(spawnPos, userId, nickname, avatar, level);
+        
+        if (character != null && EventNotificationManager.Instance != null)
+        {
+            EventNotificationManager.Instance.ShowCharacterJoinedNotification(nickname);
+        }
+        
+        return character;
+    }
+
+    public CharacterBase RespawnCharacter(string userId, string nickname, Sprite avatar = null, int level = 1)
+    {
+        // Nếu character còn sống, không respawn và return null
+        if (IsCharacterAlive(userId))
+        {
+            return null;
+        }
+
+        MapManager map = MapManager.Instance;
+        if (map == null)
+            return null;
+
+        Vector3 spawnPos = FindOpenSpawnPosition(map);
+        CharacterBase character = Spawn(spawnPos, userId, nickname, avatar, level);
+        
+        // Không hiển thị notification ở đây nữa
+        // Notification sẽ được hiển thị từ TikTokGameHandler
+        
+        return character;
+    }
+
+    private Vector3 FindOpenSpawnPosition(MapManager map)
+    {
+        Vector2 min = map.MapMin;
+        Vector2 max = map.MapMax;
+        float padding = map.CellSize * 2f;
+
+        for (int attempt = 0; attempt < 30; attempt++)
+        {
+            Vector3 pos = new Vector3(
+                UnityEngine.Random.Range(min.x + padding, max.x - padding),
+                UnityEngine.Random.Range(min.y + padding, max.y - padding),
+                0f
+            );
+
+            if (!map.IsWall(pos))
+                return pos;
+        }
+
+        return new Vector3((min.x + max.x) * 0.5f, (min.y + max.y) * 0.5f, 0f);
+    }
+
+    public CharacterBase GetCharacterById(string characterId)
+    {
+        if (string.IsNullOrEmpty(characterId))
+            return null;
+
+        characterIdMap.TryGetValue(characterId, out CharacterBase character);
+        return character;
+    }
+
+    public bool HasCharacterBeenSpawned(string characterId)
+    {
+        if (string.IsNullOrEmpty(characterId))
+            return false;
+
+        return spawnedCharacterIds.Contains(characterId);
+    }
+
+    public bool HasCharacterBeenCreated(string characterId)
+    {
+        if (string.IsNullOrEmpty(characterId))
+            return false;
+
+        return characterIdMap.ContainsKey(characterId);
+    }
+
+    public bool IsCharacterAlive(string characterId)
+    {
+        if (string.IsNullOrEmpty(characterId))
+            return false;
+
+        CharacterBase character = GetCharacterById(characterId);
+        
+        if (character == null)
+            return false;
+
+        return character.gameObject.activeInHierarchy 
+            && character.CurrentHp > 0f 
+            && !character.IsDead;
+    }
+
+    public bool IsCharacterDead(string characterId)
+    {
+        if (string.IsNullOrEmpty(characterId))
+            return false;
+
+        CharacterBase character = GetCharacterById(characterId);
+        
+        if (character == null)
+            return false;
+
+        return character.IsDead || character.CurrentHp <= 0f;
+    }
+
+    public void ClearSpawnHistory()
+    {
+        spawnedCharacterIds.Clear();
+    }
+
+    public int GetTotalSpawnedCount()
+    {
+        return spawnedCharacterIds.Count;
+    }
+
+    public bool UpgradeToLevel2(string characterId, int count = 1)
+    {
+        CharacterBase character = GetCharacterById(characterId);
+        if (character == null || !character.gameObject.activeInHierarchy || character.IsDead)
+            return false;
+
+        character.AddLevelReserveTime(2, count);
+        return true;
+    }
+
+    public bool UpgradeToLevel3(string characterId, int count = 1)
+    {
+        CharacterBase character = GetCharacterById(characterId);
+        if (character == null || !character.gameObject.activeInHierarchy || character.IsDead)
+            return false;
+
+        character.AddLevelReserveTime(3, count);
+        return true;
+    }
+
+    public bool UpgradeToLevel4(string characterId, int count = 1)
+    {
+        CharacterBase character = GetCharacterById(characterId);
+        if (character == null || !character.gameObject.activeInHierarchy || character.IsDead)
+            return false;
+
+        character.AddLevelReserveTime(4, count);
+        return true;
+    }
+
+    public bool UpgradeToLevel5(string characterId, int count = 1)
+    {
+        CharacterBase character = GetCharacterById(characterId);
+        if (character == null || !character.gameObject.activeInHierarchy || character.IsDead)
+            return false;
+
+        character.AddLevelReserveTime(5, count);
+        return true;
+    }
+
+    public bool ActivateMagnetBooster(string characterId, int count = 1)
+    {
+        CharacterBase character = GetCharacterById(characterId);
+        if (character == null || !character.gameObject.activeInHierarchy || character.IsDead)
+            return false;
+
+        character.ActivateMagnetBooster(count);
+        return true;
+    }
+
+    public bool ActivateShieldBooster(string characterId, int count = 1)
+    {
+        CharacterBase character = GetCharacterById(characterId);
+        if (character == null || !character.gameObject.activeInHierarchy || character.IsDead)
+            return false;
+
+        character.ActivateShieldBooster(count);
+        return true;
+    }
+
+    public bool ActivateMeteorBooster(string characterId, int count = 1)
+    {
+        CharacterBase character = GetCharacterById(characterId);
+        if (character == null || !character.gameObject.activeInHierarchy || character.IsDead)
+            return false;
+
+        character.ActivateMeteorBooster(count);
+        return true;
+    }
+
+    public bool AddSwordsToCharacter(string characterId, int swordsToAdd)
+    {
+        CharacterBase currentCharacter = GetCharacterById(characterId);
+        if (currentCharacter == null) return false;
+
+        SwordOrbit orbit = currentCharacter.GetSwordOrbit();
+        if (orbit == null) return false;
+
+        if (currentCharacter.IsSwordFull) return false;
+
+        int currentSwordCount = currentCharacter.SwordCount;
+        int maxSwordCount = currentCharacter.MaxSwordCount;
+        int actualSwordsToAdd = Mathf.Min(swordsToAdd, maxSwordCount - currentSwordCount);
+
+        if (actualSwordsToAdd <= 0) return false;
+
+        for (int i = 0; i < actualSwordsToAdd; i++)
+        {
+            Vector2 randomOffset = UnityEngine.Random.insideUnitCircle.normalized * 2f;
+            Vector3 spawnPos = currentCharacter.TF.position + new Vector3(randomOffset.x, randomOffset.y, 0f);
+            Sword sword = ItemManager.Instance.Spawn(spawnPos);
+            if (sword != null)
+                sword.Collect(currentCharacter);
+        }
+
+        return true;
     }
 }

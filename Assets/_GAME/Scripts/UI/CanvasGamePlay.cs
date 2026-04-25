@@ -26,18 +26,7 @@ public class CanvasGamePlay : UICanvas
     {
         base.Setup();
         gameManager = GameManager.Instance;
-        
-        Debug.Log($"CanvasGamePlay Setup - GameManager: {gameManager != null}, TimerText: {timerText != null}");
-        
-        if (gameManager == null)
-        {
-            Debug.LogError("GameManager not found!");
-        }
-        
-        if (timerText == null)
-        {
-            Debug.LogError("TimerText not assigned in Inspector!");
-        }
+   
         
         // Ẩn setting panel khi khởi tạo
         if (settingPanel != null)
@@ -50,21 +39,18 @@ public class CanvasGamePlay : UICanvas
         {
             settingButton.onClick.RemoveAllListeners();
             settingButton.onClick.AddListener(ShowSettingPanel);
-            Debug.Log("[CanvasGamePlay] settingButton listener added");
         }
         
         if (closeButton != null)
         {
             closeButton.onClick.RemoveAllListeners();
             closeButton.onClick.AddListener(HideSettingPanel);
-            Debug.Log("[CanvasGamePlay] closeButton listener added");
         }
         
         if (mainMenuButton != null)
         {
             mainMenuButton.onClick.RemoveAllListeners();
             mainMenuButton.onClick.AddListener(LoadMainMenuScene);
-            Debug.Log("[CanvasGamePlay] mainMenuButton listener added");
         }
     }
     
@@ -89,7 +75,6 @@ public class CanvasGamePlay : UICanvas
     // Hiển thị setting panel
     public void ShowSettingPanel()
     {
-        Debug.Log("[CanvasGamePlay] ShowSettingPanel called");
         
         if (settingPanel != null)
         {
@@ -100,7 +85,6 @@ public class CanvasGamePlay : UICanvas
     // Ẩn setting panel
     public void HideSettingPanel()
     {
-        Debug.Log("[CanvasGamePlay] HideSettingPanel called");
         
         if (settingPanel != null)
         {
@@ -111,7 +95,6 @@ public class CanvasGamePlay : UICanvas
     // Trở về MainMenu
     private void LoadMainMenuScene()
     {
-        Debug.Log("[CanvasGamePlay] LoadMainMenuScene called");
         
         // Reset timeScale về bình thường
         Time.timeScale = 1f;
@@ -129,12 +112,6 @@ public class CanvasGamePlay : UICanvas
         
         string timeString = string.Format("{0:00}:{1:00}", minutes, seconds);
         timerText.text = timeString;
-        
-        // Debug mỗi 60 frames
-        if (Time.frameCount % 60 == 0)
-        {
-            Debug.Log($"UI Update: Time={timeRemaining}, Display={timeString}");
-        }
         
         // Đổi màu khi còn ít thời gian
         if (timeRemaining <= 30f)

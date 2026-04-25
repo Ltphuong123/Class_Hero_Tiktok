@@ -45,6 +45,7 @@ public class CharacterBase : GameUnit, IManagedUpdate
     [Header("Meteor Booster")]
     private float meteorRadius = 10f;
     [SerializeField] private float meteorDamage = 1000f;
+    [SerializeField] private float meteorCastDuration = 2.5f;
     [SerializeField] private ParticleSystem meteorChargeParticle;
     [SerializeField] private ParticleUnit meteorImpactParticlePrefab;
     
@@ -67,11 +68,18 @@ public class CharacterBase : GameUnit, IManagedUpdate
     private MapManager cachedMap;
     private bool isMagnetActive;
     private float magnetTimer;
+    private int magnetStackCount;  // Số lần cộng dồn
+    
     private bool isShieldActive;
     private float shieldTimer;
+    private int shieldStackCount;  // Số lần cộng dồn
+    
     private bool isFrozen;
     private float frozenTimer;
+    
     private bool isCastingMeteor;
+    private int meteorStackCount;  // Số lần meteor chờ cast
+    private float meteorCastTimer;  // Timer cho cast hiện tại
 
     public float CurrentHp => currentHp;
     public float MaxHp => maxHp;
@@ -86,13 +94,24 @@ public class CharacterBase : GameUnit, IManagedUpdate
     public int CurrentLevel => currentLevel;
     public bool IsKnockedBack => isKnockedBack;
     public bool IsDead => isDead;
-    public bool IsCastingMeteor => isCastingMeteor;
+    
     public bool IsMagnetActive => isMagnetActive;
     public float MagnetTimeRemaining => isMagnetActive ? Mathf.Max(0f, magnetTimer) : 0f;
+    public int MagnetStackCount => magnetStackCount;
+    public float MagnetDuration => magnetDuration;
+    
     public bool IsShieldActive => isShieldActive;
     public float ShieldTimeRemaining => isShieldActive ? Mathf.Max(0f, shieldTimer) : 0f;
+    public int ShieldStackCount => shieldStackCount;
+    public float ShieldDuration => shieldDuration;
+    
     public bool IsFrozen => isFrozen;
     public float FrozenTimeRemaining => isFrozen ? Mathf.Max(0f, frozenTimer) : 0f;
+    
+    public int MeteorStackCount => meteorStackCount;
+    public bool IsCastingMeteor => isCastingMeteor;
+    public float MeteorCastTimeRemaining => isCastingMeteor ? Mathf.Max(0f, meteorCastTimer) : 0f;
+    public float MeteorCastDuration => meteorCastDuration;
     public float LevelTimeRemaining
     {
         get
@@ -128,10 +147,14 @@ public class CharacterBase : GameUnit, IManagedUpdate
         isDead = false;
         isMagnetActive = false;
         magnetTimer = 0f;
+        magnetStackCount = 0;
         isShieldActive = false;
         shieldTimer = 0f;
+        shieldStackCount = 0;
         isFrozen = false;
         frozenTimer = 0f;
+        meteorStackCount = 0;
+        meteorCastTimer = 0f;
         
         if (levelData != null)
             levelReserveTime = new float[levelData.GetMaxLevel() + 1];
@@ -157,7 +180,6 @@ public class CharacterBase : GameUnit, IManagedUpdate
         
         // Kích hoạt Shield Booster một lần khi spawn
         ActivateShieldBooster();
-        Debug.Log($"[CharacterBase] {characterName} spawned with Shield Booster activated");
     }
 
     public void OnDespawn()
@@ -271,14 +293,17 @@ public class CharacterBase : GameUnit, IManagedUpdate
         return 1;
     }
 
-    public void AddLevelReserveTime(int level, float time)
+    public void AddLevelReserveTime(int level, int count = 1)
     {
         if (levelData == null || levelReserveTime == null) return;
         
         int maxLevel = levelData.GetMaxLevel();
         if (level < 1 || level > maxLevel) return;
         
-        levelReserveTime[level] += time;
+        if (count < 1) count = 1;
+        
+        float durationPerAdd = levelData.GetDuration(level);
+        levelReserveTime[level] += durationPerAdd * count;
         
         int highestLevel = GetHighestAvailableLevel();
         if (highestLevel > currentLevel)
@@ -356,10 +381,24 @@ public class CharacterBase : GameUnit, IManagedUpdate
         magnetTimer -= deltaTime;
         if (magnetTimer <= 0f)
         {
-            isMagnetActive = false;
-            
-            if (magnetParticle != null)
-                magnetParticle.Stop();
+            // Kiểm tra có stack chờ không
+            if (magnetStackCount > 0)
+            {
+                magnetStackCount--;
+                magnetTimer = magnetDuration;  // Reset timer cho lần tiếp theo
+                
+                if (magnetParticle != null)
+                    magnetParticle.Play();
+                
+                Debug.Log($"[Magnet] {characterName} activated stacked magnet. Remaining: {magnetStackCount}");
+            }
+            else
+            {
+                isMagnetActive = false;
+                
+                if (magnetParticle != null)
+                    magnetParticle.Stop();
+            }
             
             return;
         }
@@ -402,13 +441,28 @@ public class CharacterBase : GameUnit, IManagedUpdate
         }
     }
 
-    public void ActivateMagnetBooster()
+    public void ActivateMagnetBooster(int count = 1)
     {
-        isMagnetActive = true;
-        magnetTimer = magnetDuration;
+        if (count < 1) count = 1;
         
-        if (magnetParticle != null)
-            magnetParticle.Play();
+        if (isMagnetActive)
+        {
+            // Đang active → Cộng dồn stack
+            magnetStackCount += count;
+            Debug.Log($"[Magnet] {characterName} stacked magnet x{count}. Total stacks: {magnetStackCount}");
+        }
+        else
+        {
+            // Chưa active → Kích hoạt mới
+            isMagnetActive = true;
+            magnetTimer = magnetDuration;
+            magnetStackCount = count - 1;  // Trừ 1 vì lần đầu đã active
+            
+            if (magnetParticle != null)
+                magnetParticle.Play();
+            
+            Debug.Log($"[Magnet] {characterName} activated magnet with {count} count(s)");
+        }
     }
 
     private void UpdateShieldBooster(float deltaTime)
@@ -418,20 +472,49 @@ public class CharacterBase : GameUnit, IManagedUpdate
         shieldTimer -= deltaTime;
         if (shieldTimer <= 0f)
         {
-            isShieldActive = false;
-            
-            if (shieldParticle != null)
-                shieldParticle.Stop();
+            // Kiểm tra có stack chờ không
+            if (shieldStackCount > 0)
+            {
+                shieldStackCount--;
+                shieldTimer = shieldDuration;  // Reset timer cho lần tiếp theo
+                
+                if (shieldParticle != null)
+                    shieldParticle.Play();
+                
+                Debug.Log($"[Shield] {characterName} activated stacked shield. Remaining: {shieldStackCount}");
+            }
+            else
+            {
+                isShieldActive = false;
+                
+                if (shieldParticle != null)
+                    shieldParticle.Stop();
+            }
         }
     }
 
-    public void ActivateShieldBooster()
+    public void ActivateShieldBooster(int count = 1)
     {
-        isShieldActive = true;
-        shieldTimer = shieldDuration;
+        if (count < 1) count = 1;
         
-        if (shieldParticle != null)
-            shieldParticle.Play();
+        if (isShieldActive)
+        {
+            // Đang active → Cộng dồn stack
+            shieldStackCount += count;
+            Debug.Log($"[Shield] {characterName} stacked shield x{count}. Total stacks: {shieldStackCount}");
+        }
+        else
+        {
+            // Chưa active → Kích hoạt mới
+            isShieldActive = true;
+            shieldTimer = shieldDuration;
+            shieldStackCount = count - 1;  // Trừ 1 vì lần đầu đã active
+            
+            if (shieldParticle != null)
+                shieldParticle.Play();
+            
+            Debug.Log($"[Shield] {characterName} activated shield with {count} count(s)");
+        }
     }
 
     public void Freeze(float duration)
@@ -485,77 +568,113 @@ public class CharacterBase : GameUnit, IManagedUpdate
         }
     }
 
-    public void ActivateMeteorBooster()
+    public void ActivateMeteorBooster(int count = 1)
     {
-        StartCoroutine(MeteorBoosterSequence());
+        if (count < 1) count = 1;
+        
+        if (isCastingMeteor)
+        {
+            // Đang cast → Cộng dồn stack để cast sau
+            meteorStackCount += count;
+            Debug.Log($"[Meteor] {characterName} stacked meteor x{count}. Total stacks: {meteorStackCount}");
+        }
+        else
+        {
+            // Không đang cast → Cast ngay lần đầu, còn lại vào stack
+            meteorStackCount += (count - 1);  // Trừ 1 vì lần đầu cast ngay
+            StartCoroutine(MeteorBoosterSequence());
+            Debug.Log($"[Meteor] {characterName} activated meteor with {count} count(s)");
+        }
     }
 
     private IEnumerator MeteorBoosterSequence()
     {
         // Bắt đầu cast meteor - block movement
         isCastingMeteor = true;
-        
-
+        meteorCastTimer = meteorCastDuration;
         
         yield return new WaitForSeconds(0.1f);
         
         if (isDead)
         {
             isCastingMeteor = false;
+            meteorCastTimer = 0f;
             yield break;
         }
         
         if (meteorChargeParticle != null)
             meteorChargeParticle.Play();
+        
+        // Update timer trong khi cast
+        float elapsed = 0.1f;
+        float remainingTime = meteorCastDuration - elapsed;
+        
+        while (remainingTime > 0f && !isDead)
+        {
+            float deltaTime = Time.deltaTime;
+            elapsed += deltaTime;
+            meteorCastTimer = meteorCastDuration - elapsed;
             
-        yield return new WaitForSeconds(0.1f);
+            // Spawn impacts sau 0.2s (0.1s đã qua + 0.1s nữa)
+            if (elapsed >= 0.2f && elapsed - deltaTime < 0.2f)
+            {
+                StartCoroutine(SpawnMeteorImpacts());
+            }
+            
+            // Play sound sau 1.6s (0.1s + 1.5s)
+            if (elapsed >= 1.6f && elapsed - deltaTime < 1.6f)
+            {
+                if (audioSource != null)
+                    audioSource.PlayMeteorBooster();
+                        // Deal damage
+                CharacterManager charMgr = CharacterManager.Instance;
+                var targets = new System.Collections.Generic.List<CharacterBase>();
+                if (charMgr != null)
+                {
+                    charMgr.GetCharactersInRadius(TF.position, meteorRadius, targets); 
+                }
+                
+                foreach (var target in targets)
+                {
+                    if (target == this) continue;
+                    if (target.IsDead) continue;
+                    target.TakeDamage(meteorDamage, this);
+                }
+            }
+            remainingTime = meteorCastDuration - elapsed;
+            yield return null;
+        }
         
         if (isDead)
         {
             if (meteorChargeParticle != null)
                 meteorChargeParticle.Stop();
             isCastingMeteor = false;
-            yield break;
-        }
-        
-        StartCoroutine(SpawnMeteorImpacts());
-
-        
-        yield return new WaitForSeconds(1.5f);
-        // Phát âm thanh Meteor Booster qua CharacterAudioSource
-        if (audioSource != null)
-        {
-            audioSource.PlayMeteorBooster();
-        }
-        if (isDead)
-        {
-            if (meteorChargeParticle != null)
-                meteorChargeParticle.Stop();
-            isCastingMeteor = false;
+            meteorCastTimer = 0f;
             yield break;
         }
 
-        CharacterManager charMgr = CharacterManager.Instance;
-        var targets = new System.Collections.Generic.List<CharacterBase>();
-        if (charMgr != null)
-        {
-            charMgr.GetCharactersInRadius(TF.position, meteorRadius, targets); 
-        }
-        
-        foreach (var target in targets)
-        {
-            if (target == this) continue;
-            if (target.IsDead) continue;
-            target.TakeDamage(meteorDamage, this);
-        }
+
 
         yield return new WaitForSeconds(0.5f);
 
         if (meteorChargeParticle != null)
             meteorChargeParticle.Stop();
         
-        // Kết thúc cast meteor - cho phép di chuyển lại
+        // Kết thúc cast meteor
         isCastingMeteor = false;
+        meteorCastTimer = 0f;
+        
+        // Kiểm tra có stack chờ không
+        if (meteorStackCount > 0)
+        {
+            meteorStackCount--;
+            Debug.Log($"[Meteor] {characterName} casting stacked meteor. Remaining: {meteorStackCount}");
+            
+            // Cast tiếp meteor từ stack - delay 3 giây giữa các lần cast
+            yield return new WaitForSeconds(3f);
+            StartCoroutine(MeteorBoosterSequence());
+        }
     }
 
     private IEnumerator SpawnMeteorImpacts()
@@ -568,7 +687,7 @@ public class CharacterBase : GameUnit, IManagedUpdate
 
         for (int i = 0; i < totalImpacts; i++)
         {
-            Vector2 randomOffset = Random.insideUnitCircle * meteorRadius;
+            Vector2 randomOffset = Random.insideUnitCircle * 8;
             Vector3 spawnPos = TF.position + new Vector3(randomOffset.x, randomOffset.y, 0f);
 
             ParticlePool.Spawn(meteorImpactParticlePrefab.ParticleType, spawnPos, Quaternion.identity);
@@ -706,7 +825,7 @@ public class CharacterBase : GameUnit, IManagedUpdate
 
     public void TakeDamage(float damage, CharacterBase attacker = null)
     {
-        if (isDead || isShieldActive) return;
+        if (isDead || isShieldActive || isCastingMeteor) return;
 
         currentHp = Mathf.Max(0f, currentHp - damage);
         infoUI?.UpdateHp(currentHp, maxHp);

@@ -25,7 +25,7 @@ public class EventNotificationUI : MonoBehaviour
         }
     }
 
-    public void ShowNotification(string message)
+    public void ShowNotification(string message, Sprite icon = null, Color? backgroundColor = null)
     {
         EventNotification notification = GetNotification();
         notification.OnHideComplete += OnNotificationHidden;
@@ -39,7 +39,7 @@ public class EventNotificationUI : MonoBehaviour
             rt.anchoredPosition = Vector2.zero;
         }
         
-        notification.Show(message);
+        notification.Show(message, icon, backgroundColor);
         
         activeNotifications.Insert(0, notification);
         notification.transform.SetAsFirstSibling();

@@ -9,6 +9,10 @@ public class CharacterLeaderboardUI : MonoBehaviour
     [SerializeField] private GameObject panel;
     [SerializeField] private KeyCode toggleKey = KeyCode.Tab;
 
+    [Header("Special Panel")]
+    [SerializeField] private GameObject specialPanel;
+    [SerializeField] private KeyCode specialPanelKey = KeyCode.P;
+
     [Header("Buttons")]
     [SerializeField] private Button openButton;
     [SerializeField] private Button closeButton;
@@ -19,9 +23,6 @@ public class CharacterLeaderboardUI : MonoBehaviour
 
     [Header("Header Info")]
     [SerializeField] private TextMeshProUGUI aliveCountText;
-
-    [Header("Action Menu")]
-    [SerializeField] private CharacterActionMenu actionMenu;
 
     private readonly List<LeaderboardRow> rows = new();
     private bool isVisible = false;
@@ -42,8 +43,6 @@ public class CharacterLeaderboardUI : MonoBehaviour
 
         if (closeButton != null)
             closeButton.onClick.RemoveListener(OnCloseButtonClicked);
-
-        LeaderboardRow.OnRowClicked -= OnRowClicked;
     }
 
     private void Start()
@@ -55,22 +54,21 @@ public class CharacterLeaderboardUI : MonoBehaviour
     {
         if (CharacterManager.Instance != null)
             CharacterManager.Instance.OnRankUpdated += RefreshUI;
-
-        LeaderboardRow.OnRowClicked += OnRowClicked;
     }
 
     private void OnDisable()
     {
         if (CharacterManager.Instance != null)
             CharacterManager.Instance.OnRankUpdated -= RefreshUI;
-
-        LeaderboardRow.OnRowClicked -= OnRowClicked;
     }
 
     private void Update()
     {
         if (Input.GetKeyDown(toggleKey))
             ToggleVisible();
+
+        if (Input.GetKeyDown(specialPanelKey))
+            ToggleSpecialPanel();
     }
 
     private void OnOpenButtonClicked()
@@ -81,12 +79,6 @@ public class CharacterLeaderboardUI : MonoBehaviour
     private void OnCloseButtonClicked()
     {
         SetVisible(false);
-    }
-
-    private void OnRowClicked(CharacterBase character)
-    {
-        if (actionMenu != null)
-            actionMenu.Show(character);
     }
 
     public void SetVisible(bool visible)
@@ -104,6 +96,15 @@ public class CharacterLeaderboardUI : MonoBehaviour
     }
 
     public void ToggleVisible() => SetVisible(!isVisible);
+
+    public void ToggleSpecialPanel()
+    {
+        if (specialPanel != null)
+        {
+            bool newState = !specialPanel.activeSelf;
+            specialPanel.SetActive(newState);
+        }
+    }
 
     private void RefreshUI()
     {
