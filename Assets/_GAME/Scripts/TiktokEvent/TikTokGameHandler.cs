@@ -49,6 +49,9 @@ public class TikTokGameHandler : MonoBehaviour
         string userId = ev.user.user_id;
         string nickname = ev.user.nickname;
 
+        // Chuyển comment về lowercase để so sánh
+        string commentLower = comment.ToLower();
+
         if (comment == "1")
         {
             characterManager.SpawnFromTikTok(userId, nickname, null, 1);
@@ -63,13 +66,15 @@ public class TikTokGameHandler : MonoBehaviour
             return;
         }
 
-        if (comment.StartsWith("atk "))
+        // Xử lý attack command: "atk ID" hoặc "atkID" (không phân biệt hoa thường)
+        if (commentLower.StartsWith("atk ") || commentLower.StartsWith("atk"))
         {
             ProcessAttackCommand(comment, userId, nickname);
             return;
         }
 
-        if (comment.ToLower() == "stop")
+        // Xử lý stop command (không phân biệt hoa thường)
+        if (commentLower == "stop")
         {
             characterManager.UnlockTargetAttack(userId);
             return;
@@ -78,7 +83,19 @@ public class TikTokGameHandler : MonoBehaviour
 
     private void ProcessAttackCommand(string comment, string userId, string nickname)
     {
-        string targetIdStr = comment.Substring(4).Trim();
+        string targetIdStr = "";
+        string commentLower = comment.ToLower();
+        
+        // Xử lý format "atk ID" (có khoảng trắng)
+        if (commentLower.StartsWith("atk "))
+        {
+            targetIdStr = comment.Substring(4).Trim();
+        }
+        // Xử lý format "atkID" (không có khoảng trắng)
+        else if (commentLower.StartsWith("atk"))
+        {
+            targetIdStr = comment.Substring(3).Trim();
+        }
         
         if (string.IsNullOrEmpty(targetIdStr) || !int.TryParse(targetIdStr, out int targetNumericId))
             return;
@@ -177,12 +194,25 @@ public class TikTokGameHandler : MonoBehaviour
         
         Debug.Log($"❤️ {nickname} +{ev.like_count} (total {ev.total_likes})");
         
-        // Thêm 1 kiếm cho user khi nhận được like
-        bool success = characterManager.AddSwordsToCharacter(userId, 1);
+        // Tính số kiếm dựa trên like_count
+        int swordsToAdd;
+        if (ev.like_count < 5)
+        {
+            swordsToAdd = 1; // Nếu like_count < 5 thì cho 1 kiếm
+        }
+        else
+        {
+            swordsToAdd = ev.like_count / 5; // Mỗi 5 like_count thì cho 1 kiếm
+        }
+        
+        // Đảm bảo ít nhất cho 1 kiếm
+        if (swordsToAdd < 1) swordsToAdd = 1;
+        
+        bool success = characterManager.AddSwordsToCharacter(userId, swordsToAdd);
         
         if (success && EventNotificationManager.Instance != null)
         {
-            EventNotificationManager.Instance.ShowAddSwordsNotification(nickname, 1);
+            EventNotificationManager.Instance.ShowAddSwordsNotification(nickname, swordsToAdd);
         }
     }
 }

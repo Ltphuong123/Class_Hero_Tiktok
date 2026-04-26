@@ -5,9 +5,27 @@ public enum SwordState { Dropped, Orbiting, Animating, FlyingIn, Sliding }
 
 public class Sword : GameUnit
 {
+    [Header("Sword Settings")]
     [SerializeField] private SpriteRenderer spriteRenderer;
     [SerializeField] private SwordDataSO swordData;
     [SerializeField] private SwordType swordType = SwordType.Default;
+    
+    [Header("Combat Mode")]
+    public static bool DestroyOnZeroHp = true; // Chế độ kiếm mất luôn khi hết máu
+    
+    // Method để chuyển đổi chế độ
+    public static void SetDestroyMode(bool destroyMode)
+    {
+        DestroyOnZeroHp = destroyMode;
+        Debug.Log($"Sword Combat Mode: {(destroyMode ? "Destroy on Zero HP" : "Drop on Zero HP")}");
+    }
+    
+    // Method để toggle chế độ
+    public static void ToggleDestroyMode()
+    {
+        DestroyOnZeroHp = !DestroyOnZeroHp;
+        Debug.Log($"Sword Combat Mode: {(DestroyOnZeroHp ? "Destroy on Zero HP" : "Drop on Zero HP")}");
+    }
     
     private const float defaultMaxHp = 100f;
     private const float defaultDamage = 15f;
@@ -354,7 +372,16 @@ public class Sword : GameUnit
         if (currentHp <= 0f)
         {
             currentHp = 0f;
-            KnockOff();
+            
+            // Kiểm tra chế độ: mất luôn hoặc rơi ra
+            if (DestroyOnZeroHp)
+            {
+                DestroySword();
+            }
+            else
+            {
+                KnockOff();
+            }
         }
     }
 
@@ -362,6 +389,26 @@ public class Sword : GameUnit
     {
         currentHp = Mathf.Min(maxHp, currentHp + amount);
         if (spriteRenderer != null) spriteRenderer.color = Color.white;
+    }
+
+    public void DestroySword()
+    {
+        if (orbit == null) return;
+        if (orbit.Owner != null && orbit.Owner.IsShieldActive) return;
+
+        state = SwordState.Animating;
+        TF.DOKill();
+
+        SwordOrbit owner = orbit;
+        owner.RemoveSword(this);
+        orbit = null;
+
+        // Tạo hiệu ứng particle khi kiếm bị phá hủy
+        Vector3 worldPos = TF.position;
+        ParticlePool.Spawn(ParticleType.SwordVsSword, worldPos);
+
+        // Despawn kiếm ngay lập tức thay vì rơi ra
+        OnDespawn();
     }
 
     public void KnockOff()

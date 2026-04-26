@@ -32,7 +32,7 @@ public class CharacterInfoUI : MonoBehaviour
     public void SetCharacterNumericId(int numericId)
     {
         if (numericIdText != null) 
-            numericIdText.text = numericId.ToString();
+            numericIdText.text = $"#{numericId.ToString()}";
     }
 
     public void UpdateHp(float current, float max)

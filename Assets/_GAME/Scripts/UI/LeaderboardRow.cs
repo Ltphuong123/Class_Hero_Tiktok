@@ -89,7 +89,7 @@ public class LeaderboardRow : MonoBehaviour, IPointerClickHandler
         
         // Hiển thị ID số nguyên
         if (idText != null)
-            idText.text = $"ID: {data.NumericId}";
+            idText.text = $"#{data.NumericId}";
 
         if (nameText != null)
             nameText.text = data.Name;
