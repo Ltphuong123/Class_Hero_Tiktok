@@ -6,6 +6,7 @@ public class CharacterInfoUI : MonoBehaviour
 {
     [SerializeField] private Image avatarImage;
     [SerializeField] private TextMeshProUGUI nameText;
+    [SerializeField] private TextMeshProUGUI numericIdText;
     [SerializeField] private Image hpFill;
     [SerializeField] private Image levelTimeFill;
 
@@ -26,6 +27,12 @@ public class CharacterInfoUI : MonoBehaviour
     public void SetCharacter(CharacterBase characterBase)
     {
         character = characterBase;
+    }
+
+    public void SetCharacterNumericId(int numericId)
+    {
+        if (numericIdText != null) 
+            numericIdText.text = numericId.ToString();
     }
 
     public void UpdateHp(float current, float max)

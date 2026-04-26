@@ -37,18 +37,16 @@ public class GameManager : Singleton<GameManager>
         Application.targetFrameRate = 60;
         //tranh viec tat man hinh
         Screen.sleepTimeout = SleepTimeout.NeverSleep;
-
-        //xu tai tho
-        int maxScreenHeight = 1280;
-        float ratio = (float)Screen.currentResolution.width / (float)Screen.currentResolution.height;
-        if (Screen.currentResolution.height > maxScreenHeight)
-        {
-            Screen.SetResolution(Mathf.RoundToInt(ratio * (float)maxScreenHeight), maxScreenHeight, true);
-        }
     }
 
     private void Update()
     {
+        // Nhấn E để end game ngay lập tức
+        if (Input.GetKeyDown(KeyCode.F2) && gameState == GameState.GamePlay)
+        {
+            ForceEndGame();
+            return;
+        }
 
         if (isGameRunning && gameState == GameState.GamePlay)
         {
@@ -159,6 +157,17 @@ public class GameManager : Singleton<GameManager>
     {
         isGameRunning = false;
         ChangeState(GameState.Lose);
+    }
+    
+    // Kết thúc game ngay lập tức (được gọi từ UI hoặc phím tắt)
+    public void ForceEndGame()
+    {
+        if (gameState == GameState.GamePlay)
+        {
+            Debug.Log("[GameManager] Force ending game");
+            currentGameTime = 0f;
+            OnTimeUp();
+        }
     }
 
     private void OnTimeUp()

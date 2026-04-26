@@ -11,5 +11,11 @@ public enum ParticleType
     Smoke = 8,
     Sparkle = 9,
     Blood = 10,
-    Impact = 11
+    Impact = 11,
+    Meteor1 = 12,
+    Meteor2 = 13,
+    Meteor3 = 14,
+    Meteor4 = 15,
+    Meteor5 = 16,
+    Meteor6 = 17
 }

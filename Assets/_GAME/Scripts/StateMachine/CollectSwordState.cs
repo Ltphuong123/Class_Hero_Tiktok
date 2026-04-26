@@ -19,8 +19,8 @@ public class CollectSwordState : ICharacterState
         retargetTimer = RetargetInterval;
         pathIndex = 0;
 
-        // Nếu đã đủ kiếm, chuyển sang Wander
-        if (sm.Owner.IsSwordFull)
+        // Nếu đã đủ kiếm hoặc còn queue, chuyển sang Wander
+        if (sm.Owner.IsSwordFull || sm.Owner.SwordQueue > 0)
         {
             sm.ChangeState(sm.Wander);
             return;
@@ -39,8 +39,8 @@ public class CollectSwordState : ICharacterState
     {
         if (sm.Owner.IsKnockedBack) return;
 
-        // Nếu đã đủ kiếm, chuyển sang Wander hoặc Attack
-        if (sm.Owner.IsSwordFull)
+        // Nếu đã đủ kiếm hoặc có queue, chuyển sang Wander hoặc Attack
+        if (sm.Owner.IsSwordFull || sm.Owner.SwordQueue > 0)
         {
             if (sm.MySwordCount > 0)
             {

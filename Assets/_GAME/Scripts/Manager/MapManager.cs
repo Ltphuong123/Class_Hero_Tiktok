@@ -2,11 +2,19 @@ using UnityEngine;
 
 public class MapManager : Singleton<MapManager>
 {
+    [Header("Map List")]
+    [SerializeField] private GameObject[] maps;
+    
+    [Header("Grid Settings (Shared)")]
     [SerializeField] private float cellSize = 1f;
     [SerializeField] private int columns = 100;
     [SerializeField] private int rows = 100;
+    
+    [Header("Wall Detection")]
     [SerializeField] private LayerMask wallMask;
-
+    
+    private const string SelectedMapPref = "SELECTED_MAP_INDEX";
+    
     private bool[] blocked;
     private float invCellSize;
     private Vector2 cachedMin;
@@ -21,12 +29,20 @@ public class MapManager : Singleton<MapManager>
     public float MapHeight => rows * cellSize;
     public Vector2 MapMin => cachedMin;
     public Vector2 MapMax => cachedMax;
+    public int MapCount => maps?.Length ?? 0;
 
     protected override void Awake()
     {
         base.Awake();
+        LoadSelectedMap();
         CacheBounds();
         BakeWallGrid();
+    }
+    
+    private void LoadSelectedMap()
+    {
+        int selectedIndex = PlayerPrefs.GetInt(SelectedMapPref, 0);
+        maps[selectedIndex].SetActive(true);
     }
 
     private void CacheBounds()

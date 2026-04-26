@@ -8,9 +8,11 @@ public class LeaderboardRow : MonoBehaviour, IPointerClickHandler
 {
     [Header("Texts")]
     [SerializeField] private TextMeshProUGUI rankText;
+    [SerializeField] private TextMeshProUGUI idText; // ID số nguyên
     [SerializeField] private TextMeshProUGUI nameText;
     [SerializeField] private TextMeshProUGUI hpText;
     [SerializeField] private TextMeshProUGUI swordCountText;
+    [SerializeField] private TextMeshProUGUI killPointsText;
     
     [Header("Booster Texts")]
     [SerializeField] private TextMeshProUGUI magnetCountText;
@@ -50,8 +52,10 @@ public class LeaderboardRow : MonoBehaviour, IPointerClickHandler
 
     private float cachedHp = -1f;
     private int cachedSwordCount = -1;
+    private int cachedSwordQueue = -1;
     private int cachedLevel = -1;
     private int cachedRank = -1;
+    private int cachedKillPoints = -1;
     private int cachedMagnetStack = -1;
     private int cachedShieldStack = -1;
     private int cachedMeteorStack = -1;
@@ -82,6 +86,10 @@ public class LeaderboardRow : MonoBehaviour, IPointerClickHandler
             rankText.text = $"#{data.Rank}";
             cachedRank = data.Rank;
         }
+        
+        // Hiển thị ID số nguyên
+        if (idText != null)
+            idText.text = $"ID: {data.NumericId}";
 
         if (nameText != null)
             nameText.text = data.Name;
@@ -137,10 +145,18 @@ public class LeaderboardRow : MonoBehaviour, IPointerClickHandler
             cachedHp = data.CurrentHp;
         }
 
-        if (swordCountText != null && cachedSwordCount != data.SwordCount)
+        if (swordCountText != null && (cachedSwordCount != data.SwordCount || cachedSwordQueue != data.SwordQueue))
         {
-            swordCountText.text = $"{data.SwordCount}";
+            int totalSwords = data.SwordCount + data.SwordQueue;
+            swordCountText.text = $"{totalSwords}";
             cachedSwordCount = data.SwordCount;
+            cachedSwordQueue = data.SwordQueue;
+        }
+        
+        if (killPointsText != null && cachedKillPoints != data.KillPoints)
+        {
+            killPointsText.text = $"{data.KillPoints}";
+            cachedKillPoints = data.KillPoints;
         }
         
         // Hiển thị Magnet count
@@ -173,12 +189,12 @@ public class LeaderboardRow : MonoBehaviour, IPointerClickHandler
             {
                 float duration = currentCharacter.MagnetDuration;
                 float ratio = data.MagnetTimeRemaining / duration;
-                magnetTimeFill.fillAmount = ratio;
+                magnetTimeFill.fillAmount = 1-ratio;
                 magnetTimeFill.enabled = true;
             }
             else
             {
-                magnetTimeFill.enabled = false;
+                magnetTimeFill.fillAmount = 1;
             }
         }
         
@@ -212,12 +228,12 @@ public class LeaderboardRow : MonoBehaviour, IPointerClickHandler
             {
                 float duration = currentCharacter.ShieldDuration;
                 float ratio = data.ShieldTimeRemaining / duration;
-                shieldTimeFill.fillAmount = ratio;
+                shieldTimeFill.fillAmount = 1-ratio;
                 shieldTimeFill.enabled = true;
             }
             else
             {
-                shieldTimeFill.enabled = false;
+                shieldTimeFill.fillAmount = 1;
             }
         }
         
@@ -247,16 +263,16 @@ public class LeaderboardRow : MonoBehaviour, IPointerClickHandler
         // Hiển thị Meteor cast time fill
         if (meteorTimeFill != null && currentCharacter != null)
         {
-            if (currentCharacter.IsCastingMeteor && data.MeteorCastTimeRemaining > 0f)
+            if ((currentCharacter.IsCastingMeteor || currentCharacter.IsMeteorOnCooldown) && data.MeteorCastTimeRemaining > 0f)
             {
                 float duration = currentCharacter.MeteorCastDuration;
                 float ratio = data.MeteorCastTimeRemaining / duration;
-                meteorTimeFill.fillAmount = ratio;
+                meteorTimeFill.fillAmount = 1-ratio;
                 meteorTimeFill.enabled = true;
             }
             else
             {
-                meteorTimeFill.enabled = false;
+                meteorTimeFill.fillAmount = 1;
             }
         }
 

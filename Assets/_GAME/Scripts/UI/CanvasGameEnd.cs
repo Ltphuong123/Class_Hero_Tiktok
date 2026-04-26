@@ -8,12 +8,13 @@ using UnityEngine.SceneManagement;
 public class CanvasGameEnd : UICanvas
 {
     [Header("Top 3 Display")]
-    [SerializeField] private GameObject[] topCharacterPanels; // 3 panels cho top 1, 2, 3
-    [SerializeField] private Image[] avatarImages; // 3 avatar images
-    [SerializeField] private TextMeshProUGUI[] nameTexts; // 3 name texts
-    [SerializeField] private TextMeshProUGUI[] levelTexts; // 3 level texts
-    [SerializeField] private TextMeshProUGUI[] swordCountTexts; // 3 sword count texts
-    [SerializeField] private TextMeshProUGUI[] rankTexts; // 3 rank texts (optional)
+    [SerializeField] private GameObject[] topCharacterPanels;
+    [SerializeField] private Image[] avatarImages;
+    [SerializeField] private TextMeshProUGUI[] nameTexts;
+    [SerializeField] private TextMeshProUGUI[] levelTexts;
+    [SerializeField] private TextMeshProUGUI[] swordCountTexts;
+    [SerializeField] private TextMeshProUGUI[] killPointsTexts;
+    [SerializeField] private TextMeshProUGUI[] rankTexts;
     
     private void Start()
     {
@@ -62,16 +63,23 @@ public class CanvasGameEnd : UICanvas
                 // Set sword count
                 if (swordCountTexts != null && i < swordCountTexts.Length && swordCountTexts[i] != null)
                 {
-                    swordCountTexts[i].text = $"{data.swordCount} Swords";
+                    int totalSwords = data.swordCount + data.swordQueue;
+                    swordCountTexts[i].text = $"{totalSwords} Swords";
                 }
                 
-                // Set rank (optional)
+                // Set kill points
+                if (killPointsTexts != null && i < killPointsTexts.Length && killPointsTexts[i] != null)
+                {
+                    killPointsTexts[i].text = $"{data.killPoints}";
+                }
+                
+                // Set rank
                 if (rankTexts != null && i < rankTexts.Length && rankTexts[i] != null)
                 {
                     rankTexts[i].text = $"#{data.rank}";
                 }
                 
-                Debug.Log($"[CanvasGameEnd] Rank {data.rank}: {data.characterName} - Level {data.level} - {data.swordCount} swords");
+                Debug.Log($"[CanvasGameEnd] Rank {data.rank}: {data.characterName} - Level {data.level} - {data.swordCount} swords - {data.killPoints} points");
             }
             else
             {

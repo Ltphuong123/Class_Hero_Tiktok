@@ -100,6 +100,10 @@ public class CharacterStateMachine : MonoBehaviour
         if (CurrentState == Dead || owner.CurrentHp <= 0f || attacker == null)
             return;
 
+        // Nếu đang lock target, không thay đổi target
+        if (owner.IsTargetLocked)
+            return;
+
         float currentTime = Time.time;
         bool canSwitch = currentTime - lastTargetSwitchTime >= targetSwitchCooldown;
 

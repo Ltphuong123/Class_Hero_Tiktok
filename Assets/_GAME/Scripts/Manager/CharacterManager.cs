@@ -6,6 +6,7 @@ public struct CharacterRankData
 {
     public CharacterBase Character;
     public int Rank;
+    public int NumericId;  // ID số nguyên
     public string Id;
     public string Name;
     public Sprite Avatar;
@@ -14,6 +15,7 @@ public struct CharacterRankData
     public int SwordCount;
     public int Level;
     public float LevelTimeRemaining;
+    public int KillPoints;
     
     public int MagnetStackCount;
     public int ShieldStackCount;
@@ -22,6 +24,8 @@ public struct CharacterRankData
     public float MagnetTimeRemaining;
     public float ShieldTimeRemaining;
     public float MeteorCastTimeRemaining;
+    
+    public int SwordQueue;
 }
 
 public class CharacterManager : Singleton<CharacterManager>
@@ -34,9 +38,12 @@ public class CharacterManager : Singleton<CharacterManager>
     private readonly List<CharacterBase> pendingRemove = new();
     private readonly HashSet<CharacterBase> characterSet = new();
     private readonly Dictionary<string, CharacterBase> characterIdMap = new();
+    private readonly Dictionary<int, CharacterBase> characterNumericIdMap = new();
     private readonly HashSet<string> spawnedCharacterIds = new();
     private MapManager cachedMap;
     private bool isUpdating;
+    
+    private int nextCharacterNumericId = 1; // ID số nguyên tăng dần
 
     private readonly List<CharacterRankData> rankedList = new();
     private float rankTimer;
@@ -65,6 +72,15 @@ public class CharacterManager : Singleton<CharacterManager>
             character.TF.rotation = rotation;
             character.gameObject.SetActive(true);
             character.OnInit(id, name, avatarSprite, level);
+            
+            // Gán numeric ID
+            int assignedNumericId = nextCharacterNumericId;
+            character.SetCharacterNumericId(assignedNumericId);
+            
+            // Thêm vào map ngay sau khi gán ID
+            characterNumericIdMap[assignedNumericId] = character;
+            nextCharacterNumericId++;
+            
             Register(character);
         }
         return character;
@@ -121,7 +137,8 @@ public class CharacterManager : Singleton<CharacterManager>
 
             Vector3 pos = t.position;
 
-            if (hasMap)
+            // ✅ Nếu đang knockback, không validate wall (để knockback hoạt động)
+            if (hasMap && !c.IsKnockedBack)
             {
                 pos = cachedMap.ClampToMap(pos);
 
@@ -138,6 +155,11 @@ public class CharacterManager : Singleton<CharacterManager>
                         pos = !cachedMap.IsBlockedWorld(tryY) ? tryY : prevPos;
                     }
                 }
+            }
+            else if (hasMap)
+            {
+                // Khi knockback, chỉ clamp vào map bounds
+                pos = cachedMap.ClampToMap(pos);
             }
 
             pos.z = pos.y + 25f;
@@ -169,6 +191,7 @@ public class CharacterManager : Singleton<CharacterManager>
             rankedList.Add(new CharacterRankData
             {
                 Character = c,
+                NumericId = c.CharacterNumericId,
                 Id = c.CharacterId,
                 Name = c.CharacterName,
                 Avatar = c.Avatar,
@@ -177,23 +200,32 @@ public class CharacterManager : Singleton<CharacterManager>
                 SwordCount = c.SwordCount,
                 Level = c.CurrentLevel,
                 LevelTimeRemaining = c.LevelTimeRemaining,
+                KillPoints = c.KillPoints,
                 MagnetStackCount = c.MagnetStackCount,
                 ShieldStackCount = c.ShieldStackCount,
                 MeteorStackCount = c.MeteorStackCount,
                 MagnetTimeRemaining = c.MagnetTimeRemaining,
                 ShieldTimeRemaining = c.ShieldTimeRemaining,
-                MeteorCastTimeRemaining = c.MeteorCastTimeRemaining
+                MeteorCastTimeRemaining = c.MeteorCastTimeRemaining,
+                SwordQueue = c.SwordQueue
             });
         }
 
         rankedList.Sort((a, b) =>
         {
+            // Sắp xếp theo Kill Points trước (cao hơn = rank cao hơn)
+            int killPointsCompare = b.KillPoints.CompareTo(a.KillPoints);
+            if (killPointsCompare != 0) return killPointsCompare;
+            
+            // Nếu kill points bằng nhau, sắp xếp theo Level
             int levelCompare = b.Level.CompareTo(a.Level);
             if (levelCompare != 0) return levelCompare;
             
+            // Nếu level bằng nhau, sắp xếp theo Sword Count
             int swordCompare = b.SwordCount.CompareTo(a.SwordCount);
             if (swordCompare != 0) return swordCompare;
             
+            // Cuối cùng sắp xếp theo HP
             return b.CurrentHp.CompareTo(a.CurrentHp);
         });
 
@@ -274,6 +306,12 @@ public class CharacterManager : Singleton<CharacterManager>
             spawnedCharacterIds.Add(character.CharacterId);
         }
         
+        // Map numeric ID
+        if (character.CharacterNumericId > 0)
+        {
+            characterNumericIdMap[character.CharacterNumericId] = character;
+        }
+        
         rankDirty = true;
     }
 
@@ -300,6 +338,12 @@ public class CharacterManager : Singleton<CharacterManager>
         if (!string.IsNullOrEmpty(character.CharacterId))
         {
             characterIdMap.Remove(character.CharacterId);
+        }
+        
+        // Remove numeric ID
+        if (character.CharacterNumericId > 0)
+        {
+            characterNumericIdMap.Remove(character.CharacterNumericId);
         }
         
         rankDirty = true;
@@ -396,6 +440,15 @@ public class CharacterManager : Singleton<CharacterManager>
             return null;
 
         characterIdMap.TryGetValue(characterId, out CharacterBase character);
+        return character;
+    }
+    
+    public CharacterBase GetCharacterByNumericId(int numericId)
+    {
+        if (numericId <= 0)
+            return null;
+
+        characterNumericIdMap.TryGetValue(numericId, out CharacterBase character);
         return character;
     }
 
@@ -531,23 +584,67 @@ public class CharacterManager : Singleton<CharacterManager>
         SwordOrbit orbit = currentCharacter.GetSwordOrbit();
         if (orbit == null) return false;
 
-        if (currentCharacter.IsSwordFull) return false;
-
         int currentSwordCount = currentCharacter.SwordCount;
         int maxSwordCount = currentCharacter.MaxSwordCount;
-        int actualSwordsToAdd = Mathf.Min(swordsToAdd, maxSwordCount - currentSwordCount);
-
-        if (actualSwordsToAdd <= 0) return false;
-
-        for (int i = 0; i < actualSwordsToAdd; i++)
+        
+        // Nếu đã đủ kiếm, thêm vào queue
+        if (currentCharacter.IsSwordFull)
         {
-            Vector2 randomOffset = UnityEngine.Random.insideUnitCircle.normalized * 2f;
-            Vector3 spawnPos = currentCharacter.TF.position + new Vector3(randomOffset.x, randomOffset.y, 0f);
-            Sword sword = ItemManager.Instance.Spawn(spawnPos);
-            if (sword != null)
-                sword.Collect(currentCharacter);
+            bool addedToQueue = currentCharacter.AddToSwordQueue(swordsToAdd);
+            return addedToQueue;
         }
 
+        // Tính số kiếm có thể thêm ngay
+        int actualSwordsToAdd = Mathf.Min(swordsToAdd, maxSwordCount - currentSwordCount);
+        int remainingSwords = swordsToAdd - actualSwordsToAdd;
+
+        // Thêm kiếm ngay lập tức
+        if (actualSwordsToAdd > 0)
+        {
+            for (int i = 0; i < actualSwordsToAdd; i++)
+            {
+                Vector2 randomOffset = UnityEngine.Random.insideUnitCircle.normalized * 2f;
+                Vector3 spawnPos = currentCharacter.TF.position + new Vector3(randomOffset.x, randomOffset.y, 0f);
+                Sword sword = ItemManager.Instance.Spawn(spawnPos);
+                if (sword != null)
+                    sword.Collect(currentCharacter);
+            }
+        }
+
+        // Thêm phần còn lại vào queue
+        if (remainingSwords > 0)
+        {
+            currentCharacter.AddToSwordQueue(remainingSwords);
+        }
+
+        return true;
+    }
+
+    public bool LockTargetAttack(string attackerId, string targetId)
+    {
+        CharacterBase attacker = GetCharacterById(attackerId);
+        if (attacker == null || !attacker.gameObject.activeInHierarchy || attacker.IsDead)
+            return false;
+
+        CharacterBase target = GetCharacterById(targetId);
+        if (target == null || !target.gameObject.activeInHierarchy || target.IsDead)
+            return false;
+
+        // Không thể lock chính mình
+        if (attacker == target)
+            return false;
+
+        attacker.LockTarget(target);
+        return true;
+    }
+
+    public bool UnlockTargetAttack(string characterId)
+    {
+        CharacterBase character = GetCharacterById(characterId);
+        if (character == null)
+            return false;
+
+        character.UnlockTarget();
         return true;
     }
 }

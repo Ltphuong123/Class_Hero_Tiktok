@@ -19,6 +19,9 @@ public class SwordOrbit : MonoBehaviour
     private const float RAD_TO_DEG = Mathf.Rad2Deg;
     private bool isPaused;
     
+    private float lastSwordDropTime = -1f;
+    private const float SwordDropCooldown = 0.1f;
+    
     public float RotateSpeed => rotateSpeed;
     public float Radius => radius;
     public int SwordCount => swords.Count;
@@ -28,6 +31,7 @@ public class SwordOrbit : MonoBehaviour
     {
         swords.Clear();
         isPaused = false;
+        lastSwordDropTime = -1f;
     }
 
     public void OnDespawn()
@@ -149,5 +153,16 @@ public class SwordOrbit : MonoBehaviour
     public void SetPaused(bool paused)
     {
         isPaused = paused;
+    }
+
+    public bool CanDropSword()
+    {
+        float currentTime = Time.time;
+        if (currentTime - lastSwordDropTime >= SwordDropCooldown)
+        {
+            lastSwordDropTime = currentTime;
+            return true;
+        }
+        return false;
     }
 }

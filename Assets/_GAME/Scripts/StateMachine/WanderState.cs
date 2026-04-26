@@ -42,8 +42,8 @@ public class WanderState : ICharacterState
                 }
             }
 
-            // Chỉ tìm kiếm nếu chưa đủ kiếm
-            if (!sm.Owner.IsSwordFull)
+            // Chỉ tìm kiếm kiếm dưới đất nếu chưa đủ kiếm VÀ hết queue
+            if (!sm.Owner.IsSwordFull && sm.Owner.SwordQueue == 0)
             {
                 Sword sword = sm.FindBestSword();
                 if (sword != null)
@@ -93,12 +93,69 @@ public class WanderState : ICharacterState
         MapManager map = sm.Map;
         GridPathfinder pathfinder = sm.Pathfinder;
 
+        Vector3 mapCenter = new Vector3(0f, 0f, myPos.z);
+
+        float distToCenter = Vector3.Distance(myPos, mapCenter);
+        const float targetRadius = 5f;
+        
+        float centerBias = 0.5f;
+        if (map != null)
+        {
+            float mapRadius = Mathf.Min(map.MapWidth, map.MapHeight) * 0.5f;
+            
+            if (distToCenter < targetRadius)
+            {
+                centerBias = 0.2f;
+            }
+            else if (distToCenter > targetRadius + 5f)
+            {
+                float normalizedDist = Mathf.Clamp01((distToCenter - targetRadius) / mapRadius);
+                centerBias = Mathf.Lerp(0.6f, 0.95f, normalizedDist);
+            }
+            else
+            {
+                centerBias = 0.4f;
+            }
+        }
+
         for (int attempt = 0; attempt < 10; attempt++)
         {
-            float angle = Random.Range(0f, Mathf.PI * 2f);
-            float dist = Random.Range(3f, WanderRadius);
-            float dirX = Mathf.Cos(angle), dirY = Mathf.Sin(angle);
-            Vector3 candidate = new Vector3(myX + dirX * dist, myY + dirY * dist, myPos.z);
+            Vector3 candidate;
+            
+            if (Random.value < centerBias)
+            {
+                Vector3 dirToCenter = (mapCenter - myPos).normalized;
+                
+                if (distToCenter < targetRadius)
+                {
+                    dirToCenter = -dirToCenter;
+                    float angle = Mathf.Atan2(dirToCenter.y, dirToCenter.x);
+                    angle += Random.Range(-Mathf.PI * 0.5f, Mathf.PI * 0.5f);
+                    float dist = Random.Range(3f, WanderRadius);
+                    float dirX = Mathf.Cos(angle);
+                    float dirY = Mathf.Sin(angle);
+                    candidate = new Vector3(myX + dirX * dist, myY + dirY * dist, myPos.z);
+                }
+                else
+                {
+                    Vector3 targetPoint = mapCenter + dirToCenter * targetRadius;
+                    Vector3 dirToTarget = (targetPoint - myPos).normalized;
+                    float angle = Mathf.Atan2(dirToTarget.y, dirToTarget.x);
+                    angle += Random.Range(-Mathf.PI * 0.3f, Mathf.PI * 0.3f);
+                    float dist = Random.Range(4f, WanderRadius);
+                    float dirX = Mathf.Cos(angle);
+                    float dirY = Mathf.Sin(angle);
+                    candidate = new Vector3(myX + dirX * dist, myY + dirY * dist, myPos.z);
+                }
+            }
+            else
+            {
+                float angle = Random.Range(0f, Mathf.PI * 2f);
+                float dist = Random.Range(3f, WanderRadius);
+                float dirX = Mathf.Cos(angle);
+                float dirY = Mathf.Sin(angle);
+                candidate = new Vector3(myX + dirX * dist, myY + dirY * dist, myPos.z);
+            }
 
             if (map != null)
             {

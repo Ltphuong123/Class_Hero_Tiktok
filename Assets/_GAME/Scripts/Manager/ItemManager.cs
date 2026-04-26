@@ -3,11 +3,15 @@ using System.Collections.Generic;
 
 public class ItemManager : Singleton<ItemManager>
 {
+    [Header("Sword Limit")]
+    [SerializeField] private int maxDroppedSwords = 400;
+    
     private SpatialGrid<Sword> grid;
     private readonly HashSet<Sword> allSwords = new();
     private readonly List<Sword> queryBuffer = new();
 
     public int SwordCount => allSwords.Count;
+    public int DroppedSwordCount { get; private set; }
 
     protected override void Awake()
     {
@@ -43,14 +47,29 @@ public class ItemManager : Singleton<ItemManager>
     public void Register(Sword sword)
     {
         if (sword != null && allSwords.Add(sword))
+        {
             grid.Add(sword, sword.TF.position);
+            
+            if (sword.State == SwordState.Dropped)
+            {
+                DroppedSwordCount++;
+            }
+        }
     }
 
     public void Unregister(Sword sword)
     {
         if (sword != null && allSwords.Remove(sword))
+        {
             grid.Remove(sword);
+            
+            if (sword.State == SwordState.Dropped)
+            {
+                DroppedSwordCount--;
+            }
+        }
     }
+
 
     public void Despawn(Sword sword)
     {

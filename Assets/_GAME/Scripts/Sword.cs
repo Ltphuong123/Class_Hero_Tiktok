@@ -25,6 +25,8 @@ public class Sword : GameUnit
     private float flyDuration, flyInvDuration, flyElapsed;
     private float slideFromAngle, slideDiff, slideTargetAngle, slideRadius;
     private float slideDuration, slideInvDuration, slideElapsed;
+    
+    private int lastDamageFrame = -1;  // Frame cuối cùng nhận damage
 
     private const float TWO_PI = Mathf.PI * 2f;
     private const float PI = Mathf.PI;
@@ -60,6 +62,7 @@ public class Sword : GameUnit
         currentHp = maxHp;
         state = SwordState.Dropped;
         orbit = null;
+        lastDamageFrame = -1;
         
         TF.rotation = Quaternion.Euler(0f, 0f, Random.Range(0f, 360f));
         TF.localScale = Vector3.one * 0.7f;
@@ -78,6 +81,7 @@ public class Sword : GameUnit
         state = SwordState.Dropped;
         orbit = null;
         currentHp = maxHp;
+        lastDamageFrame = -1;
         
         if (spriteRenderer != null)
             spriteRenderer.color = Color.white;
@@ -111,6 +115,27 @@ public class Sword : GameUnit
     }
 
     public bool Collect(CharacterBase collector)
+    {
+        if (state != SwordState.Dropped || collector == null) return false;
+
+        SwordOrbit targetOrbit = collector.GetSwordOrbit();
+        if (targetOrbit == null) return false;
+
+        // Kiểm tra giới hạn số kiếm
+        if (collector.IsSwordFull) return false;
+        
+        // Chỉ collect nếu hết queue (ưu tiên dùng queue trước)
+        if (collector.SwordQueue > 0) return false;
+
+        state = SwordState.Animating;
+        ItemManager.Instance?.Unregister(this);
+        
+        currentHp = maxHp;
+        targetOrbit.AddSword(this);
+        return true;
+    }
+
+    public bool CollectFromQueue(CharacterBase collector)
     {
         if (state != SwordState.Dropped || collector == null) return false;
 
@@ -244,8 +269,11 @@ public class Sword : GameUnit
         {
             if (character != null)
             {
-                // Kiểm tra giới hạn số kiếm trước khi nhặt
+                // Chỉ auto-collect nếu:
+                // 1. Chưa đủ kiếm
+                // 2. Hết queue (ưu tiên dùng queue trước)
                 if (character.IsSwordFull) return;
+                if (character.SwordQueue > 0) return;
                 
                 state = SwordState.Animating;
                 ItemManager.Instance?.Unregister(this);
@@ -265,10 +293,13 @@ public class Sword : GameUnit
                 ParticlePool.Spawn(ParticleType.SwordVsCharacter, hitPos);
                 
                 CharacterBase attacker = orbit.Owner;
-                character.TakeDamage(damage, attacker);
-                character.OnSwordInteraction(attacker);
                 
-                attacker?.GetAudioSource()?.PlayAttack();
+                if (character.SwordCount <= 45)
+                {
+                    character.TakeDamage(damage, attacker);
+                    character.OnSwordInteraction(attacker);
+                    attacker?.GetAudioSource()?.PlayAttack();
+                }
             }
             return;
         }
@@ -303,19 +334,22 @@ public class Sword : GameUnit
         if (orbit != null && orbit.Owner != null && orbit.Owner.IsShieldActive)
             return;
 
+        // Chỉ nhận damage 1 lần mỗi frame
+        int currentFrame = Time.frameCount;
+        if (lastDamageFrame == currentFrame)
+            return;
+        
+        lastDamageFrame = currentFrame;
+
+        // Kiểm tra cooldown trước khi trừ máu
+        if (orbit != null && !orbit.CanDropSword())
+            return;
+
+        // Trừ máu
         currentHp -= dmg;
 
         if (spriteRenderer != null)
             spriteRenderer.color = Color.Lerp(Color.white, Color.red, 1f - HpRatio);
-
-        if (orbit != null && attackerSword != null && attackerSword.orbit != null)
-        {
-            CharacterBase owner = orbit.Owner;
-            CharacterBase attacker = attackerSword.orbit.Owner;
-            
-            if (owner != null && attacker != null)
-                owner.GetStateMachine()?.OnUnderAttack(attacker);
-        }
 
         if (currentHp <= 0f)
         {

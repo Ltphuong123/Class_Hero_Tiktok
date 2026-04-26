@@ -10,8 +10,10 @@ public class TopCharacterData
     public Sprite avatar;
     public int level;
     public int swordCount;
+    public int killPoints;
     public float hp;
     public float maxHp;
+    public int swordQueue;
     
     public TopCharacterData(int rank, CharacterRankData data)
     {
@@ -21,8 +23,10 @@ public class TopCharacterData
         this.avatar = data.Avatar;
         this.level = data.Level;
         this.swordCount = data.SwordCount;
+        this.killPoints = data.KillPoints;
         this.hp = data.CurrentHp;
         this.maxHp = data.MaxHp;
+        this.swordQueue = data.SwordQueue;
     }
 }
 

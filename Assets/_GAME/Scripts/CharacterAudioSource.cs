@@ -4,6 +4,7 @@ public class CharacterAudioSource : MonoBehaviour
 {
     [Header("Audio Clips")]
     [SerializeField] private AudioClip footstepClip;
+    [SerializeField] private AudioClip swordOrbitClip;  // Âm thanh khi có trên 3 kiếm
     [SerializeField] private AudioClip attackClip;
     [SerializeField] private AudioClip deathClip;
     [SerializeField] private AudioClip levelUpClip;
@@ -19,6 +20,7 @@ public class CharacterAudioSource : MonoBehaviour
     [SerializeField] private bool useZoomFactor = true;
     [SerializeField] private float minZoomSize = 15f;
     [SerializeField] private float maxZoomSize = 30f;
+    [SerializeField] [Range(0f, 1f)] private float zoomInfluence = 0.5f;
 
     [Header("Sound Cooldowns")]
     [SerializeField] private float attackCooldown = 0.1f;
@@ -95,10 +97,14 @@ public class CharacterAudioSource : MonoBehaviour
             float currentSize = mainCamera.orthographicSize;
             
             if (currentSize >= maxZoomSize)
-                return 0f;
+                return baseVolume * (1f - zoomInfluence);
             
             if (currentSize > minZoomSize)
-                baseVolume *= 1f - (currentSize - minZoomSize) / zoomRange;
+            {
+                float zoomFactor = (currentSize - minZoomSize) / zoomRange;
+                float zoomModifier = 1f - (zoomFactor * zoomInfluence);
+                baseVolume *= zoomModifier;
+            }
         }
 
         return baseVolume;
@@ -110,6 +116,23 @@ public class CharacterAudioSource : MonoBehaviour
         {
             loopSource.clip = footstepClip;
             loopSource.Play();
+        }
+    }
+
+    public void PlaySwordOrbit()
+    {
+        if (swordOrbitClip != null)
+        {
+            // Chỉ đổi clip nếu đang phát clip khác
+            if (loopSource.clip != swordOrbitClip)
+            {
+                loopSource.clip = swordOrbitClip;
+                loopSource.Play();
+            }
+            else if (!loopSource.isPlaying)
+            {
+                loopSource.Play();
+            }
         }
     }
 
@@ -156,9 +179,6 @@ public class CharacterAudioSource : MonoBehaviour
     public void PlayMeteorBooster()
     {
         if (meteorBoosterClip != null)
-        {
             oneShotSource.PlayOneShot(meteorBoosterClip);
-            Debug.Log("[CharacterAudioSource] Playing Meteor Booster sound");
-        }
     }
 }

@@ -3,19 +3,30 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using DG.Tweening;
 
 public class CanvasGamePlay : UICanvas
 {
     [Header("Timer UI")]
     [SerializeField] private TextMeshProUGUI timerText;
     
+    [Header("Countdown Effects")]
+    [SerializeField] private AudioSource countdownAudioSource;
+    [SerializeField] private AudioClip countdownSound;
+    [SerializeField] private float countdownThreshold = 10f;
+    [SerializeField] private float punchScale = 1.2f;
+    [SerializeField] private float punchDuration = 0.3f;
+    
     [Header("Setting Panel")]
     [SerializeField] private GameObject settingPanel;
     [SerializeField] private Button settingButton; // Nút mở setting
     [SerializeField] private Button closeButton; // Nút đóng setting
     [SerializeField] private Button mainMenuButton; // Nút về MainMenu
+    [SerializeField] private Button endGameButton; // Nút kết thúc game ngay
     
     private GameManager gameManager;
+    private int lastSecond = -1;
+    private bool isCountdownActive = false;
     
     private void Start()
     {
@@ -51,6 +62,12 @@ public class CanvasGamePlay : UICanvas
         {
             mainMenuButton.onClick.RemoveAllListeners();
             mainMenuButton.onClick.AddListener(LoadMainMenuScene);
+        }
+        
+        if (endGameButton != null)
+        {
+            endGameButton.onClick.RemoveAllListeners();
+            endGameButton.onClick.AddListener(EndGameNow);
         }
     }
     
@@ -103,6 +120,24 @@ public class CanvasGamePlay : UICanvas
         SceneManager.LoadScene("MainMenu");
     }
     
+    // Kết thúc game ngay lập tức
+    private void EndGameNow()
+    {
+        if (gameManager != null)
+        {
+            Debug.Log("[CanvasGamePlay] End Game button clicked");
+            
+            // Ẩn setting panel nếu đang mở
+            if (settingPanel != null)
+            {
+                settingPanel.SetActive(false);
+            }
+            
+            // Gọi GameManager để end game
+            gameManager.ForceEndGame();
+        }
+    }
+    
     private void UpdateTimerDisplay()
     {
         float timeRemaining = gameManager.CurrentGameTime;
@@ -113,8 +148,15 @@ public class CanvasGamePlay : UICanvas
         string timeString = string.Format("{0:00}:{1:00}", minutes, seconds);
         timerText.text = timeString;
         
+        // Kiểm tra countdown 10 giây cuối
+        CheckCountdownEffects(timeRemaining, seconds);
+        
         // Đổi màu khi còn ít thời gian
-        if (timeRemaining <= 30f)
+        if (timeRemaining <= countdownThreshold)
+        {
+            timerText.color = Color.red;
+        }
+        else if (timeRemaining <= 30f)
         {
             timerText.color = Color.red;
         }
@@ -127,9 +169,67 @@ public class CanvasGamePlay : UICanvas
             timerText.color = Color.white;
         }
     }
+
+    private void CheckCountdownEffects(float timeRemaining, int currentSecond)
+    {
+        // Kích hoạt countdown khi còn <= 10 giây
+        if (timeRemaining <= countdownThreshold && timeRemaining > 0f)
+        {
+            if (!isCountdownActive)
+            {
+                isCountdownActive = true;
+                lastSecond = currentSecond;
+            }
+            
+            // Khi giây thay đổi (đếm ngược)
+            if (currentSecond != lastSecond && currentSecond >= 0)
+            {
+                PlayCountdownEffects();
+                lastSecond = currentSecond;
+            }
+        }
+        else
+        {
+            isCountdownActive = false;
+            lastSecond = -1;
+        }
+    }
+
+    private void PlayCountdownEffects()
+    {
+        // Hiệu ứng scale cho text
+        if (timerText != null)
+        {
+            timerText.transform.DOKill();
+            timerText.transform.localScale = Vector3.one;
+            timerText.transform.DOPunchScale(Vector3.one * punchScale, punchDuration, 1, 0.5f);
+        }
+        
+        // Phát âm thanh countdown
+        PlayCountdownSound();
+    }
+
+    private void PlayCountdownSound()
+    {
+        if (countdownAudioSource != null && countdownSound != null)
+        {
+            countdownAudioSource.PlayOneShot(countdownSound);
+        }
+        else if (countdownSound != null)
+        {
+            // Fallback: Tạo AudioSource tạm thời
+            AudioSource.PlayClipAtPoint(countdownSound, Camera.main.transform.position);
+        }
+    }
     
     private void OnDestroy()
     {
+        // Stop DOTween animations
+        if (timerText != null)
+        {
+            timerText.transform.DOKill();
+        }
+        
         // Cleanup listeners
         if (settingButton != null)
         {
@@ -144,6 +244,11 @@ public class CanvasGamePlay : UICanvas
         if (mainMenuButton != null)
         {
             mainMenuButton.onClick.RemoveListener(LoadMainMenuScene);
+        }
+        
+        if (endGameButton != null)
+        {
+            endGameButton.onClick.RemoveListener(EndGameNow);
         }
     }
 }

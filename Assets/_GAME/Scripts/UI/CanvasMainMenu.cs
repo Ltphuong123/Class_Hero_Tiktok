@@ -15,7 +15,62 @@ public class CanvasMainMenu : UICanvas
     [Header("UI Elements")]
     public GameObject objectToHide; // GameObject cần ẩn khi load game
     
+    [Header("Map Selection")]
+    [SerializeField] private TMP_Dropdown mapDropdown;
+    [SerializeField] private int numberOfMaps = 4; // Số lượng maps
+    
     private const string SavedKeyPref = "LICENSE_KEY";
+    private const string SelectedMapPref = "SELECTED_MAP_INDEX";
+
+    private void Start()
+    {
+        InitializeMapDropdown();
+    }
+
+    private void InitializeMapDropdown()
+    {
+        if (mapDropdown == null) return;
+        
+        // Clear options cũ
+        mapDropdown.ClearOptions();
+        
+        // Tạo danh sách options
+        var options = new System.Collections.Generic.List<string>();
+        for (int i = 0; i < numberOfMaps; i++)
+        {
+            options.Add($"Map {i + 1}");
+        }
+        
+        // Add vào dropdown
+        mapDropdown.AddOptions(options);
+        
+        // Set giá trị hiện tại từ PlayerPrefs
+        int currentIndex = GetSelectedMapIndex();
+        if (currentIndex < numberOfMaps)
+        {
+            mapDropdown.value = currentIndex;
+        }
+        
+        // Add listener để lưu khi thay đổi
+        mapDropdown.onValueChanged.AddListener(OnMapSelected);
+    }
+    
+    private void OnMapSelected(int index)
+    {
+        SetSelectedMap(index);
+        Debug.Log($"[CanvasMainMenu] Selected map index: {index}");
+    }
+    
+    private void SetSelectedMap(int index)
+    {
+        PlayerPrefs.SetInt(SelectedMapPref, index);
+        PlayerPrefs.Save();
+    }
+    
+    private int GetSelectedMapIndex()
+    {
+        return PlayerPrefs.GetInt(SelectedMapPref, 0);
+    }
 
     public void LoadGamePlayScene()
     {
