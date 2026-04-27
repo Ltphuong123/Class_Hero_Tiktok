@@ -14,7 +14,8 @@ public enum GiftActionType
     RespawnCharacter,
     ActivateMagnet,
     ActivateShield,
-    ActivateMeteor
+    ActivateMeteor,
+    ActivateHeal
 }
 
 [Serializable]
@@ -76,6 +77,51 @@ public class GiftActionConfig : ScriptableObject
     public void SortThresholds()
     {
         thresholds.Sort((a, b) => b.priceThreshold.CompareTo(a.priceThreshold));
+    }
+
+    public List<GiftActionType> GetActionsForPrice(int price)
+    {
+        SortThresholds();
+        
+        List<GiftActionType> actions = new List<GiftActionType>();
+        
+        foreach (var threshold in thresholds)
+        {
+            if (price == threshold.priceThreshold)
+                actions.Add(threshold.actionType);
+        }
+        
+        if (actions.Count == 0)
+        {
+            int highestMatchingPrice = -1;
+            
+            foreach (var threshold in thresholds)
+            {
+                if (price >= threshold.priceThreshold)
+                {
+                    if (threshold.priceThreshold > highestMatchingPrice)
+                    {
+                        highestMatchingPrice = threshold.priceThreshold;
+                    }
+                }
+            }
+            
+            if (highestMatchingPrice >= 0)
+            {
+                foreach (var threshold in thresholds)
+                {
+                    if (threshold.priceThreshold == highestMatchingPrice)
+                    {
+                        actions.Add(threshold.actionType);
+                    }
+                }
+            }
+        }
+        
+        if (actions.Count == 0)
+            actions.Add(GiftActionType.AddSwords);
+        
+        return actions;
     }
 
     public GiftActionType GetActionForPrice(int price)

@@ -1,11 +1,12 @@
 ﻿using UnityEngine;
+using System.Collections.Generic;
 
 public class TikTokGameHandler : MonoBehaviour
 {
     [Header("References")]
     public TikTokUdpReceiver receiver;
     [SerializeField] private CharacterManager characterManager;
-    [SerializeField] private GiftActionConfig giftActionConfig;
+    [SerializeField] private TikTokEventConfigSO eventConfig;
 
     private void Start()
     {
@@ -13,72 +14,14 @@ public class TikTokGameHandler : MonoBehaviour
         
         if (characterManager == null)
             characterManager = CharacterManager.Instance;
-
-        if (giftActionConfig != null)
-            giftActionConfig.LoadFromFile();
+        
+        if (eventConfig != null)
+            eventConfig.LoadFromJson();
     }
 
     private void OnDestroy()
     {
         receiver.OnEvent -= HandleEvent;
-    }
-
-    private void HandleEvent(TikEvent ev)
-    {
-        switch (ev.type)
-        {
-            case "comment":
-                HandleComment(ev);
-                break;
-            case "gift_final":
-                HandleGift(ev);
-                break;
-            case "like":
-                HandleLike(ev);
-                break;
-        }
-    }
-
-    private void HandleComment(TikEvent ev)
-    {
-        if (characterManager == null) return;
-
-        string comment = ev.comment?.Trim();
-        if (string.IsNullOrEmpty(comment)) return;
-
-        string userId = ev.user.user_id;
-        string nickname = ev.user.nickname;
-
-        // Chuyển comment về lowercase để so sánh
-        string commentLower = comment.ToLower();
-
-        if (comment == "1")
-        {
-            characterManager.SpawnFromTikTok(userId, nickname, null, 1);
-            return;
-        }
-
-        if (comment == "2")
-        {
-            CharacterBase respawnedChar = characterManager.RespawnCharacter(userId, nickname, null, 1);
-            if (respawnedChar != null && EventNotificationManager.Instance != null)
-                EventNotificationManager.Instance.ShowRespawnNotification(nickname);
-            return;
-        }
-
-        // Xử lý attack command: "atk ID" hoặc "atkID" (không phân biệt hoa thường)
-        if (commentLower.StartsWith("atk ") || commentLower.StartsWith("atk"))
-        {
-            ProcessAttackCommand(comment, userId, nickname);
-            return;
-        }
-
-        // Xử lý stop command (không phân biệt hoa thường)
-        if (commentLower == "stop")
-        {
-            characterManager.UnlockTargetAttack(userId);
-            return;
-        }
     }
 
     private void ProcessAttackCommand(string comment, string userId, string nickname)
@@ -109,110 +52,203 @@ public class TikTokGameHandler : MonoBehaviour
         attacker.LockTarget(target);
     }
 
-    private void HandleGift(TikEvent ev)
+    private void HandleEvent(TikEvent ev)
     {
-        if (characterManager == null || giftActionConfig == null) return;
+        switch (ev.type)
+        {
+            case "comment":
+                HandleComment(ev);
+                break;
+            case "gift_tick":
+                HandleGift(ev);
+                break;
+            case "like":
+                HandleLike(ev);
+                break;
+            case "share":
+                HandleShare(ev);
+                break;
+        }
+    }
+
+    private void HandleComment(TikEvent ev)
+    {
+        if (characterManager == null || eventConfig == null) return;
+
+        string comment = ev.comment?.Trim();
+        if (string.IsNullOrEmpty(comment)) return;
 
         string userId = ev.user.user_id;
         string nickname = ev.user.nickname;
-        int count = ev.count;
-        int price = ev.gift.price;
 
-        GiftActionType actionType = giftActionConfig.GetActionForPrice(price);
-        ExecuteGiftAction(actionType, userId, nickname, count);
+        string commentLower = comment.ToLower();
+
+        if (commentLower.StartsWith("atk ") || commentLower.StartsWith("atk"))
+        {
+            ProcessAttackCommand(comment, userId, nickname);
+            return;
+        }
+
+        if (commentLower == "stop")
+        {
+            characterManager.UnlockTargetAttack(userId);
+            return;
+        }
+
+        TikTokEventConfig config = eventConfig.GetEventConfigByCommand(comment);
+        if (config != null)
+        {
+            ExecuteActions(config.actions, userId, nickname, 1);
+        }
     }
 
-    private void ExecuteGiftAction(GiftActionType actionType, string userId, string nickname, int count)
+    private void HandleGift(TikEvent ev)
     {
-        bool success = false;
-        EventNotificationManager notificationManager = EventNotificationManager.Instance;
-        
-        switch (actionType)
+        if (characterManager == null || eventConfig == null) return;
+
+        string userId = ev.user.user_id;
+        string nickname = ev.user.nickname;
+        int delta = ev.delta;
+        int giftPrice = ev.gift.price;
+
+        int highestMinPrice = 0;
+
+        foreach (var config in eventConfig.events)
         {
-            case GiftActionType.AddSwords:
-                success = characterManager.AddSwordsToCharacter(userId, count);
-                if (success && notificationManager != null)
-                    notificationManager.ShowAddSwordsNotification(nickname, count);
-                break;
+            if (config.eventType != TikTokEventType.Gift) continue;
+            if (giftPrice < config.giftMinPrice) continue;
+            
+            if (config.giftMinPrice > highestMinPrice)
+            {
+                highestMinPrice = config.giftMinPrice;
+            }
+        }
 
-            case GiftActionType.UpgradeLevel2:
-                success = characterManager.UpgradeToLevel2(userId, count);
-                if (success && notificationManager != null)
-                    notificationManager.ShowUpgradeNotification(nickname, 2, count);
-                break;
-
-            case GiftActionType.UpgradeLevel3:
-                success = characterManager.UpgradeToLevel3(userId, count);
-                if (success && notificationManager != null)
-                    notificationManager.ShowUpgradeNotification(nickname, 3, count);
-                break;
-
-            case GiftActionType.UpgradeLevel4:
-                success = characterManager.UpgradeToLevel4(userId, count);
-                if (success && notificationManager != null)
-                    notificationManager.ShowUpgradeNotification(nickname, 4, count);
-                break;
-
-            case GiftActionType.UpgradeLevel5:
-                success = characterManager.UpgradeToLevel5(userId, count);
-                if (success && notificationManager != null)
-                    notificationManager.ShowUpgradeNotification(nickname, 5, count);
-                break;
-
-            case GiftActionType.RespawnCharacter:
-                // CharacterBase respawnedChar = characterManager.RespawnCharacter(userId, nickname);
-                // if (respawnedChar != null && notificationManager != null)
-                //     notificationManager.ShowRespawnNotification(nickname);
-                break;
-
-            case GiftActionType.ActivateMagnet:
-                success = characterManager.ActivateMagnetBooster(userId, count);
-                if (success && notificationManager != null)
-                    notificationManager.ShowMagnetBoosterNotification(nickname, count);
-                break;
-
-            case GiftActionType.ActivateShield:
-                success = characterManager.ActivateShieldBooster(userId, count);
-                if (success && notificationManager != null)
-                    notificationManager.ShowShieldBoosterNotification(nickname, count);
-                break;
-
-            case GiftActionType.ActivateMeteor:
-                success = characterManager.ActivateMeteorBooster(userId, count);
-                if (success && notificationManager != null)
-                    notificationManager.ShowMeteorBoosterNotification(nickname, count);
-                break;
+        if (highestMinPrice > 0)
+        {
+            foreach (var config in eventConfig.events)
+            {
+                if (config.eventType != TikTokEventType.Gift) continue;
+                if (config.giftMinPrice != highestMinPrice) continue;
+                
+                ExecuteActions(config.actions, userId, nickname, delta);
+            }
         }
     }
 
     private void HandleLike(TikEvent ev)
     {
-        if (characterManager == null) return;
+        if (characterManager == null || eventConfig == null) return;
+
+        TikTokEventConfig config = eventConfig.GetEventConfig(TikTokEventType.Like);
+        if (config == null) return;
 
         string userId = ev.user.user_id;
         string nickname = ev.user.nickname;
         
-        Debug.Log($"❤️ {nickname} +{ev.like_count} (total {ev.total_likes})");
+        int triggerCount = ev.like_count / config.likeThreshold;
+        if (triggerCount < 1) triggerCount = 1;
         
-        // Tính số kiếm dựa trên like_count
-        int swordsToAdd;
-        if (ev.like_count < 5)
+        ExecuteActions(config.actions, userId, nickname, triggerCount);
+    }
+
+    private void HandleShare(TikEvent ev)
+    {
+        if (characterManager == null || eventConfig == null) return;
+
+        TikTokEventConfig config = eventConfig.GetEventConfig(TikTokEventType.Share);
+        if (config == null) return;
+
+        string userId = ev.user.user_id;
+        string nickname = ev.user.nickname;
+        
+        ExecuteActions(config.actions, userId, nickname, 1);
+    }
+
+    private void ExecuteActions(List<TikTokActionConfig> actions, string userId, string nickname, int count)
+    {
+        if (actions == null || actions.Count == 0) return;
+
+        foreach (var actionConfig in actions)
         {
-            swordsToAdd = 1; // Nếu like_count < 5 thì cho 1 kiếm
-        }
-        else
-        {
-            swordsToAdd = ev.like_count / 5; // Mỗi 5 like_count thì cho 1 kiếm
-        }
-        
-        // Đảm bảo ít nhất cho 1 kiếm
-        if (swordsToAdd < 1) swordsToAdd = 1;
-        
-        bool success = characterManager.AddSwordsToCharacter(userId, swordsToAdd);
-        
-        if (success && EventNotificationManager.Instance != null)
-        {
-            EventNotificationManager.Instance.ShowAddSwordsNotification(nickname, swordsToAdd);
+            ExecuteAction(actionConfig, userId, nickname, count);
         }
     }
+
+    private void ExecuteAction(TikTokActionConfig actionConfig, string userId, string nickname, int count)
+    {
+        bool success = false;
+        EventNotificationManager notificationManager = EventNotificationManager.Instance;
+        
+        switch (actionConfig.actionType)
+        {
+            case TikTokActionType.Spawn:
+                characterManager.SpawnFromTikTok(userId, nickname, null, 1);
+                break;
+
+            case TikTokActionType.Respawn:
+                CharacterBase respawnedChar = characterManager.RespawnCharacter(userId, nickname, null, 1);
+                if (respawnedChar != null && notificationManager != null)
+                    notificationManager.ShowRespawnNotification(nickname);
+                break;
+
+            case TikTokActionType.AddSwords:
+                int swordCount = actionConfig.swordCount * count;
+                success = characterManager.AddSwordsToCharacter(userId, nickname, swordCount);
+                if (success && notificationManager != null)
+                    notificationManager.ShowAddSwordsNotification(nickname, swordCount);
+                break;
+
+            case TikTokActionType.UpgradeToLevel2:
+                success = characterManager.UpgradeToLevel2(userId, nickname, count);
+                if (success && notificationManager != null)
+                    notificationManager.ShowUpgradeNotification(nickname, 2, count);
+                break;
+
+            case TikTokActionType.UpgradeToLevel3:
+                success = characterManager.UpgradeToLevel3(userId, nickname, count);
+                if (success && notificationManager != null)
+                    notificationManager.ShowUpgradeNotification(nickname, 3, count);
+                break;
+
+            case TikTokActionType.UpgradeToLevel4:
+                success = characterManager.UpgradeToLevel4(userId, nickname, count);
+                if (success && notificationManager != null)
+                    notificationManager.ShowUpgradeNotification(nickname, 4, count);
+                break;
+
+            case TikTokActionType.UpgradeToLevel5:
+                success = characterManager.UpgradeToLevel5(userId, nickname, count);
+                if (success && notificationManager != null)
+                    notificationManager.ShowUpgradeNotification(nickname, 5, count);
+                break;
+
+            case TikTokActionType.MagnetBooster:
+                success = characterManager.ActivateMagnetBooster(userId, nickname, count);
+                if (success && notificationManager != null)
+                    notificationManager.ShowMagnetBoosterNotification(nickname, count);
+                break;
+
+            case TikTokActionType.ShieldBooster:
+                success = characterManager.ActivateShieldBooster(userId, nickname, count);
+                if (success && notificationManager != null)
+                    notificationManager.ShowShieldBoosterNotification(nickname, count);
+                break;
+
+            case TikTokActionType.MeteorBooster:
+                success = characterManager.ActivateMeteorBooster(userId, nickname, count);
+                if (success && notificationManager != null)
+                    notificationManager.ShowMeteorBoosterNotification(nickname, count);
+                break;
+
+            case TikTokActionType.HealBooster:
+                float healAmount = actionConfig.healAmount * count;
+                success = characterManager.ActivateHealBooster(userId, nickname, healAmount);
+                if (success && notificationManager != null)
+                    notificationManager.ShowHealBoosterNotification(nickname, healAmount);
+                break;
+        }
+    }
+
+
 }

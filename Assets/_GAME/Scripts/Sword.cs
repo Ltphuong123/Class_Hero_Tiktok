@@ -11,20 +11,15 @@ public class Sword : GameUnit
     [SerializeField] private SwordType swordType = SwordType.Default;
     
     [Header("Combat Mode")]
-    public static bool DestroyOnZeroHp = true; // Chế độ kiếm mất luôn khi hết máu
+    public static bool DestroyOnZeroHp = true;
     
-    // Method để chuyển đổi chế độ
     public static void SetDestroyMode(bool destroyMode)
     {
         DestroyOnZeroHp = destroyMode;
-        Debug.Log($"Sword Combat Mode: {(destroyMode ? "Destroy on Zero HP" : "Drop on Zero HP")}");
     }
-    
-    // Method để toggle chế độ
     public static void ToggleDestroyMode()
     {
         DestroyOnZeroHp = !DestroyOnZeroHp;
-        Debug.Log($"Sword Combat Mode: {(DestroyOnZeroHp ? "Destroy on Zero HP" : "Drop on Zero HP")}");
     }
     
     private const float defaultMaxHp = 100f;
@@ -44,8 +39,7 @@ public class Sword : GameUnit
     private float slideFromAngle, slideDiff, slideTargetAngle, slideRadius;
     private float slideDuration, slideInvDuration, slideElapsed;
     
-    private int lastDamageFrame = -1;  // Frame cuối cùng nhận damage
-
+    private int lastDamageFrame = -1;
     private const float TWO_PI = Mathf.PI * 2f;
     private const float PI = Mathf.PI;
     private const float RAD_TO_DEG = Mathf.Rad2Deg;
@@ -138,11 +132,7 @@ public class Sword : GameUnit
 
         SwordOrbit targetOrbit = collector.GetSwordOrbit();
         if (targetOrbit == null) return false;
-
-        // Kiểm tra giới hạn số kiếm
         if (collector.IsSwordFull) return false;
-        
-        // Chỉ collect nếu hết queue (ưu tiên dùng queue trước)
         if (collector.SwordQueue > 0) return false;
 
         state = SwordState.Animating;
@@ -159,13 +149,9 @@ public class Sword : GameUnit
 
         SwordOrbit targetOrbit = collector.GetSwordOrbit();
         if (targetOrbit == null) return false;
-
-        // Kiểm tra giới hạn số kiếm
         if (collector.IsSwordFull) return false;
-
         state = SwordState.Animating;
         ItemManager.Instance?.Unregister(this);
-        
         currentHp = maxHp;
         targetOrbit.AddSword(this);
         return true;
@@ -287,9 +273,6 @@ public class Sword : GameUnit
         {
             if (character != null)
             {
-                // Chỉ auto-collect nếu:
-                // 1. Chưa đủ kiếm
-                // 2. Hết queue (ưu tiên dùng queue trước)
                 if (character.IsSwordFull) return;
                 if (character.SwordQueue > 0) return;
                 
@@ -316,12 +299,21 @@ public class Sword : GameUnit
                 {
                     character.TakeDamage(damage, attacker);
                     character.OnSwordInteraction(attacker);
+                    if (attacker != null)
+                    {
+                        attacker.OnLifesteal(damage);
+                        
+                        // Attacker cũng auto lock vào victim nếu chế độ được bật (auto lock)
+                        if (CharacterBase.EnableAutoLockOnAttacked && !attacker.IsTargetLocked)
+                        {
+                            attacker.LockTarget(character, false); // false = auto lock
+                        }
+                    }
                     attacker?.GetAudioSource()?.PlayAttack();
                 }
             }
             return;
         }
-
         Sword otherSword = other.GetComponent<Sword>();
         
         if (otherSword == null || otherSword.orbit == null || otherSword.orbit == orbit) return;
@@ -333,12 +325,17 @@ public class Sword : GameUnit
 
         CharacterBase myOwner = orbit.Owner;
         CharacterBase otherOwner = otherSword.orbit.Owner;
-
+        float damageDealtToSword = Mathf.Min(otherSword.CurrentHp, damage);
         TakeDamage(otherSword.damage, otherSword);
         
         myOwner?.GetAudioSource()?.PlayAttack();
         
         otherSword.TakeDamage(damage, this);
+        
+        if (myOwner != null && damageDealtToSword > 0f)
+        {
+            myOwner.OnLifesteal(damageDealtToSword);
+        }
 
         if (myOwner != null && otherOwner != null)
         {
@@ -352,18 +349,15 @@ public class Sword : GameUnit
         if (orbit != null && orbit.Owner != null && orbit.Owner.IsShieldActive)
             return;
 
-        // Chỉ nhận damage 1 lần mỗi frame
         int currentFrame = Time.frameCount;
         if (lastDamageFrame == currentFrame)
             return;
         
         lastDamageFrame = currentFrame;
 
-        // Kiểm tra cooldown trước khi trừ máu
         if (orbit != null && !orbit.CanDropSword())
             return;
 
-        // Trừ máu
         currentHp -= dmg;
 
         if (spriteRenderer != null)
@@ -373,7 +367,6 @@ public class Sword : GameUnit
         {
             currentHp = 0f;
             
-            // Kiểm tra chế độ: mất luôn hoặc rơi ra
             if (DestroyOnZeroHp)
             {
                 DestroySword();
@@ -403,11 +396,9 @@ public class Sword : GameUnit
         owner.RemoveSword(this);
         orbit = null;
 
-        // Tạo hiệu ứng particle khi kiếm bị phá hủy
         Vector3 worldPos = TF.position;
         ParticlePool.Spawn(ParticleType.SwordVsSword, worldPos);
 
-        // Despawn kiếm ngay lập tức thay vì rơi ra
         OnDespawn();
     }
 

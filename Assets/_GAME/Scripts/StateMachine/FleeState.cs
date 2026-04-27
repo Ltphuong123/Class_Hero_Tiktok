@@ -8,7 +8,7 @@ public class FleeState : ICharacterState
     private float repathTimer;
 
     private const float FleeDuration = 2f;
-    private const float RepathInterval = 0.3f;
+    private const float RepathInterval = 0.5f;
     private const float FleeDistance = 10f;
 
     public void SetThreat(CharacterBase t) => threat = t;

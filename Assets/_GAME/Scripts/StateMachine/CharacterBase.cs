@@ -4,18 +4,17 @@ using System.Collections;
 public class CharacterBase : GameUnit, IManagedUpdate
 {
     [Header("Character Info")]
-    [SerializeField] private int characterNumericId; // ID số nguyên
+    [SerializeField] private CharacterBaseConfigSO config;
+    [SerializeField] private int characterNumericId;
     [SerializeField] private string characterId;
     [SerializeField] private string characterName = "Player";
     [SerializeField] private Sprite avatar;
     [SerializeField] private int characterLevel = 1;
-    [SerializeField] private float maxHp = 100f;
-    [SerializeField] private float moveSpeed = 5f;
-    [SerializeField] private float knockbackForce = 5f;
-    [SerializeField] private float knockbackDuration = 0.3f;
-    [SerializeField] private float knockbackCooldown = 0.5f;
-    [SerializeField] private float characterKnockbackMultiplier = 2f;
-    [SerializeField] private int maxSwordCount = 30;
+    
+    private float maxHp => config != null ? config.maxHp : 100f;
+    private int maxSwordCount => config != null ? config.maxSwordCount : 30;
+    private float overhealScalePerThreshold => config != null ? config.overhealScalePerThreshold : 0.1f;
+    private float overhealThreshold => config != null ? config.overhealThreshold : 500f;   
 
     [Header("References")]
     [SerializeField] private SwordOrbit swordOrbit;
@@ -28,6 +27,11 @@ public class CharacterBase : GameUnit, IManagedUpdate
 
     [Header("Particles")]
     [SerializeField] private LevelParticleSet[] levelParticleSets;
+
+    [Header("Lifesteal Settings")]
+    [SerializeField] private float lifestealPercent = 0.2f;
+    [SerializeField] private float lifestealCooldown = 0.5f;     
+    [SerializeField] private ParticleSystem lifestealParticle;    
     
     [Header("Magnet Booster")]
     [SerializeField] private float magnetRadius = 10f;
@@ -43,20 +47,36 @@ public class CharacterBase : GameUnit, IManagedUpdate
     [SerializeField] private float freezeDuration = 5f;
     [SerializeField] private ParticleSystem freezeParticle;
     
-    [Header("Lock Target Effects")]
-    [SerializeField] private ParticleSystem lockTargetParticle;
-    [SerializeField] private GameObject lockTargetIndicator;
+    [Header("Heal Booster")]
+    [SerializeField] private ParticleSystem healParticleLowHp;  
+    [SerializeField] private ParticleSystem healParticleHighHp; 
     
     [Header("Meteor Booster")]
     private float meteorRadius = 14f;
-    private float meteorDamage = 5000f;
+    private float meteorDamage => config != null ? config.meteorDamage : 5000f;
     [SerializeField] private float meteorCastDuration = 2.5f;
     [SerializeField] private float meteorCooldownDuration = 3f;
     [SerializeField] private ParticleSystem meteorChargeParticle;
     
-    private int maxSwordQueue = 5000;
+    [Header("Lock Target Effects")]
+    [SerializeField] private ParticleSystem lockTargetParticle;
+    [SerializeField] private GameObject lockTargetIndicator;
+
+    // Chế độ tự động lock target khi bị tấn công
+    public static bool EnableAutoLockOnAttacked = true;
     
+    // Chế độ tự động unlock target khi hết kiếm (chỉ áp dụng cho auto lock)
+    public static bool EnableAutoUnlockOnNoSwords = true;
+
+    private float moveSpeed = 5f;
+    private float knockbackForce = 10f;
+    private float knockbackDuration = 0.2f;
+    private float knockbackCooldown = 0.5f;
+    private float characterKnockbackMultiplier = 1.5f;
+
+    private int maxSwordQueue => config != null ? config.maxSwordQueue : 5000;
     private float currentHp;
+    private float currentMaxHp;
     private float lastFrameX;
     private int currentLevel;
     private float levelTimer;
@@ -75,27 +95,28 @@ public class CharacterBase : GameUnit, IManagedUpdate
     private MapManager cachedMap;
     private bool isMagnetActive;
     private float magnetTimer;
-    private int magnetStackCount;  // Số lần cộng dồn
-    
+    private int magnetStackCount;
+    private float baseMaxHp; 
+    private float overhealScaleBonus;   
+    private float lastLifestealTime; 
     private bool isShieldActive;
     private float shieldTimer;
-    private int shieldStackCount;  // Số lần cộng dồn
-    
+    private int shieldStackCount;
     private bool isFrozen;
     private float frozenTimer;
-    
     private bool isCastingMeteor;
     private bool isMeteorOnCooldown;
     private int meteorStackCount;
     private float meteorCastTimer;
-    private int killPoints;  // Số lượng kill
-    private int swordQueue;  // Hàng chờ kiếm
-    
-    private bool isTargetLocked;  // Đang khóa mục tiêu
-    private CharacterBase lockedTarget;  // Mục tiêu bị khóa
+    private int killPoints;
+    private int swordQueue;
+    private bool isTargetLocked;
+    private CharacterBase lockedTarget;
+    private float lastUnlockTime;
+    private const float AutoLockCooldown = 5f;
 
     public float CurrentHp => currentHp;
-    public float MaxHp => maxHp;
+    public float MaxHp => currentMaxHp;
     public float MoveSpeed => moveSpeed;
     public int CharacterNumericId => characterNumericId;
     public string CharacterId => characterId;
@@ -108,20 +129,17 @@ public class CharacterBase : GameUnit, IManagedUpdate
     public int CurrentLevel => currentLevel;
     public bool IsKnockedBack => isKnockedBack;
     public bool IsDead => isDead;
-    
     public bool IsMagnetActive => isMagnetActive;
     public float MagnetTimeRemaining => isMagnetActive ? Mathf.Max(0f, magnetTimer) : 0f;
     public int MagnetStackCount => magnetStackCount;
     public float MagnetDuration => magnetDuration;
-    
     public bool IsShieldActive => isShieldActive;
     public float ShieldTimeRemaining => isShieldActive ? Mathf.Max(0f, shieldTimer) : 0f;
     public int ShieldStackCount => shieldStackCount;
     public float ShieldDuration => shieldDuration;
-    
     public bool IsFrozen => isFrozen;
     public float FrozenTimeRemaining => isFrozen ? Mathf.Max(0f, frozenTimer) : 0f;
-    
+    public int HealStackCount => 0; 
     public int MeteorStackCount => meteorStackCount;
     public bool IsCastingMeteor => isCastingMeteor;
     public bool IsMeteorOnCooldown => isMeteorOnCooldown;
@@ -132,6 +150,10 @@ public class CharacterBase : GameUnit, IManagedUpdate
     public int MaxSwordQueue => maxSwordQueue;
     public bool IsTargetLocked => isTargetLocked;
     public CharacterBase LockedTarget => lockedTarget;
+    public SwordOrbit GetSwordOrbit() => swordOrbit;
+    public CharacterStateMachine GetStateMachine() => stateMachine;
+    public Animator GetAnimator() => animator;
+    public CharacterAudioSource GetAudioSource() => audioSource;
     public float LevelTimeRemaining
     {
         get
@@ -140,21 +162,63 @@ public class CharacterBase : GameUnit, IManagedUpdate
             return Mathf.Max(0f, levelReserveTime[currentLevel] - levelTimer);
         }
     }
-    public SwordOrbit GetSwordOrbit() => swordOrbit;
-    public CharacterStateMachine GetStateMachine() => stateMachine;
-    public Animator GetAnimator() => animator;
-    public CharacterAudioSource GetAudioSource() => audioSource;
 
     public void OnInit() => OnInit(characterId, characterName, avatar, characterLevel);
 
     public void OnInit(string id, string name, Sprite avatarSprite, int level = 1)
     {
+        if (config == null)
+            config = CharacterBaseConfigSO.Instance;
+        
+        // Đồng bộ biến static từ config
+        if (config != null)
+        {
+            EnableAutoLockOnAttacked = config.enableAutoLockOnAttacked;
+            EnableAutoUnlockOnNoSwords = config.enableAutoUnlockOnNoSwords;
+        }
+        Debug.Log($" {EnableAutoLockOnAttacked} - {EnableAutoUnlockOnNoSwords}");
+        
+        if (magnetParticle != null)
+            magnetParticle.Stop();
+        if (shieldParticle != null)
+            shieldParticle.Stop();
+        if (freezeParticle != null)
+            freezeParticle.Stop();
+        if (healParticleLowHp != null)
+            healParticleLowHp.Stop();
+        if (healParticleHighHp != null)
+            healParticleHighHp.Stop();
+        if (lifestealParticle != null)
+            lifestealParticle.Stop();
+        if (meteorChargeParticle != null)
+            meteorChargeParticle.Stop();
+        if (lockTargetParticle != null)
+            lockTargetParticle.Stop();
+        if (lockTargetIndicator != null)
+            lockTargetIndicator.SetActive(false);
+
+        foreach (var particleSet in levelParticleSets)
+        {
+            if (particleSet != null)
+            {
+                if (particleSet.levelParticle != null)
+                    particleSet.levelParticle.Stop();
+                if (particleSet.sword10Particle != null)
+                    particleSet.sword10Particle.Stop();
+                if (particleSet.sword20Particle != null)
+                    particleSet.sword20Particle.Stop();
+            }
+        }
+        
         characterId = id;
         characterName = name;
         avatar = avatarSprite;
         characterLevel = level;
-        
         currentHp = maxHp;
+        currentMaxHp = maxHp;
+        baseMaxHp = maxHp; 
+        overhealScaleBonus = 0f;  
+        lastLifestealTime = -lifestealCooldown; 
         currentLevel = 1;
         levelTimer = 0f;
         lastFrameX = TF.position.x;
@@ -180,86 +244,65 @@ public class CharacterBase : GameUnit, IManagedUpdate
         swordQueue = 0;
         isTargetLocked = false;
         lockedTarget = null;
+        lastUnlockTime = -AutoLockCooldown; // Cho phép lock ngay từ đầu
         
-        if (levelData != null)
-            levelReserveTime = new float[levelData.GetMaxLevel() + 1];
-        
+        levelReserveTime = new float[levelData.GetMaxLevel() + 1];
         if (stateMachine == null) stateMachine = GetComponent<CharacterStateMachine>();
         if (animator == null) animator = GetComponentInChildren<Animator>();
         if (audioSource == null) audioSource = GetComponent<CharacterAudioSource>();
         if (cachedMap == null) cachedMap = MapManager.Instance;
+
+        swordOrbit.OnInit();
+        stateMachine.OnInit();
+
+        infoUI.Init(characterName, avatar, currentHp, currentMaxHp);
+        infoUI.SetCharacter(this);
         
-        swordOrbit?.OnInit();
-        stateMachine?.OnInit();
-        
-        if (infoUI != null)
-        {
-            infoUI.Init(characterName, avatar, currentHp, maxHp);
-            infoUI.SetCharacter(this);
-        }
-        
-        animator?.SetTrigger("walk");
+        animator.SetTrigger("walk");
         
         UpdateLevelStats();
         CharacterManager.Instance.Register(this);
         
-        // Kích hoạt Shield Booster một lần khi spawn
         ActivateShieldBooster();
     }
 
     public void OnDespawn()
     {
-        audioSource?.StopFootstep();
+        audioSource.StopFootstep();
         
-        // Stop tất cả các particle systems
         if (magnetParticle != null)
             magnetParticle.Stop();
-        
         if (shieldParticle != null)
             shieldParticle.Stop();
-        
         if (freezeParticle != null)
             freezeParticle.Stop();
-        
+        if (healParticleLowHp != null)
+            healParticleLowHp.Stop();
+        if (healParticleHighHp != null)
+            healParticleHighHp.Stop();
+        if (lifestealParticle != null)
+            lifestealParticle.Stop();
         if (meteorChargeParticle != null)
             meteorChargeParticle.Stop();
-        
-        // Tắt lock target effects khi despawn
         if (lockTargetParticle != null)
             lockTargetParticle.Stop();
-        
         if (lockTargetIndicator != null)
             lockTargetIndicator.SetActive(false);
-        
-        // Stop tất cả particles trong levelParticleSets
-        if (levelParticleSets != null)
+
+        foreach (var particleSet in levelParticleSets)
         {
-            foreach (var particleSet in levelParticleSets)
+            if (particleSet != null)
             {
-                if (particleSet != null)
-                {
-                    if (particleSet.levelParticle != null)
-                        particleSet.levelParticle.Stop();
-                    
-                    if (particleSet.sword10Particle != null)
-                        particleSet.sword10Particle.Stop();
-                    
-                    if (particleSet.sword20Particle != null)
-                        particleSet.sword20Particle.Stop();
-                }
+                if (particleSet.levelParticle != null)
+                    particleSet.levelParticle.Stop();
+                if (particleSet.sword10Particle != null)
+                    particleSet.sword10Particle.Stop();
+                if (particleSet.sword20Particle != null)
+                    particleSet.sword20Particle.Stop();
             }
         }
-        
-        // Stop tất cả ParticleSystem components trên GameObject này và children
-        ParticleSystem[] allParticles = GetComponentsInChildren<ParticleSystem>(true);
-        foreach (var particle in allParticles)
-        {
-            if (particle != null)
-                particle.Stop();
-        }
-        
-        swordOrbit?.OnDespawn();
-        stateMachine?.OnDespawn();
+        swordOrbit.OnDespawn();
+        stateMachine.OnDespawn();
         CharacterManager.Instance.Despawn(this);
     }
 
@@ -267,8 +310,8 @@ public class CharacterBase : GameUnit, IManagedUpdate
     {
         if (isDead)
         {
-            audioSource?.StopFootstep();
-            stateMachine?.ManagedUpdate(deltaTime);
+            audioSource.StopFootstep();
+            stateMachine.ManagedUpdate(deltaTime);
             return;
         }
 
@@ -277,14 +320,12 @@ public class CharacterBase : GameUnit, IManagedUpdate
             frozenTimer -= deltaTime;
             if (frozenTimer <= 0f)
                 Unfreeze();
-            
             return;
         }
 
-        // Block movement khi đang cast Meteor
         if (isCastingMeteor)
         {
-            audioSource?.StopFootstep();
+            audioSource.StopFootstep();
             return;
         }
 
@@ -302,10 +343,28 @@ public class CharacterBase : GameUnit, IManagedUpdate
                 if (cachedMap != null)
                 {
                     newPos = cachedMap.ClampToMap(newPos);
-                    if (!cachedMap.IsBlockedWorld(newPos))
-                        TF.position = newPos;
+                    
+                    // Nếu vị trí mới bị chặn, thử các hướng thay thế
+                    if (cachedMap.IsBlockedWorld(newPos))
+                    {
+                        Vector3 alternativePos = TryAlternativeKnockbackDirection(TF.position, knockbackVelocity, deltaTime);
+                        
+                        if (alternativePos != TF.position)
+                        {
+                            // Tìm được hướng thay thế hợp lệ
+                            TF.position = alternativePos;
+                        }
+                        else
+                        {
+                            // Không tìm được hướng nào, dừng knockback
+                            isKnockedBack = false;
+                        }
+                    }
                     else
-                        isKnockedBack = false;
+                    {
+                        // Vị trí mới hợp lệ, di chuyển bình thường
+                        TF.position = newPos;
+                    }
                 }
                 else
                 {
@@ -386,12 +445,11 @@ public class CharacterBase : GameUnit, IManagedUpdate
     {
         if (levelData == null) return;
 
-        swordOrbit?.SetSwordType(levelData.GetSwordType(currentLevel));
+        swordOrbit.SetSwordType(levelData.GetSwordType(currentLevel));
         moveSpeed = levelData.GetSpeed(currentLevel);
-
-        float scale = levelData.GetBodyScale(currentLevel);
-        TF.localScale = Vector3.one * scale;
-        
+        float levelScale = levelData.GetBodyScale(currentLevel);
+        float totalScale = levelScale + overhealScaleBonus;
+        TF.localScale = Vector3.one * totalScale;
         if (visualTransform != null && visualTransform != TF)
         {
             Vector3 currentScale = visualTransform.localScale;
@@ -403,9 +461,7 @@ public class CharacterBase : GameUnit, IManagedUpdate
     private void UpdateFacing()
     {
         if (visualTransform == null) return;
-
         float delta = TF.position.x - lastFrameX;
-
         if (Mathf.Abs(delta) > 0.01f)
         {
             Vector3 s = visualTransform.localScale;
@@ -431,7 +487,6 @@ public class CharacterBase : GameUnit, IManagedUpdate
         {
             if (isMoving)
             {
-                // Kiểm tra số kiếm để quyết định âm thanh nào
                 if (SwordCount > 3)
                     audioSource.PlaySwordOrbit();
                 else
@@ -444,7 +499,6 @@ public class CharacterBase : GameUnit, IManagedUpdate
         }
         else if (isMoving)
         {
-            // Đang di chuyển, kiểm tra nếu số kiếm thay đổi qua ngưỡng 3
             if (SwordCount > 3)
                 audioSource.PlaySwordOrbit();
             else if (SwordCount <= 3)
@@ -480,7 +534,6 @@ public class CharacterBase : GameUnit, IManagedUpdate
             return;
         }
 
-        // Chỉ pull swords nếu chưa đủ kiếm VÀ hết queue
         if (IsSwordFull || swordQueue > 0) return;
 
         ItemManager itemMgr = ItemManager.Instance;
@@ -622,6 +675,52 @@ public class CharacterBase : GameUnit, IManagedUpdate
             if (character.IsDead) continue;
             
             character.Freeze(freezeDuration);
+        }
+    }
+
+    public void ActivateHealBooster(float healAmount)
+    {
+        if (isDead) return;
+        
+        float oldHp = currentHp;
+        currentHp += healAmount;
+        
+        if (currentHp > currentMaxHp)
+        {
+            float overflow = currentHp - currentMaxHp;
+            currentMaxHp += overflow;
+            UpdateOverhealScale();
+        }
+        
+        infoUI?.UpdateHp(currentHp, currentMaxHp);
+        
+        ParticleSystem particleToPlay = (healAmount < 10f) ? healParticleLowHp : healParticleHighHp;
+        
+        if (particleToPlay != null)
+            particleToPlay.Play();
+        
+        audioSource?.PlayLevelUp();
+    }
+
+    private void UpdateOverhealScale()
+    {
+        float totalOverheal = currentMaxHp - baseMaxHp;
+        
+        if (totalOverheal <= 0f)
+        {
+            overhealScaleBonus = 0f;
+            UpdateLevelStats();
+            return;
+        }
+        
+        int thresholdCount = Mathf.FloorToInt(totalOverheal / overhealThreshold);
+        float newScaleBonus = thresholdCount * overhealScalePerThreshold;
+        
+        if (newScaleBonus != overhealScaleBonus)
+        {
+            float oldScaleBonus = overhealScaleBonus;
+            overhealScaleBonus = newScaleBonus;
+            UpdateLevelStats();
         }
     }
 
@@ -882,7 +981,13 @@ public class CharacterBase : GameUnit, IManagedUpdate
         if (isDead || isShieldActive || isCastingMeteor) return;
 
         currentHp = Mathf.Max(0f, currentHp - damage);
-        infoUI?.UpdateHp(currentHp, maxHp);
+        infoUI?.UpdateHp(currentHp, currentMaxHp);
+        
+        // Tự động lock target vào kẻ tấn công nếu chế độ được bật (auto lock)
+        if (EnableAutoLockOnAttacked && attacker != null && !isTargetLocked)
+        {
+            LockTarget(attacker, false); // false = auto lock
+        }
         
         if (currentHp <= 0f)
         {
@@ -894,8 +999,29 @@ public class CharacterBase : GameUnit, IManagedUpdate
     public void Heal(float amount)
     {
         if (isDead) return;
-        currentHp = Mathf.Min(maxHp, currentHp + amount);
-        infoUI?.UpdateHp(currentHp, maxHp);
+        currentHp = Mathf.Min(currentMaxHp, currentHp + amount);
+        infoUI.UpdateHp(currentHp, currentMaxHp);
+    }
+
+    public void OnLifesteal(float damageDealt)
+    {
+        if (isDead) return;
+        float currentTime = Time.time;
+        if (currentTime - lastLifestealTime < lifestealCooldown)
+            return;
+        float healAmount = damageDealt * lifestealPercent;
+        if (healAmount <= 0f) return;
+        float oldHp = currentHp;
+        currentHp = Mathf.Min(currentMaxHp, currentHp + healAmount);
+        float actualHealed = currentHp - oldHp;
+        
+        if (actualHealed > 0f)
+        {
+            infoUI.UpdateHp(currentHp, currentMaxHp);
+            if (lifestealParticle != null)
+                lifestealParticle.Play();
+            lastLifestealTime = currentTime;
+        }
     }
 
     public void MultiplySpeed(float multiplier) => moveSpeed *= multiplier;
@@ -911,7 +1037,15 @@ public class CharacterBase : GameUnit, IManagedUpdate
         ApplyKnockback(direction, characterKnockbackMultiplier);
         lastKnockbackTime = currentTime;
         
-        stateMachine?.OnUnderAttack(attacker);
+        // Tự động lock target vào kẻ tấn công nếu chế độ được bật (auto lock)
+        if (EnableAutoLockOnAttacked && !isTargetLocked)
+        {
+            LockTarget(attacker, false); // false = auto lock
+        }
+        else
+        {
+            stateMachine?.OnUnderAttack(attacker);
+        }
     }
 
     public void OnSwordToSwordKnockback(CharacterBase attacker)
@@ -925,7 +1059,15 @@ public class CharacterBase : GameUnit, IManagedUpdate
         ApplyKnockback(direction, 1f);
         lastKnockbackTime = currentTime;
         
-        stateMachine?.OnUnderAttack(attacker);
+        // Tự động lock target vào kẻ tấn công nếu chế độ được bật (auto lock)
+        if (EnableAutoLockOnAttacked && !isTargetLocked)
+        {
+            LockTarget(attacker, false); // false = auto lock
+        }
+        else
+        {
+            stateMachine?.OnUnderAttack(attacker);
+        }
     }
 
     private void ApplyKnockback(Vector3 direction, float multiplier)
@@ -933,6 +1075,48 @@ public class CharacterBase : GameUnit, IManagedUpdate
         isKnockedBack = true;
         knockbackVelocity = direction * knockbackForce * multiplier;
         knockbackTimer = knockbackDuration;
+    }
+
+    private Vector3 TryAlternativeKnockbackDirection(Vector3 currentPos, Vector3 velocity, float deltaTime)
+    {
+        if (cachedMap == null) return currentPos;
+
+        // Tính toán vector vuông góc (perpendicular) với hướng knockback
+        // Perpendicular 2D: (x, y) → (-y, x) hoặc (y, -x)
+        Vector3 perpLeft = new Vector3(-velocity.y, velocity.x, velocity.z);
+        Vector3 perpRight = new Vector3(velocity.y, -velocity.x, velocity.z);
+
+        // Thử các hướng thay thế với độ ưu tiên giảm dần
+        Vector3[] alternativeDirections = new Vector3[]
+        {
+            perpLeft,                           // 90° trái
+            perpRight,                          // 90° phải
+            (velocity + perpLeft).normalized,   // 45° trái
+            (velocity + perpRight).normalized,  // 45° phải
+            perpLeft * 0.5f,                    // Trái với lực nhỏ hơn
+            perpRight * 0.5f                    // Phải với lực nhỏ hơn
+        };
+
+        float originalMagnitude = velocity.magnitude;
+
+        foreach (var altDir in alternativeDirections)
+        {
+            // Giữ nguyên magnitude của velocity gốc
+            Vector3 altVelocity = altDir.normalized * originalMagnitude;
+            Vector3 testPos = currentPos + altVelocity * deltaTime;
+            testPos = cachedMap.ClampToMap(testPos);
+
+            // Nếu vị trí này không bị chặn, sử dụng nó
+            if (!cachedMap.IsBlockedWorld(testPos))
+            {
+                // Cập nhật knockback velocity sang hướng mới
+                knockbackVelocity = altVelocity;
+                return testPos;
+            }
+        }
+
+        // Không tìm được hướng nào hợp lệ
+        return currentPos;
     }
 
     private void OnDeath()
@@ -1008,22 +1192,36 @@ public class CharacterBase : GameUnit, IManagedUpdate
 
     public void LockTarget(CharacterBase target)
     {
+        LockTarget(target, true); // Mặc định là manual lock
+    }
+
+    public void LockTarget(CharacterBase target, bool isManualLock)
+    {
         if (target == null || target == this) return;
+        
+        // Nếu là manual lock (từ bên ngoài), bỏ qua cooldown
+        if (!isManualLock)
+        {
+            // Auto lock - kiểm tra cooldown
+            if (Time.time - lastUnlockTime < AutoLockCooldown)
+            {
+                // Còn trong cooldown, không cho lock
+                return;
+            }
+        }
         
         isTargetLocked = true;
         lockedTarget = target;
         
-        // Bật particle và game object khi lock target
         if (lockTargetParticle != null)
             lockTargetParticle.Play();
         
         if (lockTargetIndicator != null)
             lockTargetIndicator.SetActive(true);
         
-        // Chuyển sang AttackState với target bị khóa
         if (stateMachine != null)
         {
-            stateMachine.Attack.SetTarget(target);
+            stateMachine.Attack.SetTarget(target, isManualLock);
             stateMachine.ChangeState(stateMachine.Attack);
         }
     }
@@ -1032,7 +1230,6 @@ public class CharacterBase : GameUnit, IManagedUpdate
     {
         characterNumericId = numericId;
         
-        // Cập nhật UI ngay lập tức
         if (infoUI != null)
             infoUI.SetCharacterNumericId(characterNumericId);
     }
@@ -1041,8 +1238,8 @@ public class CharacterBase : GameUnit, IManagedUpdate
     {
         isTargetLocked = false;
         lockedTarget = null;
+        lastUnlockTime = Time.time; // Ghi nhận thời điểm unlock
         
-        // Tắt particle và ẩn game object khi unlock target
         if (lockTargetParticle != null)
             lockTargetParticle.Stop();
         

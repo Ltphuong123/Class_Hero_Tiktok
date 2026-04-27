@@ -8,7 +8,7 @@ public class LeaderboardRow : MonoBehaviour, IPointerClickHandler
 {
     [Header("Texts")]
     [SerializeField] private TextMeshProUGUI rankText;
-    [SerializeField] private TextMeshProUGUI idText; // ID số nguyên
+    [SerializeField] private TextMeshProUGUI idText;
     [SerializeField] private TextMeshProUGUI nameText;
     [SerializeField] private TextMeshProUGUI hpText;
     [SerializeField] private TextMeshProUGUI swordCountText;
@@ -24,7 +24,6 @@ public class LeaderboardRow : MonoBehaviour, IPointerClickHandler
     [SerializeField] private Image shieldTimeFill;
     [SerializeField] private Image meteorTimeFill;
     
-    // Text components trên fill images (fallback khi không có text riêng)
     private TextMeshProUGUI magnetFillText;
     private TextMeshProUGUI shieldFillText;
     private TextMeshProUGUI meteorFillText;
@@ -39,12 +38,12 @@ public class LeaderboardRow : MonoBehaviour, IPointerClickHandler
     [SerializeField] private Sprite[] levelSprites;
 
     [Header("Background Colors")]
-    [SerializeField] private Color rank1Color = new Color(1f, 0.84f, 0f, 1f);      // Vàng gold - Mạnh nhất
-    [SerializeField] private Color rank2Color = new Color(0.75f, 0.75f, 0.75f, 1f); // Bạc silver
-    [SerializeField] private Color rank3Color = new Color(0.8f, 0.5f, 0.2f, 1f);    // Đồng bronze
-    [SerializeField] private Color rank4Color = new Color(0.4f, 0.8f, 1f, 1f);      // Xanh dương nhạt
-    [SerializeField] private Color rank5Color = new Color(0.6f, 0.9f, 0.6f, 1f);    // Xanh lá nhạt
-    [SerializeField] private Color normalRankColor = new Color(1f, 1f, 1f, 1f);     // Trắng
+    [SerializeField] private Color rank1Color = new Color(1f, 0.84f, 0f, 1f);
+    [SerializeField] private Color rank2Color = new Color(0.75f, 0.75f, 0.75f, 1f);
+    [SerializeField] private Color rank3Color = new Color(0.8f, 0.5f, 0.2f, 1f);
+    [SerializeField] private Color rank4Color = new Color(0.4f, 0.8f, 1f, 1f);
+    [SerializeField] private Color rank5Color = new Color(0.6f, 0.9f, 0.6f, 1f);
+    [SerializeField] private Color normalRankColor = new Color(1f, 1f, 1f, 1f);
     [SerializeField] private int topRankCount = 5;
 
     [Header("Camera")]
@@ -65,7 +64,6 @@ public class LeaderboardRow : MonoBehaviour, IPointerClickHandler
 
     private void Awake()
     {
-        // Tìm text components trên fill images
         if (magnetTimeFill != null)
             magnetFillText = magnetTimeFill.GetComponentInChildren<TextMeshProUGUI>();
         
@@ -80,14 +78,12 @@ public class LeaderboardRow : MonoBehaviour, IPointerClickHandler
     {
         currentCharacter = data.Character;
 
-        // Hiển thị Rank
         if (rankText != null && cachedRank != data.Rank)
         {
             rankText.text = $"#{data.Rank}";
             cachedRank = data.Rank;
         }
         
-        // Hiển thị ID số nguyên
         if (idText != null)
             idText.text = $"#{data.NumericId}";
 
@@ -142,13 +138,30 @@ public class LeaderboardRow : MonoBehaviour, IPointerClickHandler
         if (hpText != null && !Mathf.Approximately(cachedHp, data.CurrentHp))
         {
             hpText.text = $"{data.CurrentHp:F0}/{data.MaxHp:F0}";
+            
+            if (cachedHp >= 0f && data.CurrentHp > cachedHp)
+            {
+                hpText.transform.DOKill();
+                hpText.transform.localScale = Vector3.one;
+                hpText.transform.DOPunchScale(Vector3.one * 0.3f, 0.3f, 5, 0.5f);
+            }
+            
             cachedHp = data.CurrentHp;
         }
 
         if (swordCountText != null && (cachedSwordCount != data.SwordCount || cachedSwordQueue != data.SwordQueue))
         {
+            int oldTotal = (cachedSwordCount >= 0 && cachedSwordQueue >= 0) ? (cachedSwordCount + cachedSwordQueue) : -1;
             int totalSwords = data.SwordCount + data.SwordQueue;
             swordCountText.text = $"{totalSwords}";
+            
+            if (oldTotal >= 0 && totalSwords > oldTotal)
+            {
+                swordCountText.transform.DOKill();
+                swordCountText.transform.localScale = Vector3.one;
+                swordCountText.transform.DOPunchScale(Vector3.one * 0.3f, 0.3f, 5, 0.5f);
+            }
+            
             cachedSwordCount = data.SwordCount;
             cachedSwordQueue = data.SwordQueue;
         }
@@ -156,13 +169,19 @@ public class LeaderboardRow : MonoBehaviour, IPointerClickHandler
         if (killPointsText != null && cachedKillPoints != data.KillPoints)
         {
             killPointsText.text = $"{data.KillPoints}";
+            
+            if (cachedKillPoints >= 0 && data.KillPoints > cachedKillPoints)
+            {
+                killPointsText.transform.DOKill();
+                killPointsText.transform.localScale = Vector3.one;
+                killPointsText.transform.DOPunchScale(Vector3.one * 0.3f, 0.3f, 5, 0.5f);
+            }
+            
             cachedKillPoints = data.KillPoints;
         }
         
-        // Hiển thị Magnet count
         if (cachedMagnetStack != data.MagnetStackCount)
         {
-            // Ưu tiên text riêng, fallback sang text trên fill
             TextMeshProUGUI targetText = magnetCountText != null ? magnetCountText : magnetFillText;
             
             if (targetText != null)
@@ -174,7 +193,7 @@ public class LeaderboardRow : MonoBehaviour, IPointerClickHandler
                 }
                 else
                 {
-                    targetText.text = "0";
+                    targetText.text = " ";
                     targetText.enabled = true;
                 }
             }
@@ -182,7 +201,6 @@ public class LeaderboardRow : MonoBehaviour, IPointerClickHandler
             cachedMagnetStack = data.MagnetStackCount;
         }
         
-        // Hiển thị Magnet time fill
         if (magnetTimeFill != null && currentCharacter != null)
         {
             if (currentCharacter.IsMagnetActive && data.MagnetTimeRemaining > 0f)
@@ -198,10 +216,8 @@ public class LeaderboardRow : MonoBehaviour, IPointerClickHandler
             }
         }
         
-        // Hiển thị Shield count
         if (cachedShieldStack != data.ShieldStackCount)
         {
-            // Ưu tiên text riêng, fallback sang text trên fill
             TextMeshProUGUI targetText = shieldCountText != null ? shieldCountText : shieldFillText;
             
             if (targetText != null)
@@ -213,7 +229,7 @@ public class LeaderboardRow : MonoBehaviour, IPointerClickHandler
                 }
                 else
                 {
-                    targetText.text = "0";
+                    targetText.text = " ";
                     targetText.enabled = true;
                 }
             }
@@ -221,7 +237,6 @@ public class LeaderboardRow : MonoBehaviour, IPointerClickHandler
             cachedShieldStack = data.ShieldStackCount;
         }
         
-        // Hiển thị Shield time fill
         if (shieldTimeFill != null && currentCharacter != null)
         {
             if (currentCharacter.IsShieldActive && data.ShieldTimeRemaining > 0f)
@@ -237,10 +252,8 @@ public class LeaderboardRow : MonoBehaviour, IPointerClickHandler
             }
         }
         
-        // Hiển thị Meteor count
         if (cachedMeteorStack != data.MeteorStackCount)
         {
-            // Ưu tiên text riêng, fallback sang text trên fill
             TextMeshProUGUI targetText = meteorCountText != null ? meteorCountText : meteorFillText;
             
             if (targetText != null)
@@ -252,7 +265,7 @@ public class LeaderboardRow : MonoBehaviour, IPointerClickHandler
                 }
                 else
                 {
-                    targetText.text = "0";
+                    targetText.text = " ";
                     targetText.enabled = true;
                 }
             }
@@ -260,7 +273,6 @@ public class LeaderboardRow : MonoBehaviour, IPointerClickHandler
             cachedMeteorStack = data.MeteorStackCount;
         }
         
-        // Hiển thị Meteor cast time fill
         if (meteorTimeFill != null && currentCharacter != null)
         {
             if ((currentCharacter.IsCastingMeteor || currentCharacter.IsMeteorOnCooldown) && data.MeteorCastTimeRemaining > 0f)
@@ -299,12 +311,10 @@ public class LeaderboardRow : MonoBehaviour, IPointerClickHandler
         CameraController camController = Camera.main?.GetComponent<CameraController>();
         if (camController != null)
         {
-            // Set target để camera follow character liên tục
             camController.SetTarget(currentCharacter.transform);
         }
         else
         {
-            // Fallback: Di chuyển camera một lần nếu không có CameraController
             Camera mainCam = Camera.main;
             if (mainCam == null) return;
 

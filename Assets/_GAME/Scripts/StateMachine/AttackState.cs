@@ -10,17 +10,25 @@ public class AttackState : ICharacterState
     private float currentOrbitAngle;
     private bool orbitClockwise;
     private float orbitHoldTimer;
+    private bool isManualLock;
 
     private const float RepathInterval = 0.5f;
     private const float FleeChaseTimeout = 2f;
-    private const float OptimalAttackDistance = 3f;
+    private const float OptimalAttackDistance = 2f;
     private const float OptimalAttackDistanceSq = OptimalAttackDistance * OptimalAttackDistance;
     private const float AttackDistanceTolerance = 0.5f;
     private const float ChaseSpeedBonus = 0.5f;
     private const float OrbitAngleStep = 45f;
     private const float OrbitArriveThreshold = 0.5f;
 
+    public bool IsManualLock => isManualLock;
+
     public void SetTarget(CharacterBase t) => target = t;
+    public void SetTarget(CharacterBase t, bool manualLock)
+    {
+        target = t;
+        isManualLock = manualLock;
+    }
     public CharacterBase GetTarget() => target;
 
     public void Enter(CharacterStateMachine sm)
@@ -49,6 +57,15 @@ public class AttackState : ICharacterState
         
         if (!isLocked && mySwords <= 0)
         {
+            if (target != null) sm.Flee.SetThreat(target);
+            sm.ChangeState(sm.Flee);
+            return;
+        }
+
+        // Auto lock + hết kiếm → unlock và flee
+        if (isLocked && !isManualLock && mySwords <= 0 && CharacterBase.EnableAutoUnlockOnNoSwords)
+        {
+            sm.Owner.UnlockTarget();
             if (target != null) sm.Flee.SetThreat(target);
             sm.ChangeState(sm.Flee);
             return;
@@ -124,7 +141,10 @@ public class AttackState : ICharacterState
             if ((repathTimer -= deltaTime) <= 0f)
             {
                 repathTimer = RepathInterval;
-                BuildPathToTarget(sm);
+                
+                // Thay vì pathfind trực tiếp đến target, pathfind đến orbit position
+                Vector3 chaseTarget = CalculateChaseOrbitPosition(sm, targetPos);
+                BuildPathToPosition(sm, chaseTarget);
             }
 
             sm.MoveAlongPath(ref pathIndex, sm.GetCurrentSpeed() + ChaseSpeedBonus, deltaTime);
@@ -134,7 +154,11 @@ public class AttackState : ICharacterState
         UpdateOrbitMovement(sm, targetPos, deltaTime);
     }
 
-    public void Exit(CharacterStateMachine sm) => target = null;
+    public void Exit(CharacterStateMachine sm)
+    {
+        target = null;
+        isManualLock = false;
+    }
 
     private void UpdateOrbitMovement(CharacterStateMachine sm, Vector3 targetPos, float deltaTime)
     {
@@ -233,5 +257,67 @@ public class AttackState : ICharacterState
             sm.PathBuffer.Clear();
             sm.PathBuffer.Add(target.TF.position);
         }
+    }
+
+    private void BuildPathToPosition(CharacterStateMachine sm, Vector3 targetPosition)
+    {
+        pathIndex = 0;
+        if (sm.Pathfinder != null)
+            sm.Pathfinder.FindPath(sm.CachedPosition, targetPosition, sm.PathBuffer);
+        else
+        {
+            sm.PathBuffer.Clear();
+            sm.PathBuffer.Add(targetPosition);
+        }
+    }
+
+    private Vector3 CalculateChaseOrbitPosition(CharacterStateMachine sm, Vector3 targetPos)
+    {
+        // Tính vector từ target đến character
+        Vector3 toChar = sm.CachedPosition - targetPos;
+        float currentAngle = Mathf.Atan2(toChar.y, toChar.x);
+        
+        // Tính orbit position ở khoảng cách optimal
+        // Sử dụng góc hiện tại để character tiếp cận theo đường tự nhiên
+        Vector3 orbitPos = new Vector3(
+            targetPos.x + Mathf.Cos(currentAngle) * OptimalAttackDistance,
+            targetPos.y + Mathf.Sin(currentAngle) * OptimalAttackDistance,
+            targetPos.z
+        );
+        
+        // Clamp vào map
+        if (sm.Map != null)
+        {
+            orbitPos = sm.Map.ClampToMap(orbitPos);
+            
+            // Nếu vị trí này bị wall, thử các góc lân cận
+            if (sm.Map.IsBlockedWorld(orbitPos))
+            {
+                // Thử ±45° và ±90°
+                float[] angleOffsets = { 0.785f, -0.785f, 1.57f, -1.57f }; // 45°, -45°, 90°, -90° in radians
+                
+                foreach (float offset in angleOffsets)
+                {
+                    float testAngle = currentAngle + offset;
+                    Vector3 testPos = new Vector3(
+                        targetPos.x + Mathf.Cos(testAngle) * OptimalAttackDistance,
+                        targetPos.y + Mathf.Sin(testAngle) * OptimalAttackDistance,
+                        targetPos.z
+                    );
+                    
+                    testPos = sm.Map.ClampToMap(testPos);
+                    
+                    if (!sm.Map.IsBlockedWorld(testPos))
+                    {
+                        return testPos;
+                    }
+                }
+                
+                // Nếu tất cả orbit positions đều bị wall, fallback về target position
+                return targetPos;
+            }
+        }
+        
+        return orbitPos;
     }
 }

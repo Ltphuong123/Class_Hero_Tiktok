@@ -340,7 +340,6 @@ public class CharacterManager : Singleton<CharacterManager>
             characterIdMap.Remove(character.CharacterId);
         }
         
-        // Remove numeric ID
         if (character.CharacterNumericId > 0)
         {
             characterNumericIdMap.Remove(character.CharacterNumericId);
@@ -394,10 +393,19 @@ public class CharacterManager : Singleton<CharacterManager>
 
     public CharacterBase RespawnCharacter(string userId, string nickname, Sprite avatar = null, int level = 1)
     {
-        // Nếu character còn sống, không respawn và return null
-        if (IsCharacterAlive(userId))
+        CharacterBase existingCharacter = GetCharacterByIdIncludingDead(userId);
+        
+        if (existingCharacter != null)
         {
-            return null;
+            if (!existingCharacter.IsDead && existingCharacter.CurrentHp > 0f && existingCharacter.gameObject.activeInHierarchy)
+            {
+                return existingCharacter;
+            }
+            
+            if (existingCharacter.gameObject != null)
+            {
+                Despawn(existingCharacter);
+            }
         }
 
         MapManager map = MapManager.Instance;
@@ -406,9 +414,6 @@ public class CharacterManager : Singleton<CharacterManager>
 
         Vector3 spawnPos = FindOpenSpawnPosition(map);
         CharacterBase character = Spawn(spawnPos, userId, nickname, avatar, level);
-        
-        // Không hiển thị notification ở đây nữa
-        // Notification sẽ được hiển thị từ TikTokGameHandler
         
         return character;
     }
@@ -435,6 +440,22 @@ public class CharacterManager : Singleton<CharacterManager>
     }
 
     public CharacterBase GetCharacterById(string characterId)
+    {
+        if (string.IsNullOrEmpty(characterId))
+            return null;
+
+        if (characterIdMap.TryGetValue(characterId, out CharacterBase character))
+        {
+            if (character != null && !character.IsDead && character.gameObject.activeInHierarchy)
+            {
+                return character;
+            }
+        }
+        
+        return null;
+    }
+
+    private CharacterBase GetCharacterByIdIncludingDead(string characterId)
     {
         if (string.IsNullOrEmpty(characterId))
             return null;
@@ -506,80 +527,211 @@ public class CharacterManager : Singleton<CharacterManager>
         return spawnedCharacterIds.Count;
     }
 
-    public bool UpgradeToLevel2(string characterId, int count = 1)
+    public bool UpgradeToLevel2(string characterId, string nickname, int count = 1)
     {
-        CharacterBase character = GetCharacterById(characterId);
-        if (character == null || !character.gameObject.activeInHierarchy || character.IsDead)
-            return false;
+        CharacterBase character = EnsureCharacterAlive(characterId, nickname);
+        if (character == null) return false;
+        
+        if (character.IsDead)
+        {
+            StartCoroutine(DelayedUpgradeLevel2(character, count));
+            return true;
+        }
 
         character.AddLevelReserveTime(2, count);
         return true;
     }
 
-    public bool UpgradeToLevel3(string characterId, int count = 1)
+    private System.Collections.IEnumerator DelayedUpgradeLevel2(CharacterBase character, int count)
     {
-        CharacterBase character = GetCharacterById(characterId);
-        if (character == null || !character.gameObject.activeInHierarchy || character.IsDead)
-            return false;
+        yield return new WaitForSeconds(0.3f);
+        if (character != null && !character.IsDead)
+            character.AddLevelReserveTime(2, count);
+    }
+
+    public bool UpgradeToLevel3(string characterId, string nickname, int count = 1)
+    {
+        CharacterBase character = EnsureCharacterAlive(characterId, nickname);
+        if (character == null) return false;
+        
+        if (character.IsDead)
+        {
+            StartCoroutine(DelayedUpgradeLevel3(character, count));
+            return true;
+        }
 
         character.AddLevelReserveTime(3, count);
         return true;
     }
 
-    public bool UpgradeToLevel4(string characterId, int count = 1)
+    private System.Collections.IEnumerator DelayedUpgradeLevel3(CharacterBase character, int count)
     {
-        CharacterBase character = GetCharacterById(characterId);
-        if (character == null || !character.gameObject.activeInHierarchy || character.IsDead)
-            return false;
+        yield return new WaitForSeconds(0.3f);
+        if (character != null && !character.IsDead)
+            character.AddLevelReserveTime(3, count);
+    }
+
+    public bool UpgradeToLevel4(string characterId, string nickname, int count = 1)
+    {
+        CharacterBase character = EnsureCharacterAlive(characterId, nickname);
+        if (character == null) return false;
+        
+        if (character.IsDead)
+        {
+            StartCoroutine(DelayedUpgradeLevel4(character, count));
+            return true;
+        }
 
         character.AddLevelReserveTime(4, count);
         return true;
     }
 
-    public bool UpgradeToLevel5(string characterId, int count = 1)
+    private System.Collections.IEnumerator DelayedUpgradeLevel4(CharacterBase character, int count)
     {
-        CharacterBase character = GetCharacterById(characterId);
-        if (character == null || !character.gameObject.activeInHierarchy || character.IsDead)
-            return false;
+        yield return new WaitForSeconds(0.3f);
+        if (character != null && !character.IsDead)
+            character.AddLevelReserveTime(4, count);
+    }
+
+    public bool UpgradeToLevel5(string characterId, string nickname, int count = 1)
+    {
+        CharacterBase character = EnsureCharacterAlive(characterId, nickname);
+        if (character == null) return false;
+        
+        if (character.IsDead)
+        {
+            StartCoroutine(DelayedUpgradeLevel5(character, count));
+            return true;
+        }
 
         character.AddLevelReserveTime(5, count);
         return true;
     }
 
-    public bool ActivateMagnetBooster(string characterId, int count = 1)
+    private System.Collections.IEnumerator DelayedUpgradeLevel5(CharacterBase character, int count)
     {
-        CharacterBase character = GetCharacterById(characterId);
-        if (character == null || !character.gameObject.activeInHierarchy || character.IsDead)
-            return false;
+        yield return new WaitForSeconds(0.3f);
+        if (character != null && !character.IsDead)
+            character.AddLevelReserveTime(5, count);
+    }
+
+    public bool ActivateMagnetBooster(string characterId, string nickname, int count = 1)
+    {
+        CharacterBase character = EnsureCharacterAlive(characterId, nickname);
+        if (character == null) return false;
+        
+        if (character.IsDead)
+        {
+            StartCoroutine(DelayedActivateMagnet(character, count));
+            return true;
+        }
 
         character.ActivateMagnetBooster(count);
         return true;
     }
 
-    public bool ActivateShieldBooster(string characterId, int count = 1)
+    private System.Collections.IEnumerator DelayedActivateMagnet(CharacterBase character, int count)
     {
-        CharacterBase character = GetCharacterById(characterId);
-        if (character == null || !character.gameObject.activeInHierarchy || character.IsDead)
-            return false;
+        yield return new WaitForSeconds(0.3f);
+        if (character != null && !character.IsDead)
+            character.ActivateMagnetBooster(count);
+    }
+
+    public bool ActivateShieldBooster(string characterId, string nickname, int count = 1)
+    {
+        CharacterBase character = EnsureCharacterAlive(characterId, nickname);
+        if (character == null) return false;
+        
+        if (character.IsDead)
+        {
+            StartCoroutine(DelayedActivateShield(character, count));
+            return true;
+        }
 
         character.ActivateShieldBooster(count);
         return true;
     }
 
-    public bool ActivateMeteorBooster(string characterId, int count = 1)
+    private System.Collections.IEnumerator DelayedActivateShield(CharacterBase character, int count)
     {
-        CharacterBase character = GetCharacterById(characterId);
-        if (character == null || !character.gameObject.activeInHierarchy || character.IsDead)
-            return false;
+        yield return new WaitForSeconds(0.3f);
+        if (character != null && !character.IsDead)
+            character.ActivateShieldBooster(count);
+    }
+
+    public bool ActivateMeteorBooster(string characterId, string nickname, int count = 1)
+    {
+        CharacterBase character = EnsureCharacterAlive(characterId, nickname);
+        if (character == null) return false;
+        
+        if (character.IsDead)
+        {
+            StartCoroutine(DelayedActivateMeteor(character, count));
+            return true;
+        }
 
         character.ActivateMeteorBooster(count);
         return true;
     }
 
-    public bool AddSwordsToCharacter(string characterId, int swordsToAdd)
+    private System.Collections.IEnumerator DelayedActivateMeteor(CharacterBase character, int count)
     {
-        CharacterBase currentCharacter = GetCharacterById(characterId);
+        yield return new WaitForSeconds(0.3f);
+        if (character != null && !character.IsDead)
+            character.ActivateMeteorBooster(count);
+    }
+
+    public bool ActivateHealBooster(string characterId, string nickname, float healAmount)
+    {
+        CharacterBase character = EnsureCharacterAlive(characterId, nickname);
+        if (character == null) return false;
+        
+        if (character.IsDead)
+        {
+            StartCoroutine(DelayedActivateHeal(character, healAmount));
+            return true;
+        }
+
+        character.ActivateHealBooster(healAmount);
+        return true;
+    }
+
+    private System.Collections.IEnumerator DelayedActivateHeal(CharacterBase character, float healAmount)
+    {
+        yield return new WaitForSeconds(0.3f);
+        if (character != null && !character.IsDead)
+            character.ActivateHealBooster(healAmount);
+    }
+
+    private CharacterBase EnsureCharacterAlive(string characterId, string nickname)
+    {
+        CharacterBase character = GetCharacterById(characterId);
+        
+        if (character == null || character.IsDead)
+        {
+            CharacterBase existingDead = GetCharacterByIdIncludingDead(characterId);
+            if (existingDead != null && existingDead.gameObject != null)
+            {
+                Despawn(existingDead);
+            }
+            
+            character = RespawnCharacter(characterId, nickname, null, 1);
+        }
+        
+        return character;
+    }
+
+    public bool AddSwordsToCharacter(string characterId, string nickname, int swordsToAdd)
+    {
+        CharacterBase currentCharacter = EnsureCharacterAlive(characterId, nickname);
+        
         if (currentCharacter == null) return false;
+        
+        if (currentCharacter.IsDead)
+        {
+            StartCoroutine(DelayedAddSwords(currentCharacter, swordsToAdd));
+            return true;
+        }
 
         SwordOrbit orbit = currentCharacter.GetSwordOrbit();
         if (orbit == null) return false;
@@ -587,18 +739,15 @@ public class CharacterManager : Singleton<CharacterManager>
         int currentSwordCount = currentCharacter.SwordCount;
         int maxSwordCount = currentCharacter.MaxSwordCount;
         
-        // Nếu đã đủ kiếm, thêm vào queue
         if (currentCharacter.IsSwordFull)
         {
             bool addedToQueue = currentCharacter.AddToSwordQueue(swordsToAdd);
             return addedToQueue;
         }
 
-        // Tính số kiếm có thể thêm ngay
         int actualSwordsToAdd = Mathf.Min(swordsToAdd, maxSwordCount - currentSwordCount);
         int remainingSwords = swordsToAdd - actualSwordsToAdd;
 
-        // Thêm kiếm ngay lập tức
         if (actualSwordsToAdd > 0)
         {
             for (int i = 0; i < actualSwordsToAdd; i++)
@@ -611,13 +760,51 @@ public class CharacterManager : Singleton<CharacterManager>
             }
         }
 
-        // Thêm phần còn lại vào queue
         if (remainingSwords > 0)
         {
             currentCharacter.AddToSwordQueue(remainingSwords);
         }
 
         return true;
+    }
+
+    private System.Collections.IEnumerator DelayedAddSwords(CharacterBase character, int swordsToAdd)
+    {
+        yield return new WaitForSeconds(0.3f);
+        
+        if (character == null || character.IsDead) yield break;
+
+        SwordOrbit orbit = character.GetSwordOrbit();
+        if (orbit == null) yield break;
+
+        int currentSwordCount = character.SwordCount;
+        int maxSwordCount = character.MaxSwordCount;
+        
+        if (character.IsSwordFull)
+        {
+            character.AddToSwordQueue(swordsToAdd);
+            yield break;
+        }
+
+        int actualSwordsToAdd = Mathf.Min(swordsToAdd, maxSwordCount - currentSwordCount);
+        int remainingSwords = swordsToAdd - actualSwordsToAdd;
+
+        if (actualSwordsToAdd > 0)
+        {
+            for (int i = 0; i < actualSwordsToAdd; i++)
+            {
+                Vector2 randomOffset = UnityEngine.Random.insideUnitCircle.normalized * 2f;
+                Vector3 spawnPos = character.TF.position + new Vector3(randomOffset.x, randomOffset.y, 0f);
+                Sword sword = ItemManager.Instance.Spawn(spawnPos);
+                if (sword != null)
+                    sword.Collect(character);
+            }
+        }
+
+        if (remainingSwords > 0)
+        {
+            character.AddToSwordQueue(remainingSwords);
+        }
     }
 
     public bool LockTargetAttack(string attackerId, string targetId)
@@ -634,7 +821,7 @@ public class CharacterManager : Singleton<CharacterManager>
         if (attacker == target)
             return false;
 
-        attacker.LockTarget(target);
+        attacker.LockTarget(target, true); // true = manual lock (bypass cooldown)
         return true;
     }
 

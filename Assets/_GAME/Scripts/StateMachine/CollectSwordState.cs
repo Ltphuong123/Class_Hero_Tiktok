@@ -42,7 +42,8 @@ public class CollectSwordState : ICharacterState
         // Nếu đã đủ kiếm hoặc có queue, chuyển sang Wander hoặc Attack
         if (sm.Owner.IsSwordFull || sm.Owner.SwordQueue > 0)
         {
-            if (sm.MySwordCount > 0)
+            // Chỉ tìm đối thủ nếu EnableAutoLockOnAttacked = false (chế độ thường)
+            if (!CharacterBase.EnableAutoLockOnAttacked && sm.MySwordCount > 0)
             {
                 CharacterBase target = sm.FindWeakerTarget();
                 if (target != null)
@@ -60,7 +61,8 @@ public class CollectSwordState : ICharacterState
         {
             rescanTimer = RescanInterval;
             
-            if (sm.MySwordCount > 0)
+            // Chỉ tìm đối thủ nếu EnableAutoLockOnAttacked = false (chế độ thường)
+            if (!CharacterBase.EnableAutoLockOnAttacked && sm.MySwordCount > 0)
             {
                 CharacterBase target = sm.FindWeakerTarget();
                 if (target != null)
@@ -90,12 +92,16 @@ public class CollectSwordState : ICharacterState
         {
             if (targetSword.Collect(sm.Owner))
             {
-                CharacterBase target = sm.FindWeakerTarget();
-                if (target != null)
+                // Chỉ tìm đối thủ nếu EnableAutoLockOnAttacked = false (chế độ thường)
+                if (!CharacterBase.EnableAutoLockOnAttacked)
                 {
-                    sm.Attack.SetTarget(target);
-                    sm.ChangeState(sm.Attack);
-                    return;
+                    CharacterBase target = sm.FindWeakerTarget();
+                    if (target != null)
+                    {
+                        sm.Attack.SetTarget(target);
+                        sm.ChangeState(sm.Attack);
+                        return;
+                    }
                 }
 
                 targetSword = sm.FindBestSword();

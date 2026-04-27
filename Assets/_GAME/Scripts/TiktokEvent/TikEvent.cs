@@ -19,6 +19,7 @@ public class TikEvent
     public TikGift gift;
     public int count;   // số lượng quà
     public int total;   // tổng xu = price * count
+    public int delta;
 
     // debug (optional)
     public string rawJson;
@@ -38,4 +39,5 @@ public class TikGift
     public int id;
     public string name;
     public int price;   // giá 1 món (diamond)
+    
 }

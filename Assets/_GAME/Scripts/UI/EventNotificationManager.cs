@@ -14,6 +14,7 @@ public class EventNotificationManager : Singleton<EventNotificationManager>
     [SerializeField] private Sprite shieldIcon;
     [SerializeField] private Sprite meteorIcon;
     [SerializeField] private Sprite respawnIcon;
+    [SerializeField] private Sprite healIcon;
 
     [Header("Background Colors")]
     [SerializeField] private Color joinColor = new Color(0.1f, 0.4f, 0.1f, 0.5f);        // Xanh lá tối
@@ -24,6 +25,7 @@ public class EventNotificationManager : Singleton<EventNotificationManager>
     [SerializeField] private Color shieldColor = new Color(0.5f, 0.32f, 0f, 0.5f);       // Cam tối
     [SerializeField] private Color meteorColor = new Color(0.4f, 0f, 0.2f, 0.5f);        // Đỏ tím tối
     [SerializeField] private Color respawnColor = new Color(0.25f, 0.25f, 0.5f, 0.5f);   // Tím tối
+    [SerializeField] private Color healColor = new Color(0f, 0.5f, 0.2f, 0.5f);          // Xanh lá sáng
 
     [Header("Settings")]
     [SerializeField] private int maxMessageLength = 30;
@@ -154,6 +156,15 @@ public class EventNotificationManager : Singleton<EventNotificationManager>
             string countText = count > 1 ? $" x{count}" : "";
             string message = TruncateMessage($"<color=#FF0000>{characterName}</color> Meteor{countText}");
             notificationUI.ShowNotification(message, meteorIcon, meteorColor);
+        }
+    }
+
+    public void ShowHealBoosterNotification(string characterName, float healAmount)
+    {
+        if (notificationUI != null)
+        {
+            string message = TruncateMessage($"<color=#00FF88>{characterName}</color> +{healAmount:F0} HP");
+            notificationUI.ShowNotification(message, healIcon, healColor);
         }
     }
 }

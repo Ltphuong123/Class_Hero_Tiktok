@@ -36,10 +36,6 @@ public class SwordOrbit : MonoBehaviour
 
     public void OnDespawn()
     {
-        // for (int i = swords.Count - 1; i >= 0; i--)
-        // {
-        //     swords[i].KnockOff();
-        // }
         swords.Clear();
     }
 

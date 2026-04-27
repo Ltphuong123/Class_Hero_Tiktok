@@ -31,7 +31,8 @@ public class WanderState : ICharacterState
         {
             rescanTimer = RescanInterval;
 
-            if (sm.MySwordCount > 0)
+            // Chỉ tìm đối thủ nếu EnableAutoLockOnAttacked = false (chế độ thường)
+            if (!CharacterBase.EnableAutoLockOnAttacked && sm.MySwordCount > 0)
             {
                 CharacterBase target = sm.FindWeakerTarget();
                 if (target != null)
@@ -93,79 +94,29 @@ public class WanderState : ICharacterState
         MapManager map = sm.Map;
         GridPathfinder pathfinder = sm.Pathfinder;
 
-        Vector3 mapCenter = new Vector3(0f, 0f, myPos.z);
-
-        float distToCenter = Vector3.Distance(myPos, mapCenter);
-        const float targetRadius = 5f;
-        
-        float centerBias = 0.5f;
-        if (map != null)
-        {
-            float mapRadius = Mathf.Min(map.MapWidth, map.MapHeight) * 0.5f;
-            
-            if (distToCenter < targetRadius)
-            {
-                centerBias = 0.2f;
-            }
-            else if (distToCenter > targetRadius + 5f)
-            {
-                float normalizedDist = Mathf.Clamp01((distToCenter - targetRadius) / mapRadius);
-                centerBias = Mathf.Lerp(0.6f, 0.95f, normalizedDist);
-            }
-            else
-            {
-                centerBias = 0.4f;
-            }
-        }
-
+        // Thử 10 lần để tìm vị trí hợp lệ
         for (int attempt = 0; attempt < 10; attempt++)
         {
-            Vector3 candidate;
+            // Random góc và khoảng cách
+            float angle = Random.Range(0f, Mathf.PI * 2f);
+            float dist = Random.Range(3f, WanderRadius);
+            float dirX = Mathf.Cos(angle);
+            float dirY = Mathf.Sin(angle);
             
-            if (Random.value < centerBias)
-            {
-                Vector3 dirToCenter = (mapCenter - myPos).normalized;
-                
-                if (distToCenter < targetRadius)
-                {
-                    dirToCenter = -dirToCenter;
-                    float angle = Mathf.Atan2(dirToCenter.y, dirToCenter.x);
-                    angle += Random.Range(-Mathf.PI * 0.5f, Mathf.PI * 0.5f);
-                    float dist = Random.Range(3f, WanderRadius);
-                    float dirX = Mathf.Cos(angle);
-                    float dirY = Mathf.Sin(angle);
-                    candidate = new Vector3(myX + dirX * dist, myY + dirY * dist, myPos.z);
-                }
-                else
-                {
-                    Vector3 targetPoint = mapCenter + dirToCenter * targetRadius;
-                    Vector3 dirToTarget = (targetPoint - myPos).normalized;
-                    float angle = Mathf.Atan2(dirToTarget.y, dirToTarget.x);
-                    angle += Random.Range(-Mathf.PI * 0.3f, Mathf.PI * 0.3f);
-                    float dist = Random.Range(4f, WanderRadius);
-                    float dirX = Mathf.Cos(angle);
-                    float dirY = Mathf.Sin(angle);
-                    candidate = new Vector3(myX + dirX * dist, myY + dirY * dist, myPos.z);
-                }
-            }
-            else
-            {
-                float angle = Random.Range(0f, Mathf.PI * 2f);
-                float dist = Random.Range(3f, WanderRadius);
-                float dirX = Mathf.Cos(angle);
-                float dirY = Mathf.Sin(angle);
-                candidate = new Vector3(myX + dirX * dist, myY + dirY * dist, myPos.z);
-            }
+            Vector3 candidate = new Vector3(myX + dirX * dist, myY + dirY * dist, myPos.z);
 
+            // Clamp vào map và check wall
             if (map != null)
             {
                 candidate = map.ClampToMap(candidate);
                 if (map.IsWall(candidate)) continue;
             }
 
+            // Đảm bảo di chuyển đủ xa (tối thiểu 1f)
             float dx = candidate.x - myX, dy = candidate.y - myY;
             if (dx * dx + dy * dy < 1f) continue;
 
+            // Tìm đường đi
             pathIndex = 0;
             if (pathfinder != null)
             {
@@ -180,6 +131,7 @@ public class WanderState : ICharacterState
             }
         }
 
+        // Nếu không tìm được đường, clear buffer
         sm.PathBuffer.Clear();
         pathIndex = 0;
     }
