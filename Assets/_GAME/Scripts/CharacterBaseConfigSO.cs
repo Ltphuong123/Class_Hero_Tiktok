@@ -25,6 +25,10 @@ public class CharacterBaseConfigSO : ScriptableObject
     [Tooltip("Sát thương meteor")]
     public float meteorDamage = 50f;
 
+    [Header("Lifesteal Settings")]
+    [Tooltip("Tỷ lệ hút máu khi gây sát thương (0.0 - 1.0)")]
+    public float lifestealPercent = 0.2f;
+
     [Header("AI Combat Settings")]
     [Tooltip("Tự động lock target khi bị tấn công")]
     public bool enableAutoLockOnAttacked = false;
@@ -78,6 +82,7 @@ public class CharacterBaseConfigSO : ScriptableObject
             maxSwordCount = this.maxSwordCount,
             maxSwordQueue = this.maxSwordQueue,
             meteorDamage = this.meteorDamage,
+            lifestealPercent = this.lifestealPercent,
             enableAutoLockOnAttacked = this.enableAutoLockOnAttacked,
             enableAutoUnlockOnNoSwords = this.enableAutoUnlockOnNoSwords
         };
@@ -109,6 +114,7 @@ public class CharacterBaseConfigSO : ScriptableObject
             this.maxSwordCount = data.maxSwordCount;
             this.maxSwordQueue = data.maxSwordQueue;
             this.meteorDamage = data.meteorDamage;
+            this.lifestealPercent = data.lifestealPercent;
             this.enableAutoLockOnAttacked = data.enableAutoLockOnAttacked;
             this.enableAutoUnlockOnNoSwords = data.enableAutoUnlockOnNoSwords;
             
@@ -137,6 +143,7 @@ public class CharacterBaseConfigSO : ScriptableObject
         public int maxSwordCount;
         public int maxSwordQueue;
         public float meteorDamage;
+        public float lifestealPercent;
         public bool enableAutoLockOnAttacked;
         public bool enableAutoUnlockOnNoSwords;
     }

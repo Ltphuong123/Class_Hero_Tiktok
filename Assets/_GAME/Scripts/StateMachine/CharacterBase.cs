@@ -31,7 +31,8 @@ public class CharacterBase : GameUnit, IManagedUpdate
     [Header("Lifesteal Settings")]
     [SerializeField] private float lifestealPercent = 0.2f;
     [SerializeField] private float lifestealCooldown = 0.5f;     
-    [SerializeField] private ParticleSystem lifestealParticle;    
+    [SerializeField] private ParticleSystem lifestealParticle;
+    private float lifestealPercentConfig => config != null ? config.lifestealPercent : lifestealPercent;    
     
     [Header("Magnet Booster")]
     [SerializeField] private float magnetRadius = 10f;
@@ -1009,7 +1010,7 @@ public class CharacterBase : GameUnit, IManagedUpdate
         float currentTime = Time.time;
         if (currentTime - lastLifestealTime < lifestealCooldown)
             return;
-        float healAmount = damageDealt * lifestealPercent;
+        float healAmount = damageDealt * lifestealPercentConfig;
         if (healAmount <= 0f) return;
         float oldHp = currentHp;
         currentHp = Mathf.Min(currentMaxHp, currentHp + healAmount);

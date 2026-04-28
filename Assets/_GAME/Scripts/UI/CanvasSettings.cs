@@ -48,6 +48,7 @@ public class CanvasSettings : MonoBehaviour
     [SerializeField] private TMP_InputField maxSwordCountInput;
     [SerializeField] private TMP_InputField maxSwordQueueInput;
     [SerializeField] private TMP_InputField meteorDamageInput;
+    [SerializeField] private TMP_InputField lifestealPercentInput;
     [SerializeField] private Toggle autoLockOnAttackedToggle;
     [SerializeField] private Toggle autoUnlockOnNoSwordsToggle;
     [SerializeField] private Button characterBaseSaveButton;
@@ -243,6 +244,9 @@ public class CanvasSettings : MonoBehaviour
         maxSwordQueueInput.text = characterBaseConfig.maxSwordQueue.ToString();
         meteorDamageInput.text = characterBaseConfig.meteorDamage.ToString();
         
+        if (lifestealPercentInput != null)
+            lifestealPercentInput.text = characterBaseConfig.lifestealPercent.ToString();
+        
         if (autoLockOnAttackedToggle != null)
             autoLockOnAttackedToggle.isOn = characterBaseConfig.enableAutoLockOnAttacked;
         
@@ -271,6 +275,9 @@ public class CanvasSettings : MonoBehaviour
         
         if (float.TryParse(meteorDamageInput.text, out float meteorDamage))
             characterBaseConfig.meteorDamage = meteorDamage;
+
+        if (lifestealPercentInput != null && float.TryParse(lifestealPercentInput.text, out float lifestealPercent))
+            characterBaseConfig.lifestealPercent = lifestealPercent;
 
         if (autoLockOnAttackedToggle != null)
             characterBaseConfig.enableAutoLockOnAttacked = autoLockOnAttackedToggle.isOn;
@@ -305,6 +312,7 @@ public class CanvasSettings : MonoBehaviour
         characterBaseConfig.maxSwordCount = 20;
         characterBaseConfig.maxSwordQueue = 50;
         characterBaseConfig.meteorDamage = 50f;
+        characterBaseConfig.lifestealPercent = 0.2f;
         characterBaseConfig.enableAutoLockOnAttacked = false;
         characterBaseConfig.enableAutoUnlockOnNoSwords = true;
         
