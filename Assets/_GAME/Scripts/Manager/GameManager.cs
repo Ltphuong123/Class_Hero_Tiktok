@@ -34,6 +34,7 @@ public class GameManager : Singleton<GameManager>
         //tranh viec nguoi choi cham da diem vao man hinh
         Input.multiTouchEnabled = false;
         //target frame rate ve 60 fps
+         QualitySettings.vSyncCount = 0; // Tắt VSync
         Application.targetFrameRate = 60;
         //tranh viec tat man hinh
         Screen.sleepTimeout = SleepTimeout.NeverSleep;
