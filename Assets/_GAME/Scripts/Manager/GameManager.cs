@@ -37,6 +37,8 @@ public class GameManager : Singleton<GameManager>
         Application.targetFrameRate = 60;
         //tranh viec tat man hinh
         Screen.sleepTimeout = SleepTimeout.NeverSleep;
+        // game van chay khi mat focus (can thiet cho TikTok streaming)
+        Application.runInBackground = true;
     }
 
     private void Update()

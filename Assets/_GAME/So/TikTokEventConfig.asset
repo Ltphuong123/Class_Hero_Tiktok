@@ -30,7 +30,7 @@ MonoBehaviour:
       swordCount: 0
       healAmount: 0
   - eventType: 0
-    likeThreshold: 5
+    likeThreshold: 3
     commentCommand: 0
     giftMinPrice: 0
     actions:
@@ -51,7 +51,7 @@ MonoBehaviour:
     giftMinPrice: 1
     actions:
     - actionType: 2
-      swordCount: 2
+      swordCount: 3
       healAmount: 0
   - eventType: 3
     likeThreshold: 0
@@ -80,19 +80,14 @@ MonoBehaviour:
   - eventType: 3
     likeThreshold: 0
     commentCommand: 0
-    giftMinPrice: 30
+    giftMinPrice: 99
     actions:
     - actionType: 6
       swordCount: 0
       healAmount: 0
-  - eventType: 3
-    likeThreshold: 0
-    commentCommand: 0
-    giftMinPrice: 40
-    actions:
-    - actionType: 7
-      swordCount: 0
-      healAmount: 0
+    - actionType: 9
+      swordCount: 1
+      healAmount: 5
   - eventType: 3
     likeThreshold: 0
     commentCommand: 0
@@ -101,19 +96,6 @@ MonoBehaviour:
     - actionType: 8
       swordCount: 0
       healAmount: 0
-  - eventType: 3
-    likeThreshold: 0
-    commentCommand: 0
-    giftMinPrice: 70
-    actions:
-    - actionType: 9
-      swordCount: 0
-      healAmount: 0
-  - eventType: 3
-    likeThreshold: 0
-    commentCommand: 0
-    giftMinPrice: 70
-    actions:
     - actionType: 10
-      swordCount: 0
+      swordCount: 1
       healAmount: 500

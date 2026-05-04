@@ -1707,7 +1707,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   port: 7777
   logRaw: 1
-  receiveTimeoutMs: 500
+  receiveTimeoutMs: 250
   autoStart: 0
 --- !u!114 &1271743458
 MonoBehaviour:
@@ -3499,6 +3499,10 @@ PrefabInstance:
     - target: {fileID: 1020311798685653722, guid: 9016c24f05ab76f44add39558f163833, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9071950252844473982, guid: 9016c24f05ab76f44add39558f163833, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 42.5
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
