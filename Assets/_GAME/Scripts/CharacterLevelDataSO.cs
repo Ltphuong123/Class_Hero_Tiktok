@@ -20,6 +20,10 @@ public class LevelData
     
     [Tooltip("Chỉ số scale cơ thể (1.0 = bình thường)")]
     public float bodyScale = 1f;
+
+    [Tooltip("% giảm sát thương nhận vào (0 = không giảm, 0.5 = giảm 50%, tối đa 0.9)")]
+    [Range(0f, 1f)]
+    public float damageReduction = 0f;
 }
 
 [CreateAssetMenu(fileName = "CharacterLevelData", menuName = "Game/Character Level Data")]
@@ -88,6 +92,12 @@ public class CharacterLevelDataSO : ScriptableObject
         return data != null ? data.bodyScale : 1f;
     }
 
+    public float GetDamageReduction(int level)
+    {
+        LevelData data = GetLevelData(level);
+        return data != null ? Mathf.Clamp(data.damageReduction, 0f, 1f) : 0f;
+    }
+
     public int GetMaxLevel()
     {
         if (levels == null || levels.Length == 0) return 1;
@@ -101,7 +111,7 @@ public class CharacterLevelDataSO : ScriptableObject
         return max;
     }
 
-    public void SetLevelData(int level, SwordType swordType, float duration, float speed, float bodyScale)
+    public void SetLevelData(int level, SwordType swordType, float duration, float speed, float bodyScale, float damageReduction = 0f)
     {
         for (int i = 0; i < levels.Length; i++)
         {
@@ -111,6 +121,7 @@ public class CharacterLevelDataSO : ScriptableObject
                 levels[i].duration = duration;
                 levels[i].speed = speed;
                 levels[i].bodyScale = bodyScale;
+                levels[i].damageReduction = Mathf.Clamp(damageReduction, 0f, 1f);
                 return;
             }
         }
@@ -194,6 +205,7 @@ public class CharacterLevelDataSO : ScriptableObject
             levels[i].speed = 5f;
             levels[i].bodyScale = 1f;
             levels[i].swordType = SwordType.Default;
+            levels[i].damageReduction = 0f;
         }
         SaveToFile();
     }

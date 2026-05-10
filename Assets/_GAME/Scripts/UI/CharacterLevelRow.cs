@@ -10,26 +10,30 @@ public class CharacterLevelRow : MonoBehaviour
     [SerializeField] private TMP_InputField durationInput;
     [SerializeField] private TMP_InputField speedInput;
     [SerializeField] private TMP_InputField bodyScaleInput;
+    [SerializeField] private TMP_InputField damageReductionInput;
 
     private int level;
     private SwordType swordType;
     private float duration;
     private float speed;
     private float bodyScale;
+    private float damageReduction;
 
     public int Level => level;
     public SwordType SwordType => swordType;
     public float Duration => duration;
     public float Speed => speed;
     public float BodyScale => bodyScale;
+    public float DamageReduction => damageReduction;
 
-    public void Initialize(int lvl, SwordType type, float dur, float spd, float scale)
+    public void Initialize(int lvl, SwordType type, float dur, float spd, float scale, float dmgReduction = 0f)
     {
         level = lvl;
         swordType = type;
         duration = dur;
         speed = spd;
         bodyScale = scale;
+        damageReduction = dmgReduction;
 
         if (levelText != null)
             levelText.text = $"Level {lvl}";
@@ -66,6 +70,12 @@ public class CharacterLevelRow : MonoBehaviour
         {
             bodyScaleInput.text = scale.ToString("F2");
             bodyScaleInput.onEndEdit.AddListener(OnBodyScaleChanged);
+        }
+
+        if (damageReductionInput != null)
+        {
+            damageReductionInput.text = (dmgReduction * 100f).ToString("F1");
+            damageReductionInput.onEndEdit.AddListener(OnDamageReductionChanged);
         }
     }
 
@@ -113,6 +123,19 @@ public class CharacterLevelRow : MonoBehaviour
         }
     }
 
+    private void OnDamageReductionChanged(string value)
+    {
+        if (float.TryParse(value, out float newValue))
+        {
+            damageReduction = Mathf.Clamp(newValue / 100f, 0f, 1f);
+            damageReductionInput.text = Mathf.RoundToInt(damageReduction * 100f).ToString();
+        }
+        else
+        {
+            damageReductionInput.text = Mathf.RoundToInt(damageReduction * 100f).ToString();
+        }
+    }
+
     private void OnDestroy()
     {
         if (swordTypeDropdown != null)
@@ -126,5 +149,8 @@ public class CharacterLevelRow : MonoBehaviour
 
         if (bodyScaleInput != null)
             bodyScaleInput.onEndEdit.RemoveListener(OnBodyScaleChanged);
+
+        if (damageReductionInput != null)
+            damageReductionInput.onEndEdit.RemoveListener(OnDamageReductionChanged);
     }
 }

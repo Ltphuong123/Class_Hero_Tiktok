@@ -194,7 +194,7 @@ public class CanvasSettings : MonoBehaviour
             
             if (row != null)
             {
-                row.Initialize(level.level, level.swordType, level.duration, level.speed, level.bodyScale);
+                row.Initialize(level.level, level.swordType, level.duration, level.speed, level.bodyScale, level.damageReduction);
                 characterLevelRows.Add(row);
             }
         }
@@ -217,7 +217,7 @@ public class CanvasSettings : MonoBehaviour
         foreach (var row in characterLevelRows)
         {
             if (row != null)
-                levelData.SetLevelData(row.Level, row.SwordType, row.Duration, row.Speed, row.BodyScale);
+                levelData.SetLevelData(row.Level, row.SwordType, row.Duration, row.Speed, row.BodyScale, row.DamageReduction);
         }
 
         levelData.SaveToFile();

@@ -5,10 +5,6 @@ using System.Collections.Generic;
 
 public class CharacterLeaderboardUI : MonoBehaviour
 {
-    [Header("Panel")]
-    [SerializeField] private GameObject panel;
-    [SerializeField] private KeyCode toggleKey = KeyCode.Tab;
-
     [Header("Special Panel")]
     [SerializeField] private GameObject specialPanel;
     [SerializeField] private KeyCode specialPanelKey = KeyCode.P;
@@ -25,7 +21,6 @@ public class CharacterLeaderboardUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI aliveCountText;
 
     private readonly List<LeaderboardRow> rows = new();
-    private bool isVisible = false;
 
     private void Awake()
     {
@@ -47,7 +42,7 @@ public class CharacterLeaderboardUI : MonoBehaviour
 
     private void Start()
     {
-        SetVisible(false);
+        RefreshUI();
     }
 
     private void OnEnable()
@@ -64,38 +59,16 @@ public class CharacterLeaderboardUI : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(toggleKey))
-            ToggleVisible();
-
         if (Input.GetKeyDown(specialPanelKey))
             ToggleSpecialPanel();
     }
 
     private void OnOpenButtonClicked()
     {
-        SetVisible(true);
+        RefreshUI();
     }
 
-    private void OnCloseButtonClicked()
-    {
-        SetVisible(false);
-    }
-
-    public void SetVisible(bool visible)
-    {
-        isVisible = visible;
-        
-        if (panel != null)
-            panel.SetActive(visible);
-
-        if (openButton != null)
-            openButton.gameObject.SetActive(!visible);
-
-        if (visible)
-            RefreshUI();
-    }
-
-    public void ToggleVisible() => SetVisible(!isVisible);
+    private void OnCloseButtonClicked() { }
 
     public void ToggleSpecialPanel()
     {
@@ -108,8 +81,6 @@ public class CharacterLeaderboardUI : MonoBehaviour
 
     private void RefreshUI()
     {
-        if (!isVisible) return;
-
         var ranked = CharacterManager.Instance.RankedCharacters;
         int count = ranked.Count;
 

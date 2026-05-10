@@ -104,17 +104,17 @@ public class LeaderboardRow : MonoBehaviour, IPointerClickHandler
             backgroundImage.color = bgColor;
         }
 
-        if (levelIcon != null && cachedLevel != data.Level)
+        if (cachedLevel != data.Level)
         {
             int index = data.Level - 1;
             if (levelSprites != null && index >= 0 && index < levelSprites.Length)
             {
-                levelIcon.sprite = levelSprites[index];
-                levelIcon.enabled = true;
+                if (levelIcon != null) { levelIcon.sprite = levelSprites[index]; levelIcon.enabled = true; }
+                if (levelTimeFill != null) levelTimeFill.sprite = levelSprites[index];
             }
             else
             {
-                levelIcon.enabled = false;
+                if (levelIcon != null) levelIcon.enabled = false;
             }
             cachedLevel = data.Level;
         }
@@ -137,7 +137,7 @@ public class LeaderboardRow : MonoBehaviour, IPointerClickHandler
 
         if (hpText != null && !Mathf.Approximately(cachedHp, data.CurrentHp))
         {
-            hpText.text = $"{data.CurrentHp:F0}/{data.MaxHp:F0}";
+            hpText.text = $"{data.CurrentHp:F0}";
             
             if (cachedHp >= 0f && data.CurrentHp > cachedHp)
             {

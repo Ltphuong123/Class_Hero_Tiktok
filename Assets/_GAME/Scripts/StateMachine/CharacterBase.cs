@@ -177,7 +177,6 @@ public class CharacterBase : GameUnit, IManagedUpdate
             EnableAutoLockOnAttacked = config.enableAutoLockOnAttacked;
             EnableAutoUnlockOnNoSwords = config.enableAutoUnlockOnNoSwords;
         }
-        Debug.Log($" {EnableAutoLockOnAttacked} - {EnableAutoUnlockOnNoSwords}");
         
         if (magnetParticle != null)
             magnetParticle.Stop();
@@ -981,6 +980,12 @@ public class CharacterBase : GameUnit, IManagedUpdate
     {
         if (isDead || isShieldActive || isCastingMeteor) return;
 
+        if (levelData != null)
+        {
+            float reduction = levelData.GetDamageReduction(currentLevel);
+            damage *= 1f - reduction;
+        }
+
         currentHp = Mathf.Max(0f, currentHp - damage);
         infoUI?.UpdateHp(currentHp, currentMaxHp);
         
@@ -1029,7 +1034,7 @@ public class CharacterBase : GameUnit, IManagedUpdate
 
     public void OnSwordInteraction(CharacterBase attacker)
     {
-        if (isDead || isShieldActive || attacker == null) return;
+        if (isDead || attacker == null) return;
 
         float currentTime = Time.time;
         if (isKnockedBack || currentTime - lastKnockbackTime < knockbackCooldown) return;
@@ -1051,7 +1056,7 @@ public class CharacterBase : GameUnit, IManagedUpdate
 
     public void OnSwordToSwordKnockback(CharacterBase attacker)
     {
-        if (isDead || isShieldActive || attacker == null) return;
+        if (isDead || attacker == null) return;
 
         float currentTime = Time.time;
         if (isKnockedBack || currentTime - lastKnockbackTime < knockbackCooldown) return;

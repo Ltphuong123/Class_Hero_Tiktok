@@ -1,0 +1,1158 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!200 &20000000
+ShaderVariantCollection:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: NewShaderVariants
+  m_Shaders:
+  - first: {fileID: 69, guid: 0000000000000000f000000000000000, type: 0}
+    second:
+      variants:
+      - keywords: DIRECTIONAL SHADOWS_SCREEN SHADOWS_SOFT UNITY_HDR_ON
+        passType: 0
+      - keywords: POINT SHADOWS_CUBE SHADOWS_SOFT UNITY_HDR_ON
+        passType: 0
+      - keywords: POINT UNITY_HDR_ON
+        passType: 0
+  - first: {fileID: 74, guid: 0000000000000000f000000000000000, type: 0}
+    second:
+      variants:
+      - keywords: 
+        passType: 0
+      - keywords: UNITY_HDR_ON
+        passType: 0
+  - first: {fileID: 64, guid: 0000000000000000f000000000000000, type: 0}
+    second:
+      variants:
+      - keywords: SHADOWS_SINGLE_CASCADE SHADOWS_SPLIT_SPHERES
+        passType: 0
+      - keywords: SHADOWS_SPLIT_SPHERES
+        passType: 0
+  - first: {fileID: 10753, guid: 0000000000000000f000000000000000, type: 0}
+    second:
+      variants:
+      - keywords: 
+        passType: 0
+  - first: {fileID: 10770, guid: 0000000000000000f000000000000000, type: 0}
+    second:
+      variants:
+      - keywords: 
+        passType: 0
+      - keywords: UNITY_UI_ALPHACLIP
+        passType: 0
+      - keywords: UNITY_UI_CLIP_RECT
+        passType: 0
+  - first: {fileID: 19, guid: 0000000000000000f000000000000000, type: 0}
+    second:
+      variants:
+      - keywords: 
+        passType: 0
+  - first: {fileID: 66, guid: 0000000000000000f000000000000000, type: 0}
+    second:
+      variants:
+      - keywords: 
+        passType: 0
+  - first: {fileID: 46, guid: 0000000000000000f000000000000000, type: 0}
+    second:
+      variants:
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH SHADOWS_SCREEN
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH SHADOWS_SCREEN VERTEXLIGHT_ON
+        passType: 4
+      - keywords: DIRECTIONAL LIGHTPROBE_SH SHADOWS_SCREEN
+        passType: 4
+      - keywords: FOG_EXP2 POINT
+        passType: 5
+      - keywords: FOG_EXP2 POINT SHADOWS_CUBE SHADOWS_SOFT
+        passType: 5
+      - keywords: POINT SHADOWS_CUBE SHADOWS_SOFT
+        passType: 5
+      - keywords: 
+        passType: 8
+      - keywords: SHADOWS_CUBE
+        passType: 8
+      - keywords: SHADOWS_DEPTH
+        passType: 8
+      - keywords: LIGHTPROBE_SH UNITY_HDR_ON
+        passType: 10
+  - first: {fileID: 47, guid: 0000000000000000f000000000000000, type: 0}
+    second:
+      variants:
+      - keywords: 
+        passType: 8
+  - first: {fileID: 106, guid: 0000000000000000f000000000000000, type: 0}
+    second:
+      variants:
+      - keywords: _SUNDISK_SIMPLE
+        passType: 0
+  - first: {fileID: 200, guid: 0000000000000000f000000000000000, type: 0}
+    second:
+      variants:
+      - keywords: 
+        passType: 0
+  - first: {fileID: 202, guid: 0000000000000000f000000000000000, type: 0}
+    second:
+      variants:
+      - keywords: 
+        passType: 0
+  - first: {fileID: 203, guid: 0000000000000000f000000000000000, type: 0}
+    second:
+      variants:
+      - keywords: 
+        passType: 0
+  - first: {fileID: 211, guid: 0000000000000000f000000000000000, type: 0}
+    second:
+      variants:
+      - keywords: EFFECT_BUMP _ALPHABLEND_ON _FADING_ON _NORMALMAP
+        passType: 0
+      - keywords: FOG_EXP2 SOFTPARTICLES_ON
+        passType: 0
+      - keywords: FOG_EXP2 SOFTPARTICLES_ON _ALPHABLEND_ON
+        passType: 0
+      - keywords: FOG_EXP2 _ALPHABLEND_ON
+        passType: 0
+      - keywords: PROCEDURAL_INSTANCING_ON _ALPHABLEND_ON
+        passType: 0
+      - keywords: _ALPHABLEND_ON
+        passType: 0
+      - keywords: _ALPHABLEND_ON _FADING_ON
+        passType: 0
+      - keywords: PROCEDURAL_INSTANCING_ON _ALPHABLEND_ON
+        passType: 8
+      - keywords: 
+        passType: 13
+  - first: {fileID: 9000, guid: 0000000000000000f000000000000000, type: 0}
+    second:
+      variants:
+      - keywords: 
+        passType: 0
+  - first: {fileID: 9001, guid: 0000000000000000f000000000000000, type: 0}
+    second:
+      variants:
+      - keywords: 
+        passType: 0
+  - first: {fileID: 9002, guid: 0000000000000000f000000000000000, type: 0}
+    second:
+      variants:
+      - keywords: 
+        passType: 0
+  - first: {fileID: 9003, guid: 0000000000000000f000000000000000, type: 0}
+    second:
+      variants:
+      - keywords: 
+        passType: 0
+  - first: {fileID: 9004, guid: 0000000000000000f000000000000000, type: 0}
+    second:
+      variants:
+      - keywords: 
+        passType: 0
+  - first: {fileID: 9007, guid: 0000000000000000f000000000000000, type: 0}
+    second:
+      variants:
+      - keywords: 
+        passType: 0
+  - first: {fileID: 9101, guid: 0000000000000000f000000000000000, type: 0}
+    second:
+      variants:
+      - keywords: 
+        passType: 0
+  - first: {fileID: 9103, guid: 0000000000000000f000000000000000, type: 0}
+    second:
+      variants:
+      - keywords: 
+        passType: 0
+  - first: {fileID: 10701, guid: 0000000000000000f000000000000000, type: 0}
+    second:
+      variants:
+      - keywords: INSTANCING_ON SHADOWS_DEPTH
+        passType: 8
+  - first: {fileID: 4800000, guid: ed0c45eb1ee0616419e89d11b988533e, type: 3}
+    second:
+      variants:
+      - keywords: 
+        passType: 0
+  - first: {fileID: 4800000, guid: fe393ace9b354375a9cb14cdbbc28be4, type: 3}
+    second:
+      variants:
+      - keywords: OUTLINE_ON
+        passType: 0
+      - keywords: OUTLINE_ON UNDERLAY_ON
+        passType: 0
+      - keywords: OUTLINE_ON UNITY_UI_CLIP_RECT
+        passType: 0
+  - first: {fileID: 4800000, guid: 145bae762d8de8f4c8fb1b284128fae7, type: 3}
+    second:
+      variants:
+      - keywords: 
+        passType: 0
+  - first: {fileID: 4800000, guid: 68e6db2ebdc24f95958faec2be5558d6, type: 3}
+    second:
+      variants:
+      - keywords: 
+        passType: 0
+  - first: {fileID: 4800000, guid: dc8f423feba3cd94083f1415666ca3d3, type: 3}
+    second:
+      variants:
+      - keywords: 
+        passType: 0
+  - first: {fileID: 4800000, guid: d6dae50ee9e1bfa4db75f19f99355220, type: 3}
+    second:
+      variants:
+      - keywords: 
+        passType: 0
+      - keywords: _OUTPUT_DEPTH
+        passType: 0
+  - first: {fileID: 4800000, guid: 65df88701913c224d95fc554db28381a, type: 3}
+    second:
+      variants:
+      - keywords: 
+        passType: 0
+  - first: {fileID: 4800000, guid: e7857e9d0c934dc4f83f270f8447b006, type: 3}
+    second:
+      variants:
+      - keywords: 
+        passType: 0
+      - keywords: _BLOOM_LQ _TONEMAP_ACES
+        passType: 0
+  - first: {fileID: 4800000, guid: 933532a4fcc9baf4fa0491de14d08ed7, type: 3}
+    second:
+      variants:
+      - keywords: 
+        passType: 8
+      - keywords: 
+        passType: 13
+      - keywords: FOG_EXP2 _ADDITIONAL_LIGHTS _MAIN_LIGHT_SHADOWS
+        passType: 13
+      - keywords: FOG_EXP2 _ADDITIONAL_LIGHTS _MAIN_LIGHT_SHADOWS _METALLICSPECGLOSSMAP
+          _NORMALMAP
+        passType: 13
+      - keywords: _ADDITIONAL_LIGHTS _MAIN_LIGHT_SHADOWS
+        passType: 13
+      - keywords: _ADDITIONAL_LIGHTS _MAIN_LIGHT_SHADOWS _METALLICSPECGLOSSMAP _NORMALMAP
+        passType: 13
+      - keywords: _ADDITIONAL_LIGHTS _MAIN_LIGHT_SHADOWS _NORMALMAP
+        passType: 13
+  - first: {fileID: 4800000, guid: 5f1864addb451f54bae8c86d230f736e, type: 3}
+    second:
+      variants:
+      - keywords: 
+        passType: 0
+  - first: {fileID: 4800000, guid: e6e9a19c3678ded42a3bc431ebef7dbd, type: 3}
+    second:
+      variants:
+      - keywords: 
+        passType: 0
+  - first: {fileID: 4800000, guid: 93446b5c5339d4f00b85c159e1159b7c, type: 3}
+    second:
+      variants:
+      - keywords: 
+        passType: 0
+  - first: {fileID: 4800000, guid: b7839dad95683814aa64166edc107ae2, type: 3}
+    second:
+      variants:
+      - keywords: 
+        passType: 13
+      - keywords: FOG_EXP2 PROCEDURAL_INSTANCING_ON _ADDITIONAL_LIGHTS _EMISSION
+          _MAIN_LIGHT_SHADOWS _METALLICSPECGLOSSMAP _NORMALMAP
+        passType: 13
+      - keywords: PROCEDURAL_INSTANCING_ON
+        passType: 13
+      - keywords: PROCEDURAL_INSTANCING_ON _ADDITIONAL_LIGHTS _ALPHATEST_ON _EMISSION
+          _MAIN_LIGHT_SHADOWS _METALLICSPECGLOSSMAP _NORMALMAP
+        passType: 13
+      - keywords: PROCEDURAL_INSTANCING_ON _ADDITIONAL_LIGHTS _EMISSION _MAIN_LIGHT_SHADOWS
+          _METALLICSPECGLOSSMAP _NORMALMAP
+        passType: 13
+      - keywords: PROCEDURAL_INSTANCING_ON _ALPHATEST_ON
+        passType: 13
+      - keywords: _ADDITIONAL_LIGHTS _ALPHATEST_ON _EMISSION _MAIN_LIGHT_SHADOWS
+          _METALLICSPECGLOSSMAP _NORMALMAP
+        passType: 13
+      - keywords: _ADDITIONAL_LIGHTS _EMISSION _MAIN_LIGHT_SHADOWS _METALLICSPECGLOSSMAP
+          _NORMALMAP
+        passType: 13
+      - keywords: _ADDITIONAL_LIGHTS _MAIN_LIGHT_SHADOWS _NORMALMAP
+        passType: 13
+      - keywords: _ALPHATEST_ON
+        passType: 13
+  - first: {fileID: 4800000, guid: 36e335017ad71d54fbb10842863188ae, type: 3}
+    second:
+      variants:
+      - keywords: 
+        passType: 0
+  - first: {fileID: -6465566751694194690, guid: 28282d4f83c28ef41a15c9c548b2b2b3, type: 3}
+    second:
+      variants:
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH SHADOWS_SCREEN VERTEXLIGHT_ON
+          _ADDITIONAL_LIGHTS _MAIN_LIGHT_SHADOWS _USEALPHACUTOUT _USEEMISSION _USEFLOWMAP
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH SHADOWS_SCREEN _ADDITIONAL_LIGHTS
+          _BUILTIN_ALPHATEST_ON _BUILTIN_AlphaClip _MAIN_LIGHT_SHADOWS _USEALPHACUTOUT
+          _USEEMISSION _USEFLOWMAP
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH SHADOWS_SCREEN _ADDITIONAL_LIGHTS
+          _MAIN_LIGHT_SHADOWS _USEALPHACUTOUT _USEEMISSION _USEFLOWMAP
+        passType: 4
+      - keywords: DIRECTIONAL LIGHTPROBE_SH SHADOWS_SCREEN _ADDITIONAL_LIGHTS _BUILTIN_ALPHATEST_ON
+          _BUILTIN_AlphaClip _MAIN_LIGHT_SHADOWS _USEALPHACUTOUT _USEEMISSION _USEFLOWMAP
+        passType: 4
+      - keywords: DIRECTIONAL LIGHTPROBE_SH SHADOWS_SCREEN _ADDITIONAL_LIGHTS _MAIN_LIGHT_SHADOWS
+          _USEALPHACUTOUT _USEEMISSION _USEFLOWMAP
+        passType: 4
+      - keywords: FOG_EXP2 POINT SHADOWS_CUBE SHADOWS_SOFT _ADDITIONAL_LIGHTS _BUILTIN_ALPHATEST_ON
+          _BUILTIN_AlphaClip _MAIN_LIGHT_SHADOWS _USEALPHACUTOUT _USEEMISSION _USEFLOWMAP
+        passType: 5
+      - keywords: FOG_EXP2 POINT SHADOWS_CUBE SHADOWS_SOFT _ADDITIONAL_LIGHTS _MAIN_LIGHT_SHADOWS
+          _USEALPHACUTOUT _USEEMISSION _USEFLOWMAP
+        passType: 5
+      - keywords: FOG_EXP2 POINT _ADDITIONAL_LIGHTS _BUILTIN_ALPHATEST_ON _BUILTIN_AlphaClip
+          _MAIN_LIGHT_SHADOWS _USEALPHACUTOUT _USEEMISSION _USEFLOWMAP
+        passType: 5
+      - keywords: FOG_EXP2 POINT _ADDITIONAL_LIGHTS _MAIN_LIGHT_SHADOWS _USEALPHACUTOUT
+          _USEEMISSION _USEFLOWMAP
+        passType: 5
+      - keywords: POINT SHADOWS_CUBE SHADOWS_SOFT _ADDITIONAL_LIGHTS _BUILTIN_ALPHATEST_ON
+          _BUILTIN_AlphaClip _MAIN_LIGHT_SHADOWS _USEALPHACUTOUT _USEEMISSION _USEFLOWMAP
+        passType: 5
+      - keywords: POINT SHADOWS_CUBE SHADOWS_SOFT _ADDITIONAL_LIGHTS _MAIN_LIGHT_SHADOWS
+          _USEALPHACUTOUT _USEEMISSION _USEFLOWMAP
+        passType: 5
+      - keywords: SHADOWS_DEPTH _BUILTIN_ALPHATEST_ON _BUILTIN_AlphaClip _USEALPHACUTOUT
+          _USEEMISSION _USEFLOWMAP
+        passType: 8
+      - keywords: SHADOWS_DEPTH _USEALPHACUTOUT _USEEMISSION _USEFLOWMAP
+        passType: 8
+      - keywords: _ALPHATEST_ON _USEALPHACUTOUT _USEEMISSION _USEFLOWMAP
+        passType: 8
+      - keywords: _BUILTIN_ALPHATEST_ON _BUILTIN_AlphaClip _USEALPHACUTOUT _USEEMISSION
+          _USEFLOWMAP
+        passType: 8
+      - keywords: LIGHTPROBE_SH UNITY_HDR_ON _BUILTIN_ALPHATEST_ON _BUILTIN_AlphaClip
+          _MAIN_LIGHT_SHADOWS _USEALPHACUTOUT _USEEMISSION _USEFLOWMAP
+        passType: 10
+      - keywords: LIGHTPROBE_SH UNITY_HDR_ON _MAIN_LIGHT_SHADOWS _USEALPHACUTOUT
+          _USEEMISSION _USEFLOWMAP
+        passType: 10
+      - keywords: FOG_EXP2 _ADDITIONAL_LIGHTS _ALPHATEST_ON _MAIN_LIGHT_SHADOWS _USEALPHACUTOUT
+          _USEEMISSION _USEFLOWMAP
+        passType: 13
+      - keywords: _ADDITIONAL_LIGHTS _ALPHATEST_ON _MAIN_LIGHT_SHADOWS _USEALPHACUTOUT
+          _USEEMISSION _USEFLOWMAP
+        passType: 13
+      - keywords: _ALPHATEST_ON _USEALPHACUTOUT _USEEMISSION _USEFLOWMAP
+        passType: 13
+      - keywords: _BUILTIN_ALPHATEST_ON _BUILTIN_AlphaClip _USEALPHACUTOUT _USEEMISSION
+          _USEFLOWMAP
+        passType: 13
+      - keywords: _USEALPHACUTOUT _USEEMISSION _USEFLOWMAP
+        passType: 13
+  - first: {fileID: -6465566751694194690, guid: 948f04b7690e0014e8082239964ad10c, type: 3}
+    second:
+      variants:
+      - keywords: FOG_EXP2 _SURFACE_TYPE_TRANSPARENT _USEALPHACUTOUT _USEDISTORTION
+          _UV_MODE_UV
+        passType: 0
+      - keywords: FOG_EXP2 _SURFACE_TYPE_TRANSPARENT _USEALPHACUTOUT _USEFLIPBOOK
+          _USEFRAMEBLENDING _UV_MODE_SCREENSPACE
+        passType: 0
+      - keywords: FOG_EXP2 _SURFACE_TYPE_TRANSPARENT _USEALPHACUTOUT _USE_DEPTH_FADE
+          _UV_MODE_UV
+        passType: 0
+      - keywords: FOG_EXP2 _SURFACE_TYPE_TRANSPARENT _USEDISTORTION _USE_DEPTH_FADE
+          _UV_MODE_UV
+        passType: 0
+      - keywords: FOG_EXP2 _SURFACE_TYPE_TRANSPARENT _USEDISTORTION _UV_MODE_SCREENSPACE
+        passType: 0
+      - keywords: FOG_EXP2 _SURFACE_TYPE_TRANSPARENT _USEFRAMEBLENDING _USE_DEPTH_FADE
+          _UV_MODE_UV
+        passType: 0
+      - keywords: FOG_EXP2 _SURFACE_TYPE_TRANSPARENT _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 0
+      - keywords: FOG_EXP2 _SURFACE_TYPE_TRANSPARENT _UV_MODE_SCREENSPACE
+        passType: 0
+      - keywords: FOG_EXP2 _SURFACE_TYPE_TRANSPARENT _UV_MODE_UV
+        passType: 0
+      - keywords: FOG_EXP2 _USEDISTORTION _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 0
+      - keywords: FOG_EXP2 _USEDISTORTION _UV_MODE_SCREENSPACE
+        passType: 0
+      - keywords: FOG_EXP2 _USEFRAMEBLENDING _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 0
+      - keywords: FOG_EXP2 _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 0
+      - keywords: FOG_EXP2 _UV_MODE_SCREENSPACE
+        passType: 0
+      - keywords: FOG_EXP2 _UV_MODE_UV
+        passType: 0
+      - keywords: _ALPHAMODULATE_ON _SURFACE_TYPE_TRANSPARENT _USEDISTORTION _UV_MODE_UV
+        passType: 0
+      - keywords: _ALPHAMODULATE_ON _SURFACE_TYPE_TRANSPARENT _UV_MODE_UV
+        passType: 0
+      - keywords: _ALPHATEST_ON _USEALPHACUTOUT _USEDISTORTION _UV_MODE_UV
+        passType: 0
+      - keywords: _ALPHATEST_ON _USEALPHACUTOUT _USEFLIPBOOK _UV_MODE_UV
+        passType: 0
+      - keywords: _ALPHATEST_ON _USEALPHACUTOUT _UV_MODE_UV
+        passType: 0
+      - keywords: _SURFACE_TYPE_TRANSPARENT _USEALPHACUTOUT _USEDISTORTION _USE_DEPTH_FADE
+          _UV_MODE_UV
+        passType: 0
+      - keywords: _SURFACE_TYPE_TRANSPARENT _USEALPHACUTOUT _USEDISTORTION _UV_MODE_SCREENSPACE
+        passType: 0
+      - keywords: _SURFACE_TYPE_TRANSPARENT _USEALPHACUTOUT _USEDISTORTION _UV_MODE_UV
+        passType: 0
+      - keywords: _SURFACE_TYPE_TRANSPARENT _USEALPHACUTOUT _USEFLIPBOOK _USEFRAMEBLENDING
+          _UV_MODE_SCREENSPACE
+        passType: 0
+      - keywords: _SURFACE_TYPE_TRANSPARENT _USEALPHACUTOUT _USEFLIPBOOK _UV_MODE_UV
+        passType: 0
+      - keywords: _SURFACE_TYPE_TRANSPARENT _USEALPHACUTOUT _USEFRAMEBLENDING _USE_DEPTH_FADE
+          _UV_MODE_UV
+        passType: 0
+      - keywords: _SURFACE_TYPE_TRANSPARENT _USEALPHACUTOUT _USEFRAMEBLENDING _UV_MODE_UV
+        passType: 0
+      - keywords: _SURFACE_TYPE_TRANSPARENT _USEALPHACUTOUT _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 0
+      - keywords: _SURFACE_TYPE_TRANSPARENT _USEALPHACUTOUT _UV_MODE_SCREENSPACE
+        passType: 0
+      - keywords: _SURFACE_TYPE_TRANSPARENT _USEALPHACUTOUT _UV_MODE_UV
+        passType: 0
+      - keywords: _SURFACE_TYPE_TRANSPARENT _USEDISTORTION _USEFRAMEBLENDING _UV_MODE_UV
+        passType: 0
+      - keywords: _SURFACE_TYPE_TRANSPARENT _USEDISTORTION _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 0
+      - keywords: _SURFACE_TYPE_TRANSPARENT _USEDISTORTION _UV_MODE_SCREENSPACE
+        passType: 0
+      - keywords: _SURFACE_TYPE_TRANSPARENT _USEDISTORTION _UV_MODE_UV
+        passType: 0
+      - keywords: _SURFACE_TYPE_TRANSPARENT _USEFLIPBOOK _UV_MODE_UV
+        passType: 0
+      - keywords: _SURFACE_TYPE_TRANSPARENT _USEFRAMEBLENDING _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 0
+      - keywords: _SURFACE_TYPE_TRANSPARENT _USEFRAMEBLENDING _UV_MODE_UV
+        passType: 0
+      - keywords: _SURFACE_TYPE_TRANSPARENT _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 0
+      - keywords: _SURFACE_TYPE_TRANSPARENT _UV_MODE_SCREENSPACE
+        passType: 0
+      - keywords: _SURFACE_TYPE_TRANSPARENT _UV_MODE_UV
+        passType: 0
+      - keywords: _USEALPHACUTOUT _USEDISTORTION _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 0
+      - keywords: _USEALPHACUTOUT _USEDISTORTION _UV_MODE_SCREENSPACE
+        passType: 0
+      - keywords: _USEALPHACUTOUT _USEDISTORTION _UV_MODE_UV
+        passType: 0
+      - keywords: _USEALPHACUTOUT _USEFLIPBOOK _USEFRAMEBLENDING _UV_MODE_SCREENSPACE
+        passType: 0
+      - keywords: _USEALPHACUTOUT _USEFLIPBOOK _UV_MODE_UV
+        passType: 0
+      - keywords: _USEALPHACUTOUT _USEFRAMEBLENDING _UV_MODE_UV
+        passType: 0
+      - keywords: _USEALPHACUTOUT _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 0
+      - keywords: _USEALPHACUTOUT _UV_MODE_UV
+        passType: 0
+      - keywords: _USEDISTORTION _USEFRAMEBLENDING _UV_MODE_UV
+        passType: 0
+      - keywords: _USEDISTORTION _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 0
+      - keywords: _USEDISTORTION _UV_MODE_SCREENSPACE
+        passType: 0
+      - keywords: _USEFLIPBOOK _UV_MODE_UV
+        passType: 0
+      - keywords: _USEFRAMEBLENDING _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 0
+      - keywords: _USEFRAMEBLENDING _UV_MODE_UV
+        passType: 0
+      - keywords: _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 0
+      - keywords: _UV_MODE_SCREENSPACE
+        passType: 0
+      - keywords: _UV_MODE_UV
+        passType: 0
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH VERTEXLIGHT_ON _USEALPHACUTOUT
+          _USEDISTORTION _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH VERTEXLIGHT_ON _USEALPHACUTOUT
+          _USEDISTORTION _UV_MODE_UV
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH VERTEXLIGHT_ON _USEALPHACUTOUT
+          _USEFLIPBOOK _USEFRAMEBLENDING _UV_MODE_SCREENSPACE
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH VERTEXLIGHT_ON _USEALPHACUTOUT
+          _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH VERTEXLIGHT_ON _USEALPHACUTOUT
+          _UV_MODE_SCREENSPACE
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH VERTEXLIGHT_ON _USEDISTORTION
+          _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH VERTEXLIGHT_ON _USEDISTORTION
+          _UV_MODE_SCREENSPACE
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH VERTEXLIGHT_ON _USEFRAMEBLENDING
+          _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH VERTEXLIGHT_ON _USE_DEPTH_FADE
+          _UV_MODE_UV
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH VERTEXLIGHT_ON _UV_MODE_SCREENSPACE
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH VERTEXLIGHT_ON _UV_MODE_UV
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH _BUILTIN_ALPHATEST_ON _BUILTIN_AlphaClip
+          _BUILTIN_SURFACE_TYPE_TRANSPARENT _USEALPHACUTOUT _USEDISTORTION _USE_DEPTH_FADE
+          _UV_MODE_UV
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH _BUILTIN_ALPHATEST_ON _BUILTIN_AlphaClip
+          _BUILTIN_SURFACE_TYPE_TRANSPARENT _USEALPHACUTOUT _USEDISTORTION _UV_MODE_UV
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH _BUILTIN_ALPHATEST_ON _BUILTIN_AlphaClip
+          _BUILTIN_SURFACE_TYPE_TRANSPARENT _USEALPHACUTOUT _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH _BUILTIN_ALPHATEST_ON _BUILTIN_AlphaClip
+          _BUILTIN_SURFACE_TYPE_TRANSPARENT _USEDISTORTION _UV_MODE_SCREENSPACE
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH _BUILTIN_SURFACE_TYPE_TRANSPARENT
+          _USEALPHACUTOUT _USEDISTORTION _UV_MODE_UV
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH _BUILTIN_SURFACE_TYPE_TRANSPARENT
+          _USEALPHACUTOUT _USEFLIPBOOK _USEFRAMEBLENDING _UV_MODE_SCREENSPACE
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH _BUILTIN_SURFACE_TYPE_TRANSPARENT
+          _USEALPHACUTOUT _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH _BUILTIN_SURFACE_TYPE_TRANSPARENT
+          _USEALPHACUTOUT _UV_MODE_SCREENSPACE
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH _BUILTIN_SURFACE_TYPE_TRANSPARENT
+          _USEDISTORTION _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH _BUILTIN_SURFACE_TYPE_TRANSPARENT
+          _USEFRAMEBLENDING _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH _BUILTIN_SURFACE_TYPE_TRANSPARENT
+          _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH _BUILTIN_SURFACE_TYPE_TRANSPARENT
+          _UV_MODE_SCREENSPACE
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH _BUILTIN_SURFACE_TYPE_TRANSPARENT
+          _UV_MODE_UV
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH _USEALPHACUTOUT _USEFLIPBOOK
+          _USEFRAMEBLENDING _UV_MODE_SCREENSPACE
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH _USEDISTORTION _USE_DEPTH_FADE
+          _UV_MODE_UV
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH _USEDISTORTION _UV_MODE_SCREENSPACE
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH _USEFRAMEBLENDING _USE_DEPTH_FADE
+          _UV_MODE_UV
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH _UV_MODE_UV
+        passType: 4
+      - keywords: DIRECTIONAL LIGHTPROBE_SH VERTEXLIGHT_ON _USEALPHACUTOUT _USEDISTORTION
+          _UV_MODE_UV
+        passType: 4
+      - keywords: DIRECTIONAL LIGHTPROBE_SH VERTEXLIGHT_ON _USEALPHACUTOUT _USEFLIPBOOK
+          _USEFRAMEBLENDING _UV_MODE_SCREENSPACE
+        passType: 4
+      - keywords: DIRECTIONAL LIGHTPROBE_SH VERTEXLIGHT_ON _USEALPHACUTOUT _USE_DEPTH_FADE
+          _UV_MODE_UV
+        passType: 4
+      - keywords: DIRECTIONAL LIGHTPROBE_SH VERTEXLIGHT_ON _USEFRAMEBLENDING _USE_DEPTH_FADE
+          _UV_MODE_UV
+        passType: 4
+      - keywords: DIRECTIONAL LIGHTPROBE_SH VERTEXLIGHT_ON _UV_MODE_SCREENSPACE
+        passType: 4
+      - keywords: DIRECTIONAL LIGHTPROBE_SH VERTEXLIGHT_ON _UV_MODE_UV
+        passType: 4
+      - keywords: DIRECTIONAL LIGHTPROBE_SH _BUILTIN_ALPHATEST_ON _BUILTIN_AlphaClip
+          _BUILTIN_SURFACE_TYPE_TRANSPARENT _USEALPHACUTOUT _USEDISTORTION _UV_MODE_UV
+        passType: 4
+      - keywords: DIRECTIONAL LIGHTPROBE_SH _BUILTIN_SURFACE_TYPE_TRANSPARENT _USEALPHACUTOUT
+          _USEDISTORTION _UV_MODE_UV
+        passType: 4
+      - keywords: DIRECTIONAL LIGHTPROBE_SH _BUILTIN_SURFACE_TYPE_TRANSPARENT _USEALPHACUTOUT
+          _USEFLIPBOOK _USEFRAMEBLENDING _UV_MODE_SCREENSPACE
+        passType: 4
+      - keywords: DIRECTIONAL LIGHTPROBE_SH _BUILTIN_SURFACE_TYPE_TRANSPARENT _USEALPHACUTOUT
+          _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 4
+      - keywords: DIRECTIONAL LIGHTPROBE_SH _BUILTIN_SURFACE_TYPE_TRANSPARENT _USEFRAMEBLENDING
+          _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 4
+      - keywords: DIRECTIONAL LIGHTPROBE_SH _BUILTIN_SURFACE_TYPE_TRANSPARENT _UV_MODE_SCREENSPACE
+        passType: 4
+      - keywords: DIRECTIONAL LIGHTPROBE_SH _BUILTIN_SURFACE_TYPE_TRANSPARENT _UV_MODE_UV
+        passType: 4
+      - keywords: DIRECTIONAL LIGHTPROBE_SH _USEALPHACUTOUT _USEDISTORTION _UV_MODE_UV
+        passType: 4
+      - keywords: DIRECTIONAL LIGHTPROBE_SH _USEALPHACUTOUT _USEFLIPBOOK _USEFRAMEBLENDING
+          _UV_MODE_SCREENSPACE
+        passType: 4
+      - keywords: DIRECTIONAL LIGHTPROBE_SH _USEALPHACUTOUT _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 4
+      - keywords: DIRECTIONAL LIGHTPROBE_SH _USEFRAMEBLENDING _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 4
+      - keywords: DIRECTIONAL LIGHTPROBE_SH _UV_MODE_SCREENSPACE
+        passType: 4
+      - keywords: DIRECTIONAL LIGHTPROBE_SH _UV_MODE_UV
+        passType: 4
+      - keywords: SHADOWS_CUBE _BUILTIN_ALPHATEST_ON _BUILTIN_AlphaClip _BUILTIN_SURFACE_TYPE_TRANSPARENT
+          _USEALPHACUTOUT _USEDISTORTION _UV_MODE_UV
+        passType: 8
+      - keywords: SHADOWS_CUBE _BUILTIN_SURFACE_TYPE_TRANSPARENT _UV_MODE_UV
+        passType: 8
+      - keywords: SHADOWS_CUBE _USEALPHACUTOUT _USEDISTORTION _UV_MODE_UV
+        passType: 8
+      - keywords: SHADOWS_CUBE _UV_MODE_UV
+        passType: 8
+      - keywords: SHADOWS_DEPTH _BUILTIN_ALPHATEST_ON _BUILTIN_AlphaClip _BUILTIN_SURFACE_TYPE_TRANSPARENT
+          _USEALPHACUTOUT _USEDISTORTION _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 8
+      - keywords: SHADOWS_DEPTH _BUILTIN_ALPHATEST_ON _BUILTIN_AlphaClip _BUILTIN_SURFACE_TYPE_TRANSPARENT
+          _USEALPHACUTOUT _USEDISTORTION _UV_MODE_UV
+        passType: 8
+      - keywords: SHADOWS_DEPTH _BUILTIN_ALPHATEST_ON _BUILTIN_AlphaClip _BUILTIN_SURFACE_TYPE_TRANSPARENT
+          _USEALPHACUTOUT _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 8
+      - keywords: SHADOWS_DEPTH _BUILTIN_ALPHATEST_ON _BUILTIN_AlphaClip _BUILTIN_SURFACE_TYPE_TRANSPARENT
+          _USEDISTORTION _UV_MODE_SCREENSPACE
+        passType: 8
+      - keywords: SHADOWS_DEPTH _BUILTIN_ALPHATEST_ON _BUILTIN_AlphaClip _BUILTIN_SURFACE_TYPE_TRANSPARENT
+          _USEFRAMEBLENDING _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 8
+      - keywords: SHADOWS_DEPTH _BUILTIN_ALPHATEST_ON _BUILTIN_AlphaClip _USEALPHACUTOUT
+          _USEDISTORTION _UV_MODE_UV
+        passType: 8
+      - keywords: SHADOWS_DEPTH _BUILTIN_ALPHATEST_ON _BUILTIN_AlphaClip _USEALPHACUTOUT
+          _USEFLIPBOOK _UV_MODE_UV
+        passType: 8
+      - keywords: SHADOWS_DEPTH _BUILTIN_ALPHATEST_ON _BUILTIN_AlphaClip _USEALPHACUTOUT
+          _UV_MODE_UV
+        passType: 8
+      - keywords: SHADOWS_DEPTH _BUILTIN_SURFACE_TYPE_TRANSPARENT _USEALPHACUTOUT
+          _USEDISTORTION _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 8
+      - keywords: SHADOWS_DEPTH _BUILTIN_SURFACE_TYPE_TRANSPARENT _USEALPHACUTOUT
+          _USEDISTORTION _UV_MODE_SCREENSPACE
+        passType: 8
+      - keywords: SHADOWS_DEPTH _BUILTIN_SURFACE_TYPE_TRANSPARENT _USEALPHACUTOUT
+          _USEDISTORTION _UV_MODE_UV
+        passType: 8
+      - keywords: SHADOWS_DEPTH _BUILTIN_SURFACE_TYPE_TRANSPARENT _USEALPHACUTOUT
+          _USEFLIPBOOK _USEFRAMEBLENDING _UV_MODE_SCREENSPACE
+        passType: 8
+      - keywords: SHADOWS_DEPTH _BUILTIN_SURFACE_TYPE_TRANSPARENT _USEALPHACUTOUT
+          _USEFLIPBOOK _UV_MODE_UV
+        passType: 8
+      - keywords: SHADOWS_DEPTH _BUILTIN_SURFACE_TYPE_TRANSPARENT _USEALPHACUTOUT
+          _USEFRAMEBLENDING _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 8
+      - keywords: SHADOWS_DEPTH _BUILTIN_SURFACE_TYPE_TRANSPARENT _USEALPHACUTOUT
+          _USEFRAMEBLENDING _UV_MODE_UV
+        passType: 8
+      - keywords: SHADOWS_DEPTH _BUILTIN_SURFACE_TYPE_TRANSPARENT _USEALPHACUTOUT
+          _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 8
+      - keywords: SHADOWS_DEPTH _BUILTIN_SURFACE_TYPE_TRANSPARENT _USEALPHACUTOUT
+          _UV_MODE_SCREENSPACE
+        passType: 8
+      - keywords: SHADOWS_DEPTH _BUILTIN_SURFACE_TYPE_TRANSPARENT _USEALPHACUTOUT
+          _UV_MODE_UV
+        passType: 8
+      - keywords: SHADOWS_DEPTH _BUILTIN_SURFACE_TYPE_TRANSPARENT _USEDISTORTION
+          _USEFRAMEBLENDING _UV_MODE_UV
+        passType: 8
+      - keywords: SHADOWS_DEPTH _BUILTIN_SURFACE_TYPE_TRANSPARENT _USEDISTORTION
+          _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 8
+      - keywords: SHADOWS_DEPTH _BUILTIN_SURFACE_TYPE_TRANSPARENT _USEDISTORTION
+          _UV_MODE_SCREENSPACE
+        passType: 8
+      - keywords: SHADOWS_DEPTH _BUILTIN_SURFACE_TYPE_TRANSPARENT _USEDISTORTION
+          _UV_MODE_UV
+        passType: 8
+      - keywords: SHADOWS_DEPTH _BUILTIN_SURFACE_TYPE_TRANSPARENT _USEFLIPBOOK _UV_MODE_UV
+        passType: 8
+      - keywords: SHADOWS_DEPTH _BUILTIN_SURFACE_TYPE_TRANSPARENT _USEFRAMEBLENDING
+          _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 8
+      - keywords: SHADOWS_DEPTH _BUILTIN_SURFACE_TYPE_TRANSPARENT _USEFRAMEBLENDING
+          _UV_MODE_UV
+        passType: 8
+      - keywords: SHADOWS_DEPTH _BUILTIN_SURFACE_TYPE_TRANSPARENT _USE_DEPTH_FADE
+          _UV_MODE_UV
+        passType: 8
+      - keywords: SHADOWS_DEPTH _BUILTIN_SURFACE_TYPE_TRANSPARENT _UV_MODE_SCREENSPACE
+        passType: 8
+      - keywords: SHADOWS_DEPTH _BUILTIN_SURFACE_TYPE_TRANSPARENT _UV_MODE_UV
+        passType: 8
+      - keywords: SHADOWS_DEPTH _USEALPHACUTOUT _USEDISTORTION _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 8
+      - keywords: SHADOWS_DEPTH _USEALPHACUTOUT _USEDISTORTION _UV_MODE_SCREENSPACE
+        passType: 8
+      - keywords: SHADOWS_DEPTH _USEALPHACUTOUT _USEDISTORTION _UV_MODE_UV
+        passType: 8
+      - keywords: SHADOWS_DEPTH _USEALPHACUTOUT _USEFLIPBOOK _USEFRAMEBLENDING _UV_MODE_SCREENSPACE
+        passType: 8
+      - keywords: SHADOWS_DEPTH _USEALPHACUTOUT _USEFLIPBOOK _UV_MODE_UV
+        passType: 8
+      - keywords: SHADOWS_DEPTH _USEALPHACUTOUT _USEFRAMEBLENDING _USE_DEPTH_FADE
+          _UV_MODE_UV
+        passType: 8
+      - keywords: SHADOWS_DEPTH _USEALPHACUTOUT _USEFRAMEBLENDING _UV_MODE_UV
+        passType: 8
+      - keywords: SHADOWS_DEPTH _USEALPHACUTOUT _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 8
+      - keywords: SHADOWS_DEPTH _USEALPHACUTOUT _UV_MODE_SCREENSPACE
+        passType: 8
+      - keywords: SHADOWS_DEPTH _USEALPHACUTOUT _UV_MODE_UV
+        passType: 8
+      - keywords: SHADOWS_DEPTH _USEDISTORTION _USEFRAMEBLENDING _UV_MODE_UV
+        passType: 8
+      - keywords: SHADOWS_DEPTH _USEDISTORTION _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 8
+      - keywords: SHADOWS_DEPTH _USEDISTORTION _UV_MODE_SCREENSPACE
+        passType: 8
+      - keywords: SHADOWS_DEPTH _USEDISTORTION _UV_MODE_UV
+        passType: 8
+      - keywords: SHADOWS_DEPTH _USEFLIPBOOK _UV_MODE_UV
+        passType: 8
+      - keywords: SHADOWS_DEPTH _USEFRAMEBLENDING _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 8
+      - keywords: SHADOWS_DEPTH _USEFRAMEBLENDING _UV_MODE_UV
+        passType: 8
+      - keywords: SHADOWS_DEPTH _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 8
+      - keywords: SHADOWS_DEPTH _UV_MODE_SCREENSPACE
+        passType: 8
+      - keywords: SHADOWS_DEPTH _UV_MODE_UV
+        passType: 8
+      - keywords: _ALPHATEST_ON _USEALPHACUTOUT _USEDISTORTION _UV_MODE_UV
+        passType: 8
+      - keywords: _ALPHATEST_ON _USEALPHACUTOUT _USEFLIPBOOK _UV_MODE_UV
+        passType: 8
+      - keywords: _ALPHATEST_ON _USEALPHACUTOUT _UV_MODE_UV
+        passType: 8
+      - keywords: _USEALPHACUTOUT _USEDISTORTION _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 8
+      - keywords: _USEALPHACUTOUT _USEDISTORTION _UV_MODE_SCREENSPACE
+        passType: 8
+      - keywords: _USEALPHACUTOUT _USEDISTORTION _UV_MODE_UV
+        passType: 8
+      - keywords: _USEALPHACUTOUT _USEFLIPBOOK _USEFRAMEBLENDING _UV_MODE_SCREENSPACE
+        passType: 8
+      - keywords: _USEALPHACUTOUT _USEFLIPBOOK _UV_MODE_UV
+        passType: 8
+      - keywords: _USEALPHACUTOUT _USEFRAMEBLENDING _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 8
+      - keywords: _USEALPHACUTOUT _USEFRAMEBLENDING _UV_MODE_UV
+        passType: 8
+      - keywords: _USEALPHACUTOUT _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 8
+      - keywords: _USEALPHACUTOUT _UV_MODE_SCREENSPACE
+        passType: 8
+      - keywords: _USEALPHACUTOUT _UV_MODE_UV
+        passType: 8
+      - keywords: _USEDISTORTION _USEFRAMEBLENDING _UV_MODE_UV
+        passType: 8
+      - keywords: _USEDISTORTION _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 8
+      - keywords: _USEDISTORTION _UV_MODE_SCREENSPACE
+        passType: 8
+      - keywords: _USEDISTORTION _UV_MODE_UV
+        passType: 8
+      - keywords: _USEFLIPBOOK _UV_MODE_UV
+        passType: 8
+      - keywords: _USEFRAMEBLENDING _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 8
+      - keywords: _USEFRAMEBLENDING _UV_MODE_UV
+        passType: 8
+      - keywords: _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 8
+      - keywords: _UV_MODE_SCREENSPACE
+        passType: 8
+      - keywords: _UV_MODE_UV
+        passType: 8
+      - keywords: _ALPHATEST_ON _USEALPHACUTOUT _USEDISTORTION _UV_MODE_UV
+        passType: 13
+      - keywords: _ALPHATEST_ON _USEALPHACUTOUT _USEFLIPBOOK _UV_MODE_UV
+        passType: 13
+      - keywords: _ALPHATEST_ON _USEALPHACUTOUT _UV_MODE_UV
+        passType: 13
+      - keywords: _BUILTIN_ALPHATEST_ON _BUILTIN_AlphaClip _BUILTIN_SURFACE_TYPE_TRANSPARENT
+          _USEALPHACUTOUT _USEDISTORTION _UV_MODE_UV
+        passType: 13
+      - keywords: _BUILTIN_SURFACE_TYPE_TRANSPARENT _USEALPHACUTOUT _USEDISTORTION
+          _UV_MODE_UV
+        passType: 13
+      - keywords: _BUILTIN_SURFACE_TYPE_TRANSPARENT _USEALPHACUTOUT _USEFLIPBOOK
+          _USEFRAMEBLENDING _UV_MODE_SCREENSPACE
+        passType: 13
+      - keywords: _BUILTIN_SURFACE_TYPE_TRANSPARENT _USEALPHACUTOUT _USE_DEPTH_FADE
+          _UV_MODE_UV
+        passType: 13
+      - keywords: _BUILTIN_SURFACE_TYPE_TRANSPARENT _USEFRAMEBLENDING _USE_DEPTH_FADE
+          _UV_MODE_UV
+        passType: 13
+      - keywords: _BUILTIN_SURFACE_TYPE_TRANSPARENT _UV_MODE_SCREENSPACE
+        passType: 13
+      - keywords: _BUILTIN_SURFACE_TYPE_TRANSPARENT _UV_MODE_UV
+        passType: 13
+      - keywords: _USEALPHACUTOUT _USEDISTORTION _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 13
+      - keywords: _USEALPHACUTOUT _USEDISTORTION _UV_MODE_UV
+        passType: 13
+      - keywords: _USEALPHACUTOUT _USEFLIPBOOK _USEFRAMEBLENDING _UV_MODE_SCREENSPACE
+        passType: 13
+      - keywords: _USEALPHACUTOUT _USEFLIPBOOK _UV_MODE_UV
+        passType: 13
+      - keywords: _USEALPHACUTOUT _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 13
+      - keywords: _USEALPHACUTOUT _UV_MODE_UV
+        passType: 13
+      - keywords: _USEDISTORTION _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 13
+      - keywords: _USEDISTORTION _UV_MODE_SCREENSPACE
+        passType: 13
+      - keywords: _USEFRAMEBLENDING _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 13
+      - keywords: _USE_DEPTH_FADE _UV_MODE_UV
+        passType: 13
+      - keywords: _UV_MODE_SCREENSPACE
+        passType: 13
+      - keywords: _UV_MODE_UV
+        passType: 13
+  - first: {fileID: -6465566751694194690, guid: 482790da9e6ee014b93589bbc3fa82cd, type: 3}
+    second:
+      variants:
+      - keywords: FOG_EXP2 _SURFACE_TYPE_TRANSPARENT
+        passType: 0
+      - keywords: FOG_EXP2 _SURFACE_TYPE_TRANSPARENT _USEALPHANOISE
+        passType: 0
+      - keywords: FOG_EXP2 _SURFACE_TYPE_TRANSPARENT _USEALPHANOISE _USENOISEVERTEXOFFSET
+        passType: 0
+      - keywords: FOG_EXP2 _SURFACE_TYPE_TRANSPARENT _USEALPHANOISE _USENOISEVERTEXOFFSET
+          _USEUVNOISE
+        passType: 0
+      - keywords: FOG_EXP2 _SURFACE_TYPE_TRANSPARENT _USEALPHANOISE _USEUVNOISE
+        passType: 0
+      - keywords: _SURFACE_TYPE_TRANSPARENT
+        passType: 0
+      - keywords: _SURFACE_TYPE_TRANSPARENT _USEALPHANOISE
+        passType: 0
+      - keywords: _SURFACE_TYPE_TRANSPARENT _USEALPHANOISE _USENOISEVERTEXOFFSET
+        passType: 0
+      - keywords: _SURFACE_TYPE_TRANSPARENT _USEALPHANOISE _USENOISEVERTEXOFFSET
+          _USEUVNOISE
+        passType: 0
+      - keywords: _SURFACE_TYPE_TRANSPARENT _USEALPHANOISE _USEUVNOISE
+        passType: 0
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH VERTEXLIGHT_ON
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH VERTEXLIGHT_ON _USEALPHANOISE
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH VERTEXLIGHT_ON _USEALPHANOISE
+          _USENOISEVERTEXOFFSET
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH VERTEXLIGHT_ON _USEALPHANOISE
+          _USENOISEVERTEXOFFSET _USEUVNOISE
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH VERTEXLIGHT_ON _USEALPHANOISE
+          _USEUVNOISE
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH _BUILTIN_ALPHATEST_ON _BUILTIN_AlphaClip
+          _BUILTIN_SURFACE_TYPE_TRANSPARENT _USEALPHANOISE _USEUVNOISE
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH _BUILTIN_SURFACE_TYPE_TRANSPARENT
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH _BUILTIN_SURFACE_TYPE_TRANSPARENT
+          _USEALPHANOISE
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH _BUILTIN_SURFACE_TYPE_TRANSPARENT
+          _USEALPHANOISE _USEUVNOISE
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH _USEALPHANOISE
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH _USEALPHANOISE _USENOISEVERTEXOFFSET
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH _USEALPHANOISE _USENOISEVERTEXOFFSET
+          _USEUVNOISE
+        passType: 4
+      - keywords: 
+        passType: 8
+      - keywords: INSTANCING_ON _USEALPHANOISE _USEUVNOISE
+        passType: 8
+      - keywords: _BUILTIN_ALPHATEST_ON _BUILTIN_AlphaClip _BUILTIN_SURFACE_TYPE_TRANSPARENT
+          _USEALPHANOISE _USENOISEVERTEXOFFSET _USEUVNOISE
+        passType: 8
+      - keywords: _BUILTIN_ALPHATEST_ON _BUILTIN_AlphaClip _BUILTIN_SURFACE_TYPE_TRANSPARENT
+          _USEALPHANOISE _USEUVNOISE
+        passType: 8
+      - keywords: _BUILTIN_SURFACE_TYPE_TRANSPARENT
+        passType: 8
+      - keywords: _BUILTIN_SURFACE_TYPE_TRANSPARENT _USEALPHANOISE
+        passType: 8
+      - keywords: _BUILTIN_SURFACE_TYPE_TRANSPARENT _USEALPHANOISE _USENOISEVERTEXOFFSET
+        passType: 8
+      - keywords: _BUILTIN_SURFACE_TYPE_TRANSPARENT _USEALPHANOISE _USEUVNOISE
+        passType: 8
+      - keywords: _USEALPHANOISE
+        passType: 8
+      - keywords: _USEALPHANOISE _USENOISEVERTEXOFFSET
+        passType: 8
+      - keywords: _USEALPHANOISE _USENOISEVERTEXOFFSET _USEUVNOISE
+        passType: 8
+      - keywords: _USEALPHANOISE _USEUVNOISE
+        passType: 8
+      - keywords: 
+        passType: 13
+      - keywords: _USEALPHANOISE
+        passType: 13
+      - keywords: _USEALPHANOISE _USENOISEVERTEXOFFSET
+        passType: 13
+      - keywords: _USEALPHANOISE _USENOISEVERTEXOFFSET _USEUVNOISE
+        passType: 13
+      - keywords: _USEALPHANOISE _USEUVNOISE
+        passType: 13
+  - first: {fileID: -6465566751694194690, guid: e614789e71c77bc42b6a7a87554939db, type: 3}
+    second:
+      variants:
+      - keywords: _ALPHATEST_ON _USEALPHACUTOUT _USEFLOWMAP
+        passType: 0
+      - keywords: _USEALPHACUTOUT _USEFLOWMAP
+        passType: 0
+      - keywords: _ALPHATEST_ON _USEALPHACUTOUT _USEFLOWMAP
+        passType: 8
+      - keywords: _BUILTIN_ALPHATEST_ON _BUILTIN_AlphaClip _USEALPHACUTOUT _USEFLOWMAP
+        passType: 8
+      - keywords: _ALPHATEST_ON _USEALPHACUTOUT _USEFLOWMAP
+        passType: 13
+  - first: {fileID: -6465566751694194690, guid: ca014ee7250447847a8963a05b4e7958, type: 3}
+    second:
+      variants:
+      - keywords: FOG_EXP2 _SURFACE_TYPE_TRANSPARENT
+        passType: 0
+      - keywords: FOG_EXP2 _SURFACE_TYPE_TRANSPARENT _USEFRESNELDISTORTION
+        passType: 0
+      - keywords: _ALPHATEST_ON _SURFACE_TYPE_TRANSPARENT _USEMAINTEXTURE
+        passType: 0
+      - keywords: _SURFACE_TYPE_TRANSPARENT
+        passType: 0
+      - keywords: _SURFACE_TYPE_TRANSPARENT _USEFRESNELDISTORTION
+        passType: 0
+      - keywords: _SURFACE_TYPE_TRANSPARENT _USEFRESNELDISTORTION _USEMAINTEXTURE
+        passType: 0
+      - keywords: _SURFACE_TYPE_TRANSPARENT _USEMAINTEXTURE
+        passType: 0
+      - keywords: _SURFACE_TYPE_TRANSPARENT _USEMAINTEXTURE _USE_DEPTH_FADE
+        passType: 0
+      - keywords: _USEFRESNELDISTORTION _USEMAINTEXTURE
+        passType: 0
+      - keywords: _USEMAINTEXTURE
+        passType: 0
+      - keywords: _USEMAINTEXTURE _USE_DEPTH_FADE
+        passType: 0
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH VERTEXLIGHT_ON
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH VERTEXLIGHT_ON _USEFRESNELDISTORTION
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH _BUILTIN_SURFACE_TYPE_TRANSPARENT
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH _BUILTIN_SURFACE_TYPE_TRANSPARENT
+          _USEFRESNELDISTORTION
+        passType: 4
+      - keywords: DIRECTIONAL LIGHTPROBE_SH
+        passType: 4
+      - keywords: DIRECTIONAL LIGHTPROBE_SH VERTEXLIGHT_ON
+        passType: 4
+      - keywords: DIRECTIONAL LIGHTPROBE_SH VERTEXLIGHT_ON _USEFRESNELDISTORTION
+        passType: 4
+      - keywords: DIRECTIONAL LIGHTPROBE_SH _BUILTIN_SURFACE_TYPE_TRANSPARENT
+        passType: 4
+      - keywords: DIRECTIONAL LIGHTPROBE_SH _BUILTIN_SURFACE_TYPE_TRANSPARENT _USEFRESNELDISTORTION
+        passType: 4
+      - keywords: DIRECTIONAL LIGHTPROBE_SH _USEFRESNELDISTORTION
+        passType: 4
+      - keywords: 
+        passType: 8
+      - keywords: _ALPHATEST_ON _USEMAINTEXTURE
+        passType: 8
+      - keywords: _BUILTIN_ALPHATEST_ON _BUILTIN_AlphaClip _BUILTIN_SURFACE_TYPE_TRANSPARENT
+        passType: 8
+      - keywords: _BUILTIN_ALPHATEST_ON _BUILTIN_AlphaClip _BUILTIN_SURFACE_TYPE_TRANSPARENT
+          _USEFRESNELDISTORTION _USEMAINTEXTURE
+        passType: 8
+      - keywords: _BUILTIN_ALPHATEST_ON _BUILTIN_AlphaClip _BUILTIN_SURFACE_TYPE_TRANSPARENT
+          _USEMAINTEXTURE
+        passType: 8
+      - keywords: _BUILTIN_ALPHATEST_ON _BUILTIN_AlphaClip _BUILTIN_SURFACE_TYPE_TRANSPARENT
+          _USEMAINTEXTURE _USE_DEPTH_FADE
+        passType: 8
+      - keywords: _BUILTIN_SURFACE_TYPE_TRANSPARENT
+        passType: 8
+      - keywords: _BUILTIN_SURFACE_TYPE_TRANSPARENT _USEFRESNELDISTORTION
+        passType: 8
+      - keywords: _BUILTIN_SURFACE_TYPE_TRANSPARENT _USEFRESNELDISTORTION _USEMAINTEXTURE
+        passType: 8
+      - keywords: _BUILTIN_SURFACE_TYPE_TRANSPARENT _USEMAINTEXTURE
+        passType: 8
+      - keywords: _USEFRESNELDISTORTION
+        passType: 8
+      - keywords: _USEFRESNELDISTORTION _USEMAINTEXTURE
+        passType: 8
+      - keywords: _USEMAINTEXTURE
+        passType: 8
+      - keywords: _USEMAINTEXTURE _USE_DEPTH_FADE
+        passType: 8
+      - keywords: 
+        passType: 13
+      - keywords: _BUILTIN_SURFACE_TYPE_TRANSPARENT
+        passType: 13
+      - keywords: _BUILTIN_SURFACE_TYPE_TRANSPARENT _USEFRESNELDISTORTION
+        passType: 13
+      - keywords: _USEFRESNELDISTORTION
+        passType: 13
+  - first: {fileID: -6465566751694194690, guid: 27f01977537644e43b943bba6ebd994c, type: 3}
+    second:
+      variants:
+      - keywords: 
+        passType: 0
+      - keywords: _SURFACE_TYPE_TRANSPARENT
+        passType: 0
+      - keywords: 
+        passType: 8
+      - keywords: _BUILTIN_ALPHATEST_ON _BUILTIN_AlphaClip _BUILTIN_SURFACE_TYPE_TRANSPARENT
+        passType: 8
+  - first: {fileID: -6465566751694194690, guid: 63445e74c6e733f4889a5e93abdfdf5f, type: 3}
+    second:
+      variants:
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH SHADOWS_SCREEN VERTEXLIGHT_ON
+          _ADDITIONAL_LIGHTS _MAIN_LIGHT_SHADOWS _USEDISSOLVECUTOUT _USEVERTEXOFFSET
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH SHADOWS_SCREEN _ADDITIONAL_LIGHTS
+          _BUILTIN_ALPHATEST_ON _BUILTIN_AlphaClip _MAIN_LIGHT_SHADOWS _USEDISSOLVECUTOUT
+          _USEVERTEXOFFSET
+        passType: 4
+      - keywords: DIRECTIONAL FOG_EXP2 LIGHTPROBE_SH SHADOWS_SCREEN _ADDITIONAL_LIGHTS
+          _MAIN_LIGHT_SHADOWS _USEDISSOLVECUTOUT _USEVERTEXOFFSET
+        passType: 4
+      - keywords: FOG_EXP2 POINT SHADOWS_CUBE SHADOWS_SOFT _ADDITIONAL_LIGHTS _BUILTIN_ALPHATEST_ON
+          _BUILTIN_AlphaClip _MAIN_LIGHT_SHADOWS _USEDISSOLVECUTOUT _USEVERTEXOFFSET
+        passType: 5
+      - keywords: FOG_EXP2 POINT SHADOWS_CUBE SHADOWS_SOFT _ADDITIONAL_LIGHTS _MAIN_LIGHT_SHADOWS
+          _USEDISSOLVECUTOUT _USEVERTEXOFFSET
+        passType: 5
+      - keywords: FOG_EXP2 POINT _ADDITIONAL_LIGHTS _BUILTIN_ALPHATEST_ON _BUILTIN_AlphaClip
+          _MAIN_LIGHT_SHADOWS _USEDISSOLVECUTOUT _USEVERTEXOFFSET
+        passType: 5
+      - keywords: FOG_EXP2 POINT _ADDITIONAL_LIGHTS _MAIN_LIGHT_SHADOWS _USEDISSOLVECUTOUT
+          _USEVERTEXOFFSET
+        passType: 5
+      - keywords: SHADOWS_CUBE _BUILTIN_ALPHATEST_ON _BUILTIN_AlphaClip _USEDISSOLVECUTOUT
+          _USEVERTEXOFFSET
+        passType: 8
+      - keywords: SHADOWS_CUBE _USEDISSOLVECUTOUT _USEVERTEXOFFSET
+        passType: 8
+      - keywords: SHADOWS_DEPTH _BUILTIN_ALPHATEST_ON _BUILTIN_AlphaClip _USEDISSOLVECUTOUT
+          _USEVERTEXOFFSET
+        passType: 8
+      - keywords: SHADOWS_DEPTH _USEDISSOLVECUTOUT _USEVERTEXOFFSET
+        passType: 8
+      - keywords: _ALPHATEST_ON _USEDISSOLVECUTOUT
+        passType: 8
+      - keywords: _ALPHATEST_ON _USEDISSOLVECUTOUT _USEVERTEXOFFSET
+        passType: 8
+      - keywords: _BUILTIN_ALPHATEST_ON _BUILTIN_AlphaClip _USEDISSOLVECUTOUT
+        passType: 8
+      - keywords: _BUILTIN_ALPHATEST_ON _BUILTIN_AlphaClip _USEDISSOLVECUTOUT _USEVERTEXOFFSET
+        passType: 8
+      - keywords: LIGHTPROBE_SH UNITY_HDR_ON _BUILTIN_ALPHATEST_ON _BUILTIN_AlphaClip
+          _MAIN_LIGHT_SHADOWS _USEDISSOLVECUTOUT _USEVERTEXOFFSET
+        passType: 10
+      - keywords: LIGHTPROBE_SH UNITY_HDR_ON _MAIN_LIGHT_SHADOWS _USEDISSOLVECUTOUT
+          _USEVERTEXOFFSET
+        passType: 10
+      - keywords: FOG_EXP2 _ADDITIONAL_LIGHTS _ALPHATEST_ON _MAIN_LIGHT_SHADOWS _USEDISSOLVECUTOUT
+          _USEVERTEXOFFSET
+        passType: 13
+      - keywords: _ADDITIONAL_LIGHTS _ALPHATEST_ON _MAIN_LIGHT_SHADOWS _USEDISSOLVECUTOUT
+        passType: 13
+      - keywords: _ADDITIONAL_LIGHTS _ALPHATEST_ON _MAIN_LIGHT_SHADOWS _USEDISSOLVECUTOUT
+          _USEVERTEXOFFSET
+        passType: 13
+      - keywords: _ADDITIONAL_LIGHTS _MAIN_LIGHT_SHADOWS _USEDISSOLVECUTOUT
+        passType: 13
+      - keywords: _ALPHATEST_ON _USEDISSOLVECUTOUT
+        passType: 13
+      - keywords: _ALPHATEST_ON _USEDISSOLVECUTOUT _USEVERTEXOFFSET
+        passType: 13
+      - keywords: _USEDISSOLVECUTOUT _USEVERTEXOFFSET
+        passType: 13
+  - first: {fileID: -6465566751694194690, guid: 40fd8092817821d439989d3ac5e31a20, type: 3}
+    second:
+      variants:
+      - keywords: 
+        passType: 0
+      - keywords: 
+        passType: 8
+      - keywords: _BUILTIN_SURFACE_TYPE_TRANSPARENT
+        passType: 8
+  - first: {fileID: -6465566751694194690, guid: 4eb6bd2af581ef14190954952690d371, type: 3}
+    second:
+      variants:
+      - keywords: 
+        passType: 8
+      - keywords: _ALPHATEST_ON _USEALPHACUTOUT
+        passType: 8
+      - keywords: _ALPHATEST_ON _USESCRIPTROTATIONVECTOR _USEVERTEXOFFSET
+        passType: 8
+      - keywords: _BUILTIN_ALPHATEST_ON _BUILTIN_AlphaClip _BUILTIN_SURFACE_TYPE_TRANSPARENT
+          _USEALPHACUTOUT
+        passType: 8
+      - keywords: _BUILTIN_SURFACE_TYPE_TRANSPARENT _USESCRIPTROTATIONVECTOR _USEVERTEXOFFSET
+        passType: 8
+      - keywords: _ADDITIONAL_LIGHTS _ALPHATEST_ON _MAIN_LIGHT_SHADOWS _SURFACE_TYPE_TRANSPARENT
+          _USEALPHACUTOUT
+        passType: 13
+      - keywords: _ADDITIONAL_LIGHTS _ALPHATEST_ON _MAIN_LIGHT_SHADOWS _SURFACE_TYPE_TRANSPARENT
+          _USESCRIPTROTATIONVECTOR _USEVERTEXOFFSET
+        passType: 13
+  - first: {fileID: -6465566751694194690, guid: 486de6ef863947e41bd731229806c0a5, type: 3}
+    second:
+      variants:
+      - keywords: _SURFACE_TYPE_TRANSPARENT _USEFRAMEBLENDING
+        passType: 0
+      - keywords: _SURFACE_TYPE_TRANSPARENT _USEFRAMEBLENDING _USE_DEPTH_FADE
+        passType: 0
+      - keywords: _SURFACE_TYPE_TRANSPARENT _USE_DEPTH_FADE
+        passType: 0
+      - keywords: _USEFRAMEBLENDING
+        passType: 0
+      - keywords: _USEFRAMEBLENDING _USE_DEPTH_FADE
+        passType: 0
+      - keywords: _BUILTIN_SURFACE_TYPE_TRANSPARENT _USEFRAMEBLENDING
+        passType: 8
+      - keywords: _BUILTIN_SURFACE_TYPE_TRANSPARENT _USEFRAMEBLENDING _USE_DEPTH_FADE
+        passType: 8
+      - keywords: _BUILTIN_SURFACE_TYPE_TRANSPARENT _USE_DEPTH_FADE
+        passType: 8
+      - keywords: _USEFRAMEBLENDING
+        passType: 8
+      - keywords: _USEFRAMEBLENDING _USE_DEPTH_FADE
+        passType: 8
+      - keywords: _USE_DEPTH_FADE
+        passType: 8
