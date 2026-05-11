@@ -76,11 +76,11 @@ public class Sword : GameUnit
         orbit = null;
         lastDamageFrame = -1;
         
-        TF.rotation = Quaternion.Euler(0f, 0f, Random.Range(0f, 360f));
+        TF.rotation = Quaternion.Euler(90f, Random.Range(0f, 360f), 0f);
         TF.localScale = Vector3.one * 0.7f;
-        
+
         Vector3 pos = TF.position;
-        pos.z = 100f;
+        pos.y = 0f;
         TF.position = pos;
         
         if (spriteRenderer != null)
@@ -222,7 +222,7 @@ public class Sword : GameUnit
         float s = Smooth(p);
         float r = flyStartRadius + (flyOrbitRadius - flyStartRadius) * s;
 
-        TF.localPosition = new Vector3(Mathf.Cos(angle) * r, Mathf.Sin(angle) * r, -0.2f);
+        TF.localPosition = new Vector3(Mathf.Cos(angle) * r, Mathf.Sin(angle) * r, 0f);
         TF.localRotation = Quaternion.Euler(0f, 0f, Mathf.LerpAngle(angle * RAD_TO_DEG + 180f, angle * RAD_TO_DEG - 90f, s));
 
         if (flyElapsed >= flyDuration)
@@ -263,7 +263,7 @@ public class Sword : GameUnit
         return t * t * (3f - 2f * t);
     }
 
-    private void OnTriggerEnter2D(Collider2D other)
+    private void OnTriggerEnter(Collider other)
     {
         if (state == SwordState.Animating || state == SwordState.FlyingIn) return;
 
@@ -415,28 +415,34 @@ public class Sword : GameUnit
         orbit = null;
 
         Vector3 worldPos = TF.position;
-        Vector2 radial = ((Vector2)(worldPos - owner.transform.position)).normalized;
-        if (radial == Vector2.zero) radial = Random.insideUnitCircle.normalized;
+        Vector3 diff = worldPos - owner.transform.position;
+        Vector3 radial = new Vector3(diff.x, 0f, diff.z);
+        if (radial.sqrMagnitude < 0.001f)
+        {
+            float a = Random.Range(0f, Mathf.PI * 2f);
+            radial = new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a));
+        }
+        radial.Normalize();
 
         float sign = owner.RotateSpeed >= 0 ? -1f : 1f;
-        Vector2 dirNormalized = new Vector2(-radial.y, radial.x) * sign;
+        Vector3 dir = new Vector3(-radial.z, 0f, radial.x) * sign;
 
         TF.SetParent(null);
-        
+
         Vector3 landPos = worldPos;
-        landPos.z = 1f;
+        landPos.y = 0f;
 
         MapManager map = MapManager.Instance;
         if (map != null)
         {
             float stepSize = map.CellSize * 0.5f;
             Vector3 safeLand = worldPos;
-            safeLand.z = 1f;
+            safeLand.y = 0f;
 
             for (float d = stepSize; d <= knockForce; d += stepSize)
             {
-                Vector3 check = worldPos + (Vector3)(dirNormalized * d);
-                check.z = 1f;
+                Vector3 check = worldPos + dir * d;
+                check.y = 0f;
                 check = map.ClampToMap(check);
 
                 if (map.IsWall(check)) break;
@@ -444,30 +450,28 @@ public class Sword : GameUnit
             }
 
             if (map.IsWall(safeLand))
-            {
                 safeLand = FindNearestOpenPosition(worldPos, map);
-            }
 
             landPos = safeLand;
-            landPos.z = 1f;
+            landPos.y = 0f;
         }
 
         var seq = DOTween.Sequence();
         seq.Join(TF.DOMove(landPos, fallDuration).SetEase(Ease.OutQuad));
         seq.Join(TF.DOScale(0.7f, fallDuration).SetEase(Ease.InQuad));
-        seq.Join(TF.DORotate(new Vector3(0f, 0f, Random.Range(0f, 360f)), fallDuration, RotateMode.FastBeyond360));
+        seq.Join(TF.DORotate(new Vector3(90f, Random.Range(0f, 360f), 0f), fallDuration, RotateMode.FastBeyond360));
         seq.OnComplete(() =>
         {
             state = SwordState.Dropped;
             currentHp = maxHp;
             if (spriteRenderer != null) spriteRenderer.color = Color.white;
-            
+
             SetSwordType(SwordType.Default);
-            
+
             Vector3 finalPos = TF.position;
-            finalPos.z = 100f;
+            finalPos.y = 0f;
             TF.position = finalPos;
-            
+
             ItemManager.Instance?.Register(this);
         });
     }
@@ -481,9 +485,9 @@ public class Sword : GameUnit
             for (int angle = 0; angle < 360; angle += 45)
             {
                 float rad = angle * Mathf.Deg2Rad;
-                Vector3 offset = new Vector3(Mathf.Cos(rad), Mathf.Sin(rad), 0f) * (cellSize * radius);
+                Vector3 offset = new Vector3(Mathf.Cos(rad), 0f, Mathf.Sin(rad)) * (cellSize * radius);
                 Vector3 checkPos = center + offset;
-                checkPos.z = 1f;
+                checkPos.y = 0f;
                 checkPos = map.ClampToMap(checkPos);
                 
                 if (!map.IsWall(checkPos))

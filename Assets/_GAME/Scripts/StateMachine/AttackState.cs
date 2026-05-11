@@ -41,7 +41,7 @@ public class AttackState : ICharacterState
         if (target != null)
         {
             Vector3 toChar = sm.CachedPosition - target.TF.position;
-            currentOrbitAngle = Mathf.Atan2(toChar.y, toChar.x) * Mathf.Rad2Deg;
+            currentOrbitAngle = Mathf.Atan2(toChar.z, toChar.x) * Mathf.Rad2Deg;
             orbitClockwise = Random.value > 0.5f;
             
             BuildPathToTarget(sm);
@@ -106,8 +106,8 @@ public class AttackState : ICharacterState
 
         Vector3 targetPos = target.TF.position;
         float dx = targetPos.x - sm.CachedPosition.x;
-        float dy = targetPos.y - sm.CachedPosition.y;
-        float distSq = dx * dx + dy * dy;
+        float dz = targetPos.z - sm.CachedPosition.z;
+        float distSq = dx * dx + dz * dz;
 
         if (!isLocked && distSq > sm.VisionRadiusSq * 1.2f)
         {
@@ -120,7 +120,7 @@ public class AttackState : ICharacterState
 
         if (distanceError < -AttackDistanceTolerance)
         {
-            Vector3 retreatDir = new Vector3(-dx, -dy, 0f).normalized;
+            Vector3 retreatDir = new Vector3(-dx, 0f, -dz).normalized;
             Vector3 retreatTarget = sm.CachedPosition + retreatDir * Mathf.Abs(distanceError);
             
             if (sm.Map != null)
@@ -190,56 +190,50 @@ public class AttackState : ICharacterState
     private void PickNextOrbitPosition(CharacterStateMachine sm, Vector3 targetPos)
     {
         Vector3 toChar = sm.CachedPosition - targetPos;
-        float currentAngle = Mathf.Atan2(toChar.y, toChar.x) * Mathf.Rad2Deg;
-        
+        float currentAngle = Mathf.Atan2(toChar.z, toChar.x) * Mathf.Rad2Deg;
+
         float newAngle = currentAngle;
-        if (orbitClockwise)
-            newAngle -= OrbitAngleStep;
-        else
-            newAngle += OrbitAngleStep;
-        
-        while (newAngle < 0f) newAngle += 360f;
+        if (orbitClockwise) newAngle -= OrbitAngleStep;
+        else                newAngle += OrbitAngleStep;
+
+        while (newAngle <   0f) newAngle += 360f;
         while (newAngle >= 360f) newAngle -= 360f;
-        
+
         currentOrbitAngle = newAngle;
-        
-        float angleRad = newAngle * Mathf.Deg2Rad;
+
+        float angleRad    = newAngle * Mathf.Deg2Rad;
         float orbitRadius = OptimalAttackDistance;
-        
+
         Vector3 orbitPos = new Vector3(
             targetPos.x + Mathf.Cos(angleRad) * orbitRadius,
-            targetPos.y + Mathf.Sin(angleRad) * orbitRadius,
-            targetPos.z
+            targetPos.y,
+            targetPos.z + Mathf.Sin(angleRad) * orbitRadius
         );
-        
+
         if (sm.Map != null)
         {
             orbitPos = sm.Map.ClampToMap(orbitPos);
-            
+
             if (sm.Map.IsBlockedWorld(orbitPos))
             {
                 orbitClockwise = !orbitClockwise;
-                
-                if (orbitClockwise)
-                    newAngle = currentAngle - OrbitAngleStep;
-                else
-                    newAngle = currentAngle + OrbitAngleStep;
-                
-                while (newAngle < 0f) newAngle += 360f;
+
+                newAngle = orbitClockwise
+                    ? currentAngle - OrbitAngleStep
+                    : currentAngle + OrbitAngleStep;
+
+                while (newAngle <   0f) newAngle += 360f;
                 while (newAngle >= 360f) newAngle -= 360f;
-                
+
                 angleRad = newAngle * Mathf.Deg2Rad;
                 orbitPos = new Vector3(
                     targetPos.x + Mathf.Cos(angleRad) * orbitRadius,
-                    targetPos.y + Mathf.Sin(angleRad) * orbitRadius,
-                    targetPos.z
+                    targetPos.y,
+                    targetPos.z + Mathf.Sin(angleRad) * orbitRadius
                 );
                 orbitPos = sm.Map.ClampToMap(orbitPos);
-                
-                if (sm.Map.IsBlockedWorld(orbitPos))
-                {
-                    return;
-                }
+
+                if (sm.Map.IsBlockedWorld(orbitPos)) return;
             }
         }
         
@@ -275,45 +269,37 @@ public class AttackState : ICharacterState
     {
         // Tính vector từ target đến character
         Vector3 toChar = sm.CachedPosition - targetPos;
-        float currentAngle = Mathf.Atan2(toChar.y, toChar.x);
-        
-        // Tính orbit position ở khoảng cách optimal
-        // Sử dụng góc hiện tại để character tiếp cận theo đường tự nhiên
+        float currentAngle = Mathf.Atan2(toChar.z, toChar.x);
+
         Vector3 orbitPos = new Vector3(
             targetPos.x + Mathf.Cos(currentAngle) * OptimalAttackDistance,
-            targetPos.y + Mathf.Sin(currentAngle) * OptimalAttackDistance,
-            targetPos.z
+            targetPos.y,
+            targetPos.z + Mathf.Sin(currentAngle) * OptimalAttackDistance
         );
-        
-        // Clamp vào map
+
         if (sm.Map != null)
         {
             orbitPos = sm.Map.ClampToMap(orbitPos);
-            
-            // Nếu vị trí này bị wall, thử các góc lân cận
+
             if (sm.Map.IsBlockedWorld(orbitPos))
             {
-                // Thử ±45° và ±90°
-                float[] angleOffsets = { 0.785f, -0.785f, 1.57f, -1.57f }; // 45°, -45°, 90°, -90° in radians
-                
+                float[] angleOffsets = { 0.785f, -0.785f, 1.57f, -1.57f };
+
                 foreach (float offset in angleOffsets)
                 {
                     float testAngle = currentAngle + offset;
                     Vector3 testPos = new Vector3(
                         targetPos.x + Mathf.Cos(testAngle) * OptimalAttackDistance,
-                        targetPos.y + Mathf.Sin(testAngle) * OptimalAttackDistance,
-                        targetPos.z
+                        targetPos.y,
+                        targetPos.z + Mathf.Sin(testAngle) * OptimalAttackDistance
                     );
-                    
+
                     testPos = sm.Map.ClampToMap(testPos);
-                    
+
                     if (!sm.Map.IsBlockedWorld(testPos))
-                    {
                         return testPos;
-                    }
                 }
-                
-                // Nếu tất cả orbit positions đều bị wall, fallback về target position
+
                 return targetPos;
             }
         }

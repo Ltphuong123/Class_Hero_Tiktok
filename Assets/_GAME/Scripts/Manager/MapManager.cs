@@ -3,7 +3,7 @@ using UnityEngine;
 public class MapManager : Singleton<MapManager>
 {
     [Header("Map List")]
-    [SerializeField] private GameObject[] maps;
+    // [SerializeField] private GameObject[] maps;
     
     [Header("Grid Settings (Shared)")]
     [SerializeField] private float cellSize = 1f;
@@ -29,7 +29,7 @@ public class MapManager : Singleton<MapManager>
     public float MapHeight => rows * cellSize;
     public Vector2 MapMin => cachedMin;
     public Vector2 MapMax => cachedMax;
-    public int MapCount => maps?.Length ?? 0;
+    // public int MapCount => maps?.Length ?? 0;
 
     protected override void Awake()
     {
@@ -42,7 +42,7 @@ public class MapManager : Singleton<MapManager>
     private void LoadSelectedMap()
     {
         int selectedIndex = PlayerPrefs.GetInt(SelectedMapPref, 0);
-        maps[selectedIndex].SetActive(true);
+        // maps[selectedIndex].SetActive(true);
     }
 
     private void CacheBounds()
@@ -66,9 +66,9 @@ public class MapManager : Singleton<MapManager>
             int row = i / columns;
 
             float cx = cachedMin.x + (col + 0.5f) * cellSize;
-            float cy = cachedMin.y + (row + 0.5f) * cellSize;
+            float cz = cachedMin.y + (row + 0.5f) * cellSize;
 
-            blocked[i] = Physics2D.OverlapBox(new Vector2(cx, cy), new Vector2(size, size), 0f, wallMask) != null;
+            blocked[i] = Physics.CheckBox(new Vector3(cx, 0f, cz), new Vector3(size * 0.5f, 0.6f, size * 0.5f), Quaternion.identity, wallMask);
         }
 
         pathfinder = new GridPathfinder(this);
@@ -77,7 +77,7 @@ public class MapManager : Singleton<MapManager>
     public Vector2Int WorldToCell(Vector3 worldPos)
     {
         int cx = (int)((worldPos.x - cachedMin.x) * invCellSize);
-        int cy = (int)((worldPos.y - cachedMin.y) * invCellSize);
+        int cy = (int)((worldPos.z - cachedMin.y) * invCellSize);
 
         if (cx < 0) cx = 0; else if (cx >= columns) cx = columns - 1;
         if (cy < 0) cy = 0; else if (cy >= rows) cy = rows - 1;
@@ -89,8 +89,8 @@ public class MapManager : Singleton<MapManager>
     {
         return new Vector3(
             cachedMin.x + (col + 0.5f) * cellSize,
-            cachedMin.y + (row + 0.5f) * cellSize,
-            0f
+            0f,
+            cachedMin.y + (row + 0.5f) * cellSize
         );
     }
 
@@ -104,7 +104,7 @@ public class MapManager : Singleton<MapManager>
     public bool IsBlockedWorld(Vector3 worldPos)
     {
         int col = (int)((worldPos.x - cachedMin.x) * invCellSize);
-        int row = (int)((worldPos.y - cachedMin.y) * invCellSize);
+        int row = (int)((worldPos.z - cachedMin.y) * invCellSize);
         return IsBlocked(col, row);
     }
 
@@ -116,7 +116,7 @@ public class MapManager : Singleton<MapManager>
     public bool IsInsideMap(Vector3 worldPos)
     {
         return worldPos.x >= cachedMin.x && worldPos.x <= cachedMax.x
-            && worldPos.y >= cachedMin.y && worldPos.y <= cachedMax.y;
+            && worldPos.z >= cachedMin.y && worldPos.z <= cachedMax.y;
     }
 
     public Vector3 ClampToMap(Vector3 worldPos)
@@ -124,8 +124,8 @@ public class MapManager : Singleton<MapManager>
         if (worldPos.x < cachedMin.x) worldPos.x = cachedMin.x;
         else if (worldPos.x > cachedMax.x) worldPos.x = cachedMax.x;
 
-        if (worldPos.y < cachedMin.y) worldPos.y = cachedMin.y;
-        else if (worldPos.y > cachedMax.y) worldPos.y = cachedMax.y;
+        if (worldPos.z < cachedMin.y) worldPos.z = cachedMin.y;
+        else if (worldPos.z > cachedMax.y) worldPos.z = cachedMax.y;
 
         return worldPos;
     }

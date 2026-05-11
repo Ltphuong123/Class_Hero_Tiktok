@@ -5,7 +5,7 @@ public class WanderState : ICharacterState
     private int pathIndex;
     private float rescanTimer;
     private float stuckTimer;
-    private float lastPosX, lastPosY;
+    private float lastPosX, lastPosZ;
 
     private const float RescanInterval = 0.2f;
     private const float WanderRadius = 8f;
@@ -18,7 +18,7 @@ public class WanderState : ICharacterState
         stuckTimer = 0f;
         Vector3 pos = sm.CachedPosition;
         lastPosX = pos.x;
-        lastPosY = pos.y;
+        lastPosZ = pos.z;
         PickNewWanderTarget(sm);
     }
 
@@ -57,9 +57,9 @@ public class WanderState : ICharacterState
         }
 
         Vector3 pos = sm.CachedPosition;
-        float dx = pos.x - lastPosX, dy = pos.y - lastPosY;
-        
-        if (dx * dx + dy * dy < StuckMoveSq)
+        float dx = pos.x - lastPosX, dz = pos.z - lastPosZ;
+
+        if (dx * dx + dz * dz < StuckMoveSq)
         {
             stuckTimer += deltaTime;
             if (stuckTimer >= StuckThreshold)
@@ -72,7 +72,7 @@ public class WanderState : ICharacterState
         {
             stuckTimer = 0f;
             lastPosX = pos.x;
-            lastPosY = pos.y;
+            lastPosZ = pos.z;
         }
 
         if (pathIndex >= sm.PathBuffer.Count || sm.PathBuffer.Count == 0)
@@ -90,31 +90,27 @@ public class WanderState : ICharacterState
     private void PickNewWanderTarget(CharacterStateMachine sm)
     {
         Vector3 myPos = sm.CachedPosition;
-        float myX = myPos.x, myY = myPos.y;
+        float myX = myPos.x, myZ = myPos.z;
         MapManager map = sm.Map;
         GridPathfinder pathfinder = sm.Pathfinder;
 
-        // Thử 10 lần để tìm vị trí hợp lệ
         for (int attempt = 0; attempt < 10; attempt++)
         {
-            // Random góc và khoảng cách
             float angle = Random.Range(0f, Mathf.PI * 2f);
-            float dist = Random.Range(3f, WanderRadius);
-            float dirX = Mathf.Cos(angle);
-            float dirY = Mathf.Sin(angle);
-            
-            Vector3 candidate = new Vector3(myX + dirX * dist, myY + dirY * dist, myPos.z);
+            float dist  = Random.Range(3f, WanderRadius);
+            float dirX  = Mathf.Cos(angle);
+            float dirZ  = Mathf.Sin(angle);
 
-            // Clamp vào map và check wall
+            Vector3 candidate = new Vector3(myX + dirX * dist, 0f, myZ + dirZ * dist);
+
             if (map != null)
             {
                 candidate = map.ClampToMap(candidate);
                 if (map.IsWall(candidate)) continue;
             }
 
-            // Đảm bảo di chuyển đủ xa (tối thiểu 1f)
-            float dx = candidate.x - myX, dy = candidate.y - myY;
-            if (dx * dx + dy * dy < 1f) continue;
+            float dx = candidate.x - myX, dz = candidate.z - myZ;
+            if (dx * dx + dz * dz < 1f) continue;
 
             // Tìm đường đi
             pathIndex = 0;

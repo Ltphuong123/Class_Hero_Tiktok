@@ -144,15 +144,15 @@ public class CharacterManager : Singleton<CharacterManager>
 
                 if (cachedMap.IsBlockedWorld(pos))
                 {
-                    Vector3 tryX = new Vector3(pos.x, prevPos.y, pos.z);
+                    Vector3 tryX = new Vector3(pos.x, 0f, prevPos.z);
                     if (!cachedMap.IsBlockedWorld(tryX))
                     {
                         pos = tryX;
                     }
                     else
                     {
-                        Vector3 tryY = new Vector3(prevPos.x, pos.y, pos.z);
-                        pos = !cachedMap.IsBlockedWorld(tryY) ? tryY : prevPos;
+                        Vector3 tryZ = new Vector3(prevPos.x, 0f, pos.z);
+                        pos = !cachedMap.IsBlockedWorld(tryZ) ? tryZ : prevPos;
                     }
                 }
             }
@@ -162,7 +162,7 @@ public class CharacterManager : Singleton<CharacterManager>
                 pos = cachedMap.ClampToMap(pos);
             }
 
-            pos.z = pos.y + 25f;
+            pos.y = 0f;
             t.position = pos;
             grid.UpdatePosition(c, pos);
         }
@@ -428,15 +428,15 @@ public class CharacterManager : Singleton<CharacterManager>
         {
             Vector3 pos = new Vector3(
                 UnityEngine.Random.Range(min.x + padding, max.x - padding),
-                UnityEngine.Random.Range(min.y + padding, max.y - padding),
-                0f
+                0f,
+                UnityEngine.Random.Range(min.y + padding, max.y - padding)
             );
 
             if (!map.IsWall(pos))
                 return pos;
         }
 
-        return new Vector3((min.x + max.x) * 0.5f, (min.y + max.y) * 0.5f, 0f);
+        return new Vector3((min.x + max.x) * 0.5f, 0f, (min.y + max.y) * 0.5f);
     }
 
     public CharacterBase GetCharacterById(string characterId)
@@ -753,7 +753,7 @@ public class CharacterManager : Singleton<CharacterManager>
             for (int i = 0; i < actualSwordsToAdd; i++)
             {
                 Vector2 randomOffset = UnityEngine.Random.insideUnitCircle.normalized * 2f;
-                Vector3 spawnPos = currentCharacter.TF.position + new Vector3(randomOffset.x, randomOffset.y, 0f);
+                Vector3 spawnPos = currentCharacter.TF.position + new Vector3(randomOffset.x, 0f, randomOffset.y);
                 Sword sword = ItemManager.Instance.Spawn(spawnPos);
                 if (sword != null)
                     sword.Collect(currentCharacter);
@@ -794,7 +794,7 @@ public class CharacterManager : Singleton<CharacterManager>
             for (int i = 0; i < actualSwordsToAdd; i++)
             {
                 Vector2 randomOffset = UnityEngine.Random.insideUnitCircle.normalized * 2f;
-                Vector3 spawnPos = character.TF.position + new Vector3(randomOffset.x, randomOffset.y, 0f);
+                Vector3 spawnPos = character.TF.position + new Vector3(randomOffset.x, 0f, randomOffset.y);
                 Sword sword = ItemManager.Instance.Spawn(spawnPos);
                 if (sword != null)
                     sword.Collect(character);

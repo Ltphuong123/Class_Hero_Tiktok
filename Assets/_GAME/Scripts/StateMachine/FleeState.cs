@@ -54,8 +54,8 @@ public class FleeState : ICharacterState
             float angle = Random.Range(0f, Mathf.PI * 2f);
             Vector3 randomTarget = new Vector3(
                 myPos.x + Mathf.Cos(angle) * FleeDistance,
-                myPos.y + Mathf.Sin(angle) * FleeDistance,
-                myPos.z);
+                0f,
+                myPos.z + Mathf.Sin(angle) * FleeDistance);
 
             if (sm.Map != null)
                 randomTarget = sm.Map.ClampToMap(randomTarget);
@@ -66,46 +66,46 @@ public class FleeState : ICharacterState
 
         Vector3 threatPos = threat.TF.position;
         float dx = myPos.x - threatPos.x;
-        float dy = myPos.y - threatPos.y;
-        float mag = Mathf.Sqrt(dx * dx + dy * dy);
+        float dz = myPos.z - threatPos.z;
+        float mag = Mathf.Sqrt(dx * dx + dz * dz);
 
         if (mag < 0.01f)
         {
             float angle = Random.Range(0f, Mathf.PI * 2f);
             dx = Mathf.Cos(angle);
-            dy = Mathf.Sin(angle);
+            dz = Mathf.Sin(angle);
         }
         else
         {
             dx /= mag;
-            dy /= mag;
+            dz /= mag;
         }
 
         Vector3 fleeTarget = new Vector3(
             myPos.x + dx * FleeDistance,
-            myPos.y + dy * FleeDistance,
-            myPos.z);
+            0f,
+            myPos.z + dz * FleeDistance);
 
         if (sm.Map != null)
         {
             fleeTarget = sm.Map.ClampToMap(fleeTarget);
-            
+
             if (sm.Map.IsWall(fleeTarget))
             {
                 for (int i = 0; i < 8; i++)
                 {
                     float angle = i * 0.785398f;
                     float cos = Mathf.Cos(angle), sin = Mathf.Sin(angle);
-                    float rdx = dx * cos - dy * sin;
-                    float rdy = dx * sin + dy * cos;
-                    
+                    float rdx = dx * cos - dz * sin;
+                    float rdz = dx * sin + dz * cos;
+
                     Vector3 alt = new Vector3(
                         myPos.x + rdx * FleeDistance,
-                        myPos.y + rdy * FleeDistance,
-                        myPos.z);
-                    
+                        0f,
+                        myPos.z + rdz * FleeDistance);
+
                     alt = sm.Map.ClampToMap(alt);
-                    
+
                     if (!sm.Map.IsWall(alt))
                     {
                         fleeTarget = alt;

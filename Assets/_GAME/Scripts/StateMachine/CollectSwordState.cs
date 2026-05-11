@@ -86,9 +86,9 @@ public class CollectSwordState : ICharacterState
         }
 
         float dx = targetSword.TF.position.x - sm.CachedPosition.x;
-        float dy = targetSword.TF.position.y - sm.CachedPosition.y;
-        
-        if (dx * dx + dy * dy <= PickupRadiusSq)
+        float dz = targetSword.TF.position.z - sm.CachedPosition.z;
+
+        if (dx * dx + dz * dz <= PickupRadiusSq)
         {
             if (targetSword.Collect(sm.Owner))
             {

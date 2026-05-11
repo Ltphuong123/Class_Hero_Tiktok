@@ -45,7 +45,7 @@ public class LevelManager : Singleton<LevelManager>
         for (int i = 0; i < initialSwordCount; i++)
         {
             Vector3 pos = FindOpenPosition(min, max, padding, map);
-            if (pos.z < 0f)
+            if (pos.y < 0f)
             {
                 Debug.LogWarning($"[LevelManager] Could not find open position for sword {i}. Skipping.");
                 continue;
@@ -79,7 +79,7 @@ public class LevelManager : Singleton<LevelManager>
         for (int i = 0; i < initialCharacterCount; i++)
         {
             Vector3 pos = FindOpenPosition(min, max, padding, map);
-            if (pos.z < 0f)
+            if (pos.y < 0f)
             {
                 Debug.LogWarning($"[LevelManager] Could not find open position for character {i}. Skipping.");
                 continue;
@@ -103,7 +103,7 @@ public class LevelManager : Singleton<LevelManager>
         if (map == null || charMgr == null) return;
 
         Vector3 pos = FindOpenPosition(map.MapMin, map.MapMax, map.CellSize * 2f, map);
-        if (pos.z < 0f) return;
+        if (pos.y < 0f) return;
 
         string id = $"char_{System.Guid.NewGuid():N}";
         string name = characterNames.Length > 0 ? characterNames[Random.Range(0, characterNames.Length)] : "Character";
@@ -168,12 +168,12 @@ public class LevelManager : Singleton<LevelManager>
         {
             Vector3 pos = new Vector3(
                 Random.Range(min.x + padding, max.x - padding),
-                Random.Range(min.y + padding, max.y - padding),
-                0f
+                0f,
+                Random.Range(min.y + padding, max.y - padding)
             );
             if (!map.IsWall(pos))
                 return pos;
         }
-        return new Vector3(0f, 0f, -1f);
+        return new Vector3(0f, -1f, 0f);
     }
 }

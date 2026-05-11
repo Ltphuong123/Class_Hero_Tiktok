@@ -68,8 +68,8 @@ public class GridPathfinder
         if (startCell.x == goalCell.x && startCell.y == goalCell.y)
         {
             float dx = startWorld.x - goalWorld.x;
-            float dy = startWorld.y - goalWorld.y;
-            return Mathf.Sqrt(dx * dx + dy * dy);
+            float dz = startWorld.z - goalWorld.z;
+            return Mathf.Sqrt(dx * dx + dz * dz);
         }
 
         return RunAStar(startCell, goalCell, true, goalWorld, null);
@@ -96,8 +96,8 @@ public class GridPathfinder
         {
             result.Add(goalWorld);
             float dx = startWorld.x - goalWorld.x;
-            float dy = startWorld.y - goalWorld.y;
-            return Mathf.Sqrt(dx * dx + dy * dy);
+            float dz = startWorld.z - goalWorld.z;
+            return Mathf.Sqrt(dx * dx + dz * dz);
         }
 
         return RunAStar(startCell, goalCell, false, goalWorld, result);

@@ -20,7 +20,7 @@ public class SpatialGrid<T> where T : class
 
     public void Add(T entity, Vector3 pos)
     {
-        long key = PosToKey(pos.x, pos.y);
+        long key = PosToKey(pos.x, pos.z);
 
         if (!cells.TryGetValue(key, out var list))
         {
@@ -67,7 +67,7 @@ public class SpatialGrid<T> where T : class
         if (!entityCells.TryGetValue(entity, out long oldKey))
             return;
 
-        long newKey = PosToKey(newPos.x, newPos.y);
+        long newKey = PosToKey(newPos.x, newPos.z);
         entityPositions[entity] = newPos;
 
         if (oldKey == newKey)
@@ -113,20 +113,20 @@ public class SpatialGrid<T> where T : class
     {
         results.Clear();
 
-        float cx = center.x, cy = center.y;
+        float cx = center.x, cz = center.z;
         float radiusSq = radius * radius;
 
         int minX = (int)((cx - radius) * invCellSize) - 1;
         int maxX = (int)((cx + radius) * invCellSize) + 1;
-        int minY = (int)((cy - radius) * invCellSize) - 1;
-        int maxY = (int)((cy + radius) * invCellSize) + 1;
+        int minZ = (int)((cz - radius) * invCellSize) - 1;
+        int maxZ = (int)((cz + radius) * invCellSize) + 1;
 
         for (int gx = minX; gx <= maxX; gx++)
         {
             long keyBase = (long)gx << 32;
-            for (int gy = minY; gy <= maxY; gy++)
+            for (int gz = minZ; gz <= maxZ; gz++)
             {
-                long key = keyBase | (uint)gy;
+                long key = keyBase | (uint)gz;
                 if (!cells.TryGetValue(key, out var list))
                     continue;
 
@@ -136,9 +136,9 @@ public class SpatialGrid<T> where T : class
                     T entity = list[i];
                     Vector3 pos = entityPositions[entity];
                     float dx = pos.x - cx;
-                    float dy = pos.y - cy;
+                    float dz = pos.z - cz;
 
-                    if (dx * dx + dy * dy <= radiusSq)
+                    if (dx * dx + dz * dz <= radiusSq)
                         results.Add(entity);
                 }
             }
@@ -147,22 +147,22 @@ public class SpatialGrid<T> where T : class
 
     public T GetNearest(Vector3 center, float radius, T exclude = null)
     {
-        float cx = center.x, cy = center.y;
+        float cx = center.x, cz = center.z;
         float radiusSq = radius * radius;
         float bestDistSq = float.MaxValue;
         T best = null;
 
         int minX = (int)((cx - radius) * invCellSize) - 1;
         int maxX = (int)((cx + radius) * invCellSize) + 1;
-        int minY = (int)((cy - radius) * invCellSize) - 1;
-        int maxY = (int)((cy + radius) * invCellSize) + 1;
+        int minZ = (int)((cz - radius) * invCellSize) - 1;
+        int maxZ = (int)((cz + radius) * invCellSize) + 1;
 
         for (int gx = minX; gx <= maxX; gx++)
         {
             long keyBase = (long)gx << 32;
-            for (int gy = minY; gy <= maxY; gy++)
+            for (int gz = minZ; gz <= maxZ; gz++)
             {
-                long key = keyBase | (uint)gy;
+                long key = keyBase | (uint)gz;
                 if (!cells.TryGetValue(key, out var list))
                     continue;
 
@@ -174,8 +174,8 @@ public class SpatialGrid<T> where T : class
 
                     Vector3 pos = entityPositions[entity];
                     float dx = pos.x - cx;
-                    float dy = pos.y - cy;
-                    float distSq = dx * dx + dy * dy;
+                    float dz = pos.z - cz;
+                    float distSq = dx * dx + dz * dz;
 
                     if (distSq < bestDistSq)
                     {
@@ -190,10 +190,10 @@ public class SpatialGrid<T> where T : class
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private long PosToKey(float x, float y)
+    private long PosToKey(float x, float z)
     {
         int kx = x >= 0f ? (int)(x * invCellSize) : (int)(x * invCellSize) - 1;
-        int ky = y >= 0f ? (int)(y * invCellSize) : (int)(y * invCellSize) - 1;
-        return (long)kx << 32 | (uint)ky;
+        int kz = z >= 0f ? (int)(z * invCellSize) : (int)(z * invCellSize) - 1;
+        return (long)kx << 32 | (uint)kz;
     }
 }

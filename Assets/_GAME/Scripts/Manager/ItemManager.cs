@@ -23,16 +23,12 @@ public class ItemManager : Singleton<ItemManager>
 
     public Sword Spawn(Vector3 position, Quaternion rotation)
     {
+        position.y = 0f;
         Sword sword = SimplePool.Spawn<Sword>(PoolType.Sword, position, rotation);
         if (sword != null)
         {
-            // Set position trước khi OnInit
-            position.z = 100f;
             sword.TF.position = position;
-            
-            // OnInit sẽ set random rotation và đảm bảo z = 100
             sword.OnInit();
-            
             sword.gameObject.SetActive(true);
             Register(sword);
         }
@@ -97,7 +93,7 @@ public class ItemManager : Singleton<ItemManager>
 
         Sword best = null;
         float bestDistSq = float.MaxValue;
-        float px = position.x, py = position.y;
+        float px = position.x, pz = position.z;
 
         int count = queryBuffer.Count;
         for (int i = 0; i < count; i++)
@@ -107,8 +103,8 @@ public class ItemManager : Singleton<ItemManager>
             {
                 Vector3 sp = sword.TF.position;
                 float dx = sp.x - px;
-                float dy = sp.y - py;
-                float distSq = dx * dx + dy * dy;
+                float dz = sp.z - pz;
+                float distSq = dx * dx + dz * dz;
                 if (distSq < bestDistSq)
                 {
                     bestDistSq = distSq;

@@ -18,6 +18,8 @@ public class SwordOrbit : MonoBehaviour
     private const float TWO_PI = Mathf.PI * 2f;
     private const float RAD_TO_DEG = Mathf.Rad2Deg;
     private bool isPaused;
+    private float orbitAngle = 0f;
+    private float baseEulerX, baseEulerY;
     
     private float lastSwordDropTime = -1f;
     private const float SwordDropCooldown = 0.1f;
@@ -29,6 +31,10 @@ public class SwordOrbit : MonoBehaviour
 
     public void OnInit()
     {
+        orbitAngle = 0f;
+        Vector3 e = transform.eulerAngles;
+        baseEulerX = -90f;
+        baseEulerY = 0f;
         swords.Clear();
         isPaused = false;
         lastSwordDropTime = -1f;
@@ -143,7 +149,8 @@ public class SwordOrbit : MonoBehaviour
     private void Update()
     {
         if (isPaused) return;
-        transform.Rotate(0f, 0f, rotateSpeed * Time.deltaTime);
+        orbitAngle += rotateSpeed * Time.deltaTime;
+        transform.rotation = Quaternion.Euler(baseEulerX, baseEulerY, orbitAngle);
     }
 
     public void SetPaused(bool paused)

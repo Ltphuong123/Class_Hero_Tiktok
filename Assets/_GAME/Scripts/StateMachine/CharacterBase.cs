@@ -210,6 +210,11 @@ public class CharacterBase : GameUnit, IManagedUpdate
             }
         }
         
+        if (visualTransform != null && visualTransform != TF)
+            visualTransform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+        else
+            TF.rotation = Quaternion.Euler(90f, 0f, 0f);
+
         characterId = id;
         characterName = name;
         avatar = avatarSprite;
@@ -477,8 +482,8 @@ public class CharacterBase : GameUnit, IManagedUpdate
 
         Vector3 currentPos = TF.position;
         float dx = currentPos.x - lastPosition.x;
-        float dy = currentPos.y - lastPosition.y;
-        float distanceSq = dx * dx + dy * dy;
+        float dz = currentPos.z - lastPosition.z;
+        float distanceSq = dx * dx + dz * dz;
         
         bool wasMoving = isMoving;
         isMoving = distanceSq > 0.0001f;
@@ -547,7 +552,7 @@ public class CharacterBase : GameUnit, IManagedUpdate
             if (sword.State != SwordState.Dropped) continue;
 
             Vector3 toCharacter = TF.position - sword.TF.position;
-            float distanceSq = toCharacter.x * toCharacter.x + toCharacter.y * toCharacter.y;
+            float distanceSq = toCharacter.x * toCharacter.x + toCharacter.z * toCharacter.z;
             
             if (distanceSq < 1f)
             {
@@ -1089,8 +1094,8 @@ public class CharacterBase : GameUnit, IManagedUpdate
 
         // Tính toán vector vuông góc (perpendicular) với hướng knockback
         // Perpendicular 2D: (x, y) → (-y, x) hoặc (y, -x)
-        Vector3 perpLeft = new Vector3(-velocity.y, velocity.x, velocity.z);
-        Vector3 perpRight = new Vector3(velocity.y, -velocity.x, velocity.z);
+        Vector3 perpLeft  = new Vector3(-velocity.z, 0f,  velocity.x);
+        Vector3 perpRight = new Vector3( velocity.z, 0f, -velocity.x);
 
         // Thử các hướng thay thế với độ ưu tiên giảm dần
         Vector3[] alternativeDirections = new Vector3[]
@@ -1182,7 +1187,7 @@ public class CharacterBase : GameUnit, IManagedUpdate
         for (int i = 0; i < swordsToAdd; i++)
         {
             Vector2 randomOffset = UnityEngine.Random.insideUnitCircle.normalized * 2f;
-            Vector3 spawnPos = TF.position + new Vector3(randomOffset.x, randomOffset.y, 0f);
+            Vector3 spawnPos = TF.position + new Vector3(randomOffset.x, 0f, randomOffset.y);
             Sword sword = ItemManager.Instance.Spawn(spawnPos);
             
             if (sword != null && sword.CollectFromQueue(this))

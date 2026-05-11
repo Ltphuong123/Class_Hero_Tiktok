@@ -184,69 +184,71 @@ public class CharacterStateMachine : MonoBehaviour
     public bool MoveToward(Vector3 target, float speed, float deltaTime, float arriveThreshold = 0.3f)
     {
         float posX = CachedPosition.x, posY = CachedPosition.y, posZ = CachedPosition.z;
-        float dx = target.x - posX, dy = target.y - posY;
-        float distSq = dx * dx + dy * dy;
+        float dx = target.x - posX, dz = target.z - posZ;
+        float distSq = dx * dx + dz * dz;
         float threshSq = arriveThreshold * arriveThreshold;
 
         if (distSq <= threshSq) return true;
 
         float step = speed * deltaTime;
-        float nextX, nextY;
+        float nextX, nextZ;
 
         if (step * step >= distSq)
         {
             nextX = target.x;
-            nextY = target.y;
+            nextZ = target.z;
         }
         else
         {
             float invDist = step / Mathf.Sqrt(distSq);
             nextX = posX + dx * invDist;
-            nextY = posY + dy * invDist;
+            nextZ = posZ + dz * invDist;
         }
 
-        ValidateMove(posX, posY, ref nextX, ref nextY, posZ);
+        ValidateMove(posX, posZ, ref nextX, ref nextZ, posY);
 
-        float movedSq = (nextX - posX) * (nextX - posX) + (nextY - posY) * (nextY - posY);
+        float movedSq = (nextX - posX) * (nextX - posX) + (nextZ - posZ) * (nextZ - posZ);
         if (movedSq < 0.001f) return true;
 
-        Vector3 newPos = new Vector3(nextX, nextY, posZ);
+        Vector3 newPos = new Vector3(nextX, posY, nextZ);
         owner.transform.position = newPos;
         CachedPosition = newPos;
 
         dx = target.x - nextX;
-        dy = target.y - nextY;
-        return dx * dx + dy * dy <= threshSq;
+        dz = target.z - nextZ;
+        return dx * dx + dz * dz <= threshSq;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void ValidateMove(float fromX, float fromY, ref float toX, ref float toY, float z)
+    public void ValidateMove(float fromX, float fromZ, ref float toX, ref float toZ, float y)
     {
         if (map == null) return;
 
-        Vector3 to = new Vector3(toX, toY, z);
-        Vector3 mid = new Vector3((fromX + toX) * 0.5f, (fromY + toY) * 0.5f, z);
-        
+        Vector3 to  = new Vector3(toX,   y, toZ);
+        Vector3 mid = new Vector3((fromX + toX) * 0.5f, y, (fromZ + toZ) * 0.5f);
+
         if (!map.IsBlockedWorld(to) && !map.IsBlockedWorld(mid)) return;
 
-        Vector3 tryX = new Vector3(toX, fromY, z);
-        Vector3 midX = new Vector3((fromX + toX) * 0.5f, fromY, z);
+        // Trượt theo X: giữ X mới, giữ Z cũ
+        Vector3 tryX  = new Vector3(toX,   y, fromZ);
+        Vector3 midX  = new Vector3((fromX + toX) * 0.5f, y, fromZ);
         if (!map.IsBlockedWorld(tryX) && !map.IsBlockedWorld(midX))
         {
-            toY = fromY;
+            toZ = fromZ;
             return;
         }
 
-        Vector3 tryY = new Vector3(fromX, toY, z);
-        Vector3 midY = new Vector3(fromX, (fromY + toY) * 0.5f, z);
-        if (!map.IsBlockedWorld(tryY) && !map.IsBlockedWorld(midY))
+        // Trượt theo Z: giữ X cũ, giữ Z mới
+        Vector3 tryZ  = new Vector3(fromX, y, toZ);
+        Vector3 midZ  = new Vector3(fromX, y, (fromZ + toZ) * 0.5f);
+        if (!map.IsBlockedWorld(tryZ) && !map.IsBlockedWorld(midZ))
         {
             toX = fromX;
             return;
         }
 
         toX = fromX;
-        toY = fromY;
+        toZ = fromZ;
     }
 
     public bool MoveAlongPath(ref int pathIndex, float speed, float deltaTime)
@@ -269,7 +271,7 @@ public class CharacterStateMachine : MonoBehaviour
 
         CharacterBase best = null;
         float bestDistSq = float.MaxValue;
-        float myX = CachedPosition.x, myY = CachedPosition.y;
+        float myX = CachedPosition.x, myZ = CachedPosition.z;
 
         for (int i = 0, count = NearbyCharacters.Count; i < count; i++)
         {
@@ -277,8 +279,8 @@ public class CharacterStateMachine : MonoBehaviour
             if (other == owner || other.CurrentHp <= 0f || other.SwordCount > mySwords) continue;
 
             Vector3 pos = other.TF.position;
-            float dx = pos.x - myX, dy = pos.y - myY;
-            float distSq = dx * dx + dy * dy;
+            float dx = pos.x - myX, dz = pos.z - myZ;
+            float distSq = dx * dx + dz * dz;
             
             if (distSq < bestDistSq)
             {
@@ -301,13 +303,13 @@ public class CharacterStateMachine : MonoBehaviour
 
         Sword best = null;
         float bestDistSq = float.MaxValue;
-        float myX = CachedPosition.x, myY = CachedPosition.y;
+        float myX = CachedPosition.x, myZ = CachedPosition.z;
 
         for (int i = 0; i < count; i++)
         {
             Vector3 pos = NearbySwords[i].TF.position;
-            float dx = pos.x - myX, dy = pos.y - myY;
-            float distSq = dx * dx + dy * dy;
+            float dx = pos.x - myX, dz = pos.z - myZ;
+            float distSq = dx * dx + dz * dz;
             
             if (distSq < bestDistSq)
             {
