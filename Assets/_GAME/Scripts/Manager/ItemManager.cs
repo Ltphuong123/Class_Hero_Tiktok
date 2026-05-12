@@ -23,7 +23,7 @@ public class ItemManager : Singleton<ItemManager>
 
     public Sword Spawn(Vector3 position, Quaternion rotation)
     {
-        position.y = 0f;
+        position.y = -0.5f;
         Sword sword = SimplePool.Spawn<Sword>(PoolType.Sword, position, rotation);
         if (sword != null)
         {

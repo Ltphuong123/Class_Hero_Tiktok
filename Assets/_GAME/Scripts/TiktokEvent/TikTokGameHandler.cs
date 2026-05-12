@@ -235,12 +235,6 @@ public class TikTokGameHandler : MonoBehaviour
                     notificationManager.ShowShieldBoosterNotification(nickname, count);
                 break;
 
-            case TikTokActionType.MeteorBooster:
-                success = characterManager.ActivateMeteorBooster(userId, nickname, count);
-                if (success && notificationManager != null)
-                    notificationManager.ShowMeteorBoosterNotification(nickname, count);
-                break;
-
             case TikTokActionType.HealBooster:
                 float healAmount = actionConfig.healAmount * count;
                 success = characterManager.ActivateHealBooster(userId, nickname, healAmount);

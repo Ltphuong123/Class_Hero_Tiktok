@@ -42,17 +42,6 @@ public class CollectSwordState : ICharacterState
         // Nếu đã đủ kiếm hoặc có queue, chuyển sang Wander hoặc Attack
         if (sm.Owner.IsSwordFull || sm.Owner.SwordQueue > 0)
         {
-            // Chỉ tìm đối thủ nếu EnableAutoLockOnAttacked = false (chế độ thường)
-            if (!CharacterBase.EnableAutoLockOnAttacked && sm.MySwordCount > 0)
-            {
-                CharacterBase target = sm.FindWeakerTarget();
-                if (target != null)
-                {
-                    sm.Attack.SetTarget(target);
-                    sm.ChangeState(sm.Attack);
-                    return;
-                }
-            }
             sm.ChangeState(sm.Wander);
             return;
         }
@@ -60,18 +49,6 @@ public class CollectSwordState : ICharacterState
         if ((rescanTimer -= deltaTime) <= 0f)
         {
             rescanTimer = RescanInterval;
-            
-            // Chỉ tìm đối thủ nếu EnableAutoLockOnAttacked = false (chế độ thường)
-            if (!CharacterBase.EnableAutoLockOnAttacked && sm.MySwordCount > 0)
-            {
-                CharacterBase target = sm.FindWeakerTarget();
-                if (target != null)
-                {
-                    sm.Attack.SetTarget(target);
-                    sm.ChangeState(sm.Attack);
-                    return;
-                }
-            }
         }
 
         if (targetSword == null || targetSword.State != SwordState.Dropped || !targetSword.gameObject.activeSelf)
@@ -92,18 +69,6 @@ public class CollectSwordState : ICharacterState
         {
             if (targetSword.Collect(sm.Owner))
             {
-                // Chỉ tìm đối thủ nếu EnableAutoLockOnAttacked = false (chế độ thường)
-                if (!CharacterBase.EnableAutoLockOnAttacked)
-                {
-                    CharacterBase target = sm.FindWeakerTarget();
-                    if (target != null)
-                    {
-                        sm.Attack.SetTarget(target);
-                        sm.ChangeState(sm.Attack);
-                        return;
-                    }
-                }
-
                 targetSword = sm.FindBestSword();
                 if (targetSword != null)
                 {

@@ -25,9 +25,6 @@ public class CharacterBase : GameUnit, IManagedUpdate
     [SerializeField] private Animator animator;
     [SerializeField] private CharacterAudioSource audioSource;
 
-    [Header("Particles")]
-    [SerializeField] private LevelParticleSet[] levelParticleSets;
-
     [Header("Lifesteal Settings")]
     [SerializeField] private float lifestealPercent = 0.2f;
     [SerializeField] private float lifestealCooldown = 0.5f;     
@@ -48,26 +45,8 @@ public class CharacterBase : GameUnit, IManagedUpdate
     [SerializeField] private float freezeDuration = 5f;
     [SerializeField] private ParticleSystem freezeParticle;
     
-    [Header("Heal Booster")]
-    [SerializeField] private ParticleSystem healParticleLowHp;  
-    [SerializeField] private ParticleSystem healParticleHighHp; 
-    
-    [Header("Meteor Booster")]
-    private float meteorRadius = 14f;
-    private float meteorDamage => config != null ? config.meteorDamage : 5000f;
-    [SerializeField] private float meteorCastDuration = 2.5f;
-    [SerializeField] private float meteorCooldownDuration = 3f;
-    [SerializeField] private ParticleSystem meteorChargeParticle;
-    
     [Header("Lock Target Effects")]
     [SerializeField] private ParticleSystem lockTargetParticle;
-    [SerializeField] private GameObject lockTargetIndicator;
-
-    // Chế độ tự động lock target khi bị tấn công
-    public static bool EnableAutoLockOnAttacked = true;
-    
-    // Chế độ tự động unlock target khi hết kiếm (chỉ áp dụng cho auto lock)
-    public static bool EnableAutoUnlockOnNoSwords = true;
 
     private float moveSpeed = 5f;
     private float knockbackForce = 10f;
@@ -86,10 +65,6 @@ public class CharacterBase : GameUnit, IManagedUpdate
     private Vector3 knockbackVelocity;
     private float knockbackTimer;
     private float lastKnockbackTime;
-    private int lastSwordCount;
-    private bool has10SwordsActive;
-    private bool has20SwordsActive;
-    private LevelParticleSet currentParticleSet;
     private bool isDead;
     private Vector3 lastPosition;
     private bool isMoving;
@@ -105,10 +80,6 @@ public class CharacterBase : GameUnit, IManagedUpdate
     private int shieldStackCount;
     private bool isFrozen;
     private float frozenTimer;
-    private bool isCastingMeteor;
-    private bool isMeteorOnCooldown;
-    private int meteorStackCount;
-    private float meteorCastTimer;
     private int killPoints;
     private int swordQueue;
     private bool isTargetLocked;
@@ -140,12 +111,6 @@ public class CharacterBase : GameUnit, IManagedUpdate
     public float ShieldDuration => shieldDuration;
     public bool IsFrozen => isFrozen;
     public float FrozenTimeRemaining => isFrozen ? Mathf.Max(0f, frozenTimer) : 0f;
-    public int HealStackCount => 0; 
-    public int MeteorStackCount => meteorStackCount;
-    public bool IsCastingMeteor => isCastingMeteor;
-    public bool IsMeteorOnCooldown => isMeteorOnCooldown;
-    public float MeteorCastTimeRemaining => (isCastingMeteor || isMeteorOnCooldown) ? Mathf.Max(0f, meteorCastTimer) : 0f;
-    public float MeteorCastDuration => meteorCastDuration + meteorCooldownDuration;
     public int KillPoints => killPoints;
     public int SwordQueue => swordQueue;
     public int MaxSwordQueue => maxSwordQueue;
@@ -171,49 +136,21 @@ public class CharacterBase : GameUnit, IManagedUpdate
         if (config == null)
             config = CharacterBaseConfigSO.Instance;
         
-        // Đồng bộ biến static từ config
-        if (config != null)
-        {
-            EnableAutoLockOnAttacked = config.enableAutoLockOnAttacked;
-            EnableAutoUnlockOnNoSwords = config.enableAutoUnlockOnNoSwords;
-        }
-        
         if (magnetParticle != null)
             magnetParticle.Stop();
         if (shieldParticle != null)
             shieldParticle.Stop();
         if (freezeParticle != null)
             freezeParticle.Stop();
-        if (healParticleLowHp != null)
-            healParticleLowHp.Stop();
-        if (healParticleHighHp != null)
-            healParticleHighHp.Stop();
         if (lifestealParticle != null)
             lifestealParticle.Stop();
-        if (meteorChargeParticle != null)
-            meteorChargeParticle.Stop();
         if (lockTargetParticle != null)
             lockTargetParticle.Stop();
-        if (lockTargetIndicator != null)
-            lockTargetIndicator.SetActive(false);
 
-        foreach (var particleSet in levelParticleSets)
-        {
-            if (particleSet != null)
-            {
-                if (particleSet.levelParticle != null)
-                    particleSet.levelParticle.Stop();
-                if (particleSet.sword10Particle != null)
-                    particleSet.sword10Particle.Stop();
-                if (particleSet.sword20Particle != null)
-                    particleSet.sword20Particle.Stop();
-            }
-        }
-        
-        if (visualTransform != null && visualTransform != TF)
-            visualTransform.localRotation = Quaternion.Euler(90f, 0f, 0f);
-        else
-            TF.rotation = Quaternion.Euler(90f, 0f, 0f);
+        // if (visualTransform != null && visualTransform != TF)
+        //     visualTransform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+        // else
+        TF.rotation = Quaternion.Euler(90f, 0f, 0f);
 
         characterId = id;
         characterName = name;
@@ -230,9 +167,6 @@ public class CharacterBase : GameUnit, IManagedUpdate
         lastPosition = TF.position;
         isMoving = false;
         lastKnockbackTime = -knockbackCooldown;
-        lastSwordCount = 0;
-        has10SwordsActive = false;
-        has20SwordsActive = false;
         isDead = false;
         isMagnetActive = false;
         magnetTimer = 0f;
@@ -242,9 +176,6 @@ public class CharacterBase : GameUnit, IManagedUpdate
         shieldStackCount = 0;
         isFrozen = false;
         frozenTimer = 0f;
-        meteorStackCount = 0;
-        meteorCastTimer = 0f;
-        isMeteorOnCooldown = false;
         killPoints = 0;
         swordQueue = 0;
         isTargetLocked = false;
@@ -281,31 +212,11 @@ public class CharacterBase : GameUnit, IManagedUpdate
             shieldParticle.Stop();
         if (freezeParticle != null)
             freezeParticle.Stop();
-        if (healParticleLowHp != null)
-            healParticleLowHp.Stop();
-        if (healParticleHighHp != null)
-            healParticleHighHp.Stop();
         if (lifestealParticle != null)
             lifestealParticle.Stop();
-        if (meteorChargeParticle != null)
-            meteorChargeParticle.Stop();
         if (lockTargetParticle != null)
             lockTargetParticle.Stop();
-        if (lockTargetIndicator != null)
-            lockTargetIndicator.SetActive(false);
 
-        foreach (var particleSet in levelParticleSets)
-        {
-            if (particleSet != null)
-            {
-                if (particleSet.levelParticle != null)
-                    particleSet.levelParticle.Stop();
-                if (particleSet.sword10Particle != null)
-                    particleSet.sword10Particle.Stop();
-                if (particleSet.sword20Particle != null)
-                    particleSet.sword20Particle.Stop();
-            }
-        }
         swordOrbit.OnDespawn();
         stateMachine.OnDespawn();
         CharacterManager.Instance.Despawn(this);
@@ -328,12 +239,6 @@ public class CharacterBase : GameUnit, IManagedUpdate
             return;
         }
 
-        if (isCastingMeteor)
-        {
-            audioSource.StopFootstep();
-            return;
-        }
-
         if (isKnockedBack)
         {
             knockbackTimer -= deltaTime;
@@ -344,30 +249,31 @@ public class CharacterBase : GameUnit, IManagedUpdate
             }
             else
             {
-                Vector3 newPos = TF.position + knockbackVelocity * deltaTime;
+                Vector3 vel = knockbackVelocity;
+                vel.y = 0f;
+                Vector3 newPos = TF.position + vel * deltaTime;
+                newPos.y = 0f;
                 if (cachedMap != null)
                 {
                     newPos = cachedMap.ClampToMap(newPos);
-                    
-                    // Nếu vị trí mới bị chặn, thử các hướng thay thế
+                    newPos.y = 0f;
+
                     if (cachedMap.IsBlockedWorld(newPos))
                     {
-                        Vector3 alternativePos = TryAlternativeKnockbackDirection(TF.position, knockbackVelocity, deltaTime);
-                        
+                        Vector3 alternativePos = TryAlternativeKnockbackDirection(TF.position, vel, deltaTime);
+
                         if (alternativePos != TF.position)
                         {
-                            // Tìm được hướng thay thế hợp lệ
+                            alternativePos.y = 0f;
                             TF.position = alternativePos;
                         }
                         else
                         {
-                            // Không tìm được hướng nào, dừng knockback
                             isKnockedBack = false;
                         }
                     }
                     else
                     {
-                        // Vị trí mới hợp lệ, di chuyển bình thường
                         TF.position = newPos;
                     }
                 }
@@ -379,7 +285,6 @@ public class CharacterBase : GameUnit, IManagedUpdate
         }
 
         UpdateLevelTimer(deltaTime);
-        CheckSwordCountParticles();
         UpdateMagnetBooster(deltaTime);
         UpdateShieldBooster(deltaTime);
         ProcessSwordQueue();
@@ -698,12 +603,6 @@ public class CharacterBase : GameUnit, IManagedUpdate
         }
         
         infoUI?.UpdateHp(currentHp, currentMaxHp);
-        
-        ParticleSystem particleToPlay = (healAmount < 10f) ? healParticleLowHp : healParticleHighHp;
-        
-        if (particleToPlay != null)
-            particleToPlay.Play();
-        
         audioSource?.PlayLevelUp();
     }
 
@@ -729,131 +628,6 @@ public class CharacterBase : GameUnit, IManagedUpdate
         }
     }
 
-    public void ActivateMeteorBooster(int count = 1)
-    {
-        if (count < 1) count = 1;
-        
-        if (isCastingMeteor || isMeteorOnCooldown)
-            meteorStackCount += count;
-        else
-        {
-            meteorStackCount += (count - 1);
-            StartCoroutine(MeteorBoosterSequence());
-        }
-    }
-
-    private IEnumerator MeteorBoosterSequence()
-    {
-        float totalDuration = meteorCastDuration + meteorCooldownDuration;
-        isCastingMeteor = true;
-        isMeteorOnCooldown = true;
-        meteorCastTimer = totalDuration;
-        
-        yield return new WaitForSeconds(0.1f);
-        
-        if (isDead)
-        {
-            isCastingMeteor = false;
-            isMeteorOnCooldown = false;
-            meteorCastTimer = 0f;
-            yield break;
-        }
-        
-        if (meteorChargeParticle != null)
-            meteorChargeParticle.Play();
-
-        float elapsed = 0.1f;
-        bool hasSpawnedImpacts = false;
-        bool hasPlayedSound = false;
-        bool hasStoppedParticle = false;
-
-        while (elapsed < totalDuration && !isDead)
-        {
-            float deltaTime = Time.deltaTime;
-            elapsed += deltaTime;
-            meteorCastTimer = totalDuration - elapsed;
-
-            if (elapsed >= 0.2f && !hasSpawnedImpacts)
-            {
-                hasSpawnedImpacts = true;
-                StartCoroutine(SpawnMeteorImpacts());
-            }
-
-            if (elapsed >= 1.1f && !hasPlayedSound)
-            {
-                hasPlayedSound = true;
-                
-                if (audioSource != null)
-                    audioSource.PlayMeteorBooster();
-                
-                var targets = new System.Collections.Generic.List<CharacterBase>();
-                CharacterManager.Instance.GetCharactersInRadius(TF.position, meteorRadius, targets);
-                
-                foreach (var target in targets)
-                {
-                    if (target == this || target.IsDead) continue;
-                    target.TakeDamage(meteorDamage, this);
-                }
-            }
-
-            if (elapsed >= meteorCastDuration && !hasStoppedParticle)
-            {
-                hasStoppedParticle = true;
-                
-                if (meteorChargeParticle != null)
-                    meteorChargeParticle.Stop();
-                
-                isCastingMeteor = false;
-            }
-
-            yield return null;
-        }
-        
-        if (isDead)
-        {
-            if (meteorChargeParticle != null)
-                meteorChargeParticle.Stop();
-            isCastingMeteor = false;
-            isMeteorOnCooldown = false;
-            meteorCastTimer = 0f;
-            yield break;
-        }
-
-        if (meteorChargeParticle != null)
-            meteorChargeParticle.Stop();
-        
-        isCastingMeteor = false;
-        isMeteorOnCooldown = false;
-        meteorCastTimer = 0f;
-        
-        if (meteorStackCount > 0)
-        {
-            meteorStackCount--;
-            StartCoroutine(MeteorBoosterSequence());
-        }
-    }
-
-    private IEnumerator SpawnMeteorImpacts()
-    {
-        ParticleType[] meteorTypes = new ParticleType[]
-        {
-            ParticleType.Meteor1,
-            ParticleType.Meteor2,
-            ParticleType.Meteor3,
-            ParticleType.Meteor4,
-            ParticleType.Meteor5,
-            ParticleType.Meteor6
-        };
-
-        Vector3 spawnPos = TF.position;
-
-        for (int i = 0; i < meteorTypes.Length; i++)
-        {
-            ParticlePool.Spawn(meteorTypes[i], spawnPos, Quaternion.identity);
-            yield return new WaitForSeconds(0.05f);
-        }
-    }
-
     public void LevelUp()
     {
         if (levelData == null) return;
@@ -873,15 +647,10 @@ public class CharacterBase : GameUnit, IManagedUpdate
         int oldLevel = currentLevel;
         currentLevel = Mathf.Clamp(level, 1, levelData.GetMaxLevel());
         levelTimer = 0f;
-        
-        has10SwordsActive = false;
-        has20SwordsActive = false;
-        
         UpdateLevelStats();
-        
+
         if (oldLevel != currentLevel)
         {
-            SwitchLevelParticles(oldLevel);
             if (currentLevel > oldLevel)
                 audioSource?.PlayLevelUp();
         }
@@ -895,95 +664,9 @@ public class CharacterBase : GameUnit, IManagedUpdate
         return levelReserveTime[currentLevel];
     }
 
-    private void CheckSwordCountParticles()
-    {
-        int swordCount = SwordCount;
-        
-        if (swordCount == lastSwordCount || currentParticleSet == null) return;
-
-        if (swordCount >= 20 && !has20SwordsActive)
-        {
-            has20SwordsActive = true;
-            currentParticleSet.sword20Particle?.Play();
-        }
-        else if (swordCount < 20 && has20SwordsActive)
-        {
-            has20SwordsActive = false;
-            currentParticleSet.sword20Particle?.Stop();
-        }
-        
-        if (swordCount >= 10 && !has10SwordsActive)
-        {
-            has10SwordsActive = true;
-            currentParticleSet.sword10Particle?.Play();
-        }
-        else if (swordCount < 10 && has10SwordsActive)
-        {
-            has10SwordsActive = false;
-            currentParticleSet.sword10Particle?.Stop();
-        }
-        
-        lastSwordCount = swordCount;
-    }
-
-    private void SwitchLevelParticles(int oldLevel)
-    {
-        if (levelParticleSets == null || levelParticleSets.Length == 0) return;
-        
-        LevelParticleSet oldParticleSet = GetParticleSetForLevel(oldLevel);
-        if (oldParticleSet != null)
-        {
-            if (oldParticleSet.levelParticle != null)
-                oldParticleSet.levelParticle.Stop();
-            
-            if (oldParticleSet.sword10Particle != null)
-                oldParticleSet.sword10Particle.Stop();
-            
-            if (oldParticleSet.sword20Particle != null)
-                oldParticleSet.sword20Particle.Stop();
-        }
-        
-        currentParticleSet = GetParticleSetForLevel(currentLevel);
-        
-        if (currentParticleSet != null)
-        {
-            if (currentParticleSet.levelParticle != null)
-                currentParticleSet.levelParticle.Play();
-            
-            int swordCount = SwordCount;
-            
-            if (swordCount >= 10)
-            {
-                if (currentParticleSet.sword10Particle != null)
-                    currentParticleSet.sword10Particle.Play();
-                has10SwordsActive = true;
-            }
-            
-            if (swordCount >= 20)
-            {
-                if (currentParticleSet.sword20Particle != null)
-                    currentParticleSet.sword20Particle.Play();
-                has20SwordsActive = true;
-            }
-        }
-    }
-
-    private LevelParticleSet GetParticleSetForLevel(int level)
-    {
-        if (levelParticleSets == null) return null;
-        
-        foreach (var set in levelParticleSets)
-        {
-            if (set.level == level)
-                return set;
-        }
-        
-        return null;
-    }
-
     public void TakeDamage(float damage, CharacterBase attacker = null)
     {
-        if (isDead || isShieldActive || isCastingMeteor) return;
+        if (isDead || isShieldActive) return;
 
         if (levelData != null)
         {
@@ -993,12 +676,6 @@ public class CharacterBase : GameUnit, IManagedUpdate
 
         currentHp = Mathf.Max(0f, currentHp - damage);
         infoUI?.UpdateHp(currentHp, currentMaxHp);
-        
-        // Tự động lock target vào kẻ tấn công nếu chế độ được bật (auto lock)
-        if (EnableAutoLockOnAttacked && attacker != null && !isTargetLocked)
-        {
-            LockTarget(attacker, false); // false = auto lock
-        }
         
         if (currentHp <= 0f)
         {
@@ -1045,46 +722,33 @@ public class CharacterBase : GameUnit, IManagedUpdate
         if (isKnockedBack || currentTime - lastKnockbackTime < knockbackCooldown) return;
         
         Vector3 direction = (TF.position - attacker.TF.position).normalized;
+        Debug.Log(direction);
         ApplyKnockback(direction, characterKnockbackMultiplier);
         lastKnockbackTime = currentTime;
-        
-        // Tự động lock target vào kẻ tấn công nếu chế độ được bật (auto lock)
-        if (EnableAutoLockOnAttacked && !isTargetLocked)
-        {
-            LockTarget(attacker, false); // false = auto lock
-        }
-        else
-        {
-            stateMachine?.OnUnderAttack(attacker);
-        }
+        stateMachine?.OnUnderAttack(attacker);
     }
 
     public void OnSwordToSwordKnockback(CharacterBase attacker)
     {
+        Debug.Log("OnSwordToSwordKnockback triggered");
         if (isDead || attacker == null) return;
 
         float currentTime = Time.time;
         if (isKnockedBack || currentTime - lastKnockbackTime < knockbackCooldown) return;
         
         Vector3 direction = (TF.position - attacker.TF.position).normalized;
+        Debug.Log(direction);
+        
         ApplyKnockback(direction, 1f);
         lastKnockbackTime = currentTime;
-        
-        // Tự động lock target vào kẻ tấn công nếu chế độ được bật (auto lock)
-        if (EnableAutoLockOnAttacked && !isTargetLocked)
-        {
-            LockTarget(attacker, false); // false = auto lock
-        }
-        else
-        {
-            stateMachine?.OnUnderAttack(attacker);
-        }
+        stateMachine?.OnUnderAttack(attacker);
     }
 
     private void ApplyKnockback(Vector3 direction, float multiplier)
     {
         isKnockedBack = true;
-        knockbackVelocity = direction * knockbackForce * multiplier;
+        Vector3 flatDir = new Vector3(direction.x, 0f, direction.z).normalized;
+        knockbackVelocity = flatDir * knockbackForce * multiplier;
         knockbackTimer = knockbackDuration;
     }
 
@@ -1226,10 +890,7 @@ public class CharacterBase : GameUnit, IManagedUpdate
         
         if (lockTargetParticle != null)
             lockTargetParticle.Play();
-        
-        if (lockTargetIndicator != null)
-            lockTargetIndicator.SetActive(true);
-        
+
         if (stateMachine != null)
         {
             stateMachine.Attack.SetTarget(target, isManualLock);
@@ -1253,8 +914,5 @@ public class CharacterBase : GameUnit, IManagedUpdate
         
         if (lockTargetParticle != null)
             lockTargetParticle.Stop();
-        
-        if (lockTargetIndicator != null)
-            lockTargetIndicator.SetActive(false);
     }
 }

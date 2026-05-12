@@ -62,8 +62,7 @@ public class AttackState : ICharacterState
             return;
         }
 
-        // Auto lock + hết kiếm → unlock và flee
-        if (isLocked && !isManualLock && mySwords <= 0 && CharacterBase.EnableAutoUnlockOnNoSwords)
+        if (isLocked && !isManualLock && mySwords <= 0)
         {
             sm.Owner.UnlockTarget();
             if (target != null) sm.Flee.SetThreat(target);

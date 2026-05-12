@@ -31,18 +31,6 @@ public class WanderState : ICharacterState
         {
             rescanTimer = RescanInterval;
 
-            // Chỉ tìm đối thủ nếu EnableAutoLockOnAttacked = false (chế độ thường)
-            if (!CharacterBase.EnableAutoLockOnAttacked && sm.MySwordCount > 0)
-            {
-                CharacterBase target = sm.FindWeakerTarget();
-                if (target != null)
-                {
-                    sm.Attack.SetTarget(target);
-                    sm.ChangeState(sm.Attack);
-                    return;
-                }
-            }
-
             // Chỉ tìm kiếm kiếm dưới đất nếu chưa đủ kiếm VÀ hết queue
             if (!sm.Owner.IsSwordFull && sm.Owner.SwordQueue == 0)
             {

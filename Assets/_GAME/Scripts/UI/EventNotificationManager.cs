@@ -12,7 +12,6 @@ public class EventNotificationManager : Singleton<EventNotificationManager>
     [SerializeField] private Sprite swordIcon;
     [SerializeField] private Sprite magnetIcon;
     [SerializeField] private Sprite shieldIcon;
-    [SerializeField] private Sprite meteorIcon;
     [SerializeField] private Sprite respawnIcon;
     [SerializeField] private Sprite healIcon;
 
@@ -23,7 +22,6 @@ public class EventNotificationManager : Singleton<EventNotificationManager>
     [SerializeField] private Color swordColor = new Color(0.15f, 0.3f, 0.5f, 0.5f);      // Xanh dương tối
     [SerializeField] private Color magnetColor = new Color(0f, 0.4f, 0.4f, 0.5f);        // Cyan tối
     [SerializeField] private Color shieldColor = new Color(0.5f, 0.32f, 0f, 0.5f);       // Cam tối
-    [SerializeField] private Color meteorColor = new Color(0.4f, 0f, 0.2f, 0.5f);        // Đỏ tím tối
     [SerializeField] private Color respawnColor = new Color(0.25f, 0.25f, 0.5f, 0.5f);   // Tím tối
     [SerializeField] private Color healColor = new Color(0f, 0.5f, 0.2f, 0.5f);          // Xanh lá sáng
 
@@ -146,16 +144,6 @@ public class EventNotificationManager : Singleton<EventNotificationManager>
             string countText = count > 1 ? $" x{count}" : "";
             string message = TruncateMessage($"<color=#FFA500>{characterName}</color> Shield{countText}");
             notificationUI.ShowNotification(message, shieldIcon, shieldColor);
-        }
-    }
-
-    public void ShowMeteorBoosterNotification(string characterName, int count)
-    {
-        if (notificationUI != null)
-        {
-            string countText = count > 1 ? $" x{count}" : "";
-            string message = TruncateMessage($"<color=#FF0000>{characterName}</color> Meteor{countText}");
-            notificationUI.ShowNotification(message, meteorIcon, meteorColor);
         }
     }
 

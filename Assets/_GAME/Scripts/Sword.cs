@@ -77,10 +77,10 @@ public class Sword : GameUnit
         lastDamageFrame = -1;
         
         TF.rotation = Quaternion.Euler(90f, Random.Range(0f, 360f), 0f);
-        TF.localScale = Vector3.one * 0.7f;
+        TF.localScale = Vector3.one * 0.9f;
 
         Vector3 pos = TF.position;
-        pos.y = 0f;
+        pos.y = -0.5f;
         TF.position = pos;
         
         if (spriteRenderer != null)
@@ -294,21 +294,12 @@ public class Sword : GameUnit
                 ParticlePool.Spawn(ParticleType.SwordVsCharacter, hitPos);
                 
                 CharacterBase attacker = orbit.Owner;
-                
+
                 if (character.SwordCount <= 45)
                 {
                     character.TakeDamage(damage, attacker);
                     character.OnSwordInteraction(attacker);
-                    if (attacker != null)
-                    {
-                        attacker.OnLifesteal(damage);
-                        
-                        // Attacker cũng auto lock vào victim nếu chế độ được bật (auto lock)
-                        if (CharacterBase.EnableAutoLockOnAttacked && !attacker.IsTargetLocked)
-                        {
-                            attacker.LockTarget(character, false); // false = auto lock
-                        }
-                    }
+                    attacker?.OnLifesteal(damage);
                     attacker?.GetAudioSource()?.PlayAttack();
                 }
             }
@@ -430,7 +421,7 @@ public class Sword : GameUnit
         TF.SetParent(null);
 
         Vector3 landPos = worldPos;
-        landPos.y = 0f;
+        landPos.y = -0.5f;
 
         MapManager map = MapManager.Instance;
         if (map != null)
@@ -453,7 +444,7 @@ public class Sword : GameUnit
                 safeLand = FindNearestOpenPosition(worldPos, map);
 
             landPos = safeLand;
-            landPos.y = 0f;
+            landPos.y = -0.5f;
         }
 
         var seq = DOTween.Sequence();
@@ -469,7 +460,7 @@ public class Sword : GameUnit
             SetSwordType(SwordType.Default);
 
             Vector3 finalPos = TF.position;
-            finalPos.y = 0f;
+            finalPos.y = -0.5f;
             TF.position = finalPos;
 
             ItemManager.Instance?.Register(this);

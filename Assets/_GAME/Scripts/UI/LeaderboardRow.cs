@@ -17,16 +17,12 @@ public class LeaderboardRow : MonoBehaviour, IPointerClickHandler
     [Header("Booster Texts")]
     [SerializeField] private TextMeshProUGUI magnetCountText;
     [SerializeField] private TextMeshProUGUI shieldCountText;
-    [SerializeField] private TextMeshProUGUI meteorCountText;
-    
     [Header("Booster Fill Images")]
     [SerializeField] private Image magnetTimeFill;
     [SerializeField] private Image shieldTimeFill;
-    [SerializeField] private Image meteorTimeFill;
-    
+
     private TextMeshProUGUI magnetFillText;
     private TextMeshProUGUI shieldFillText;
-    private TextMeshProUGUI meteorFillText;
 
     [Header("Images")]
     [SerializeField] private Image backgroundImage;
@@ -57,7 +53,6 @@ public class LeaderboardRow : MonoBehaviour, IPointerClickHandler
     private int cachedKillPoints = -1;
     private int cachedMagnetStack = -1;
     private int cachedShieldStack = -1;
-    private int cachedMeteorStack = -1;
     private CharacterBase currentCharacter;
 
     public static event System.Action<CharacterBase> OnRowClicked;
@@ -70,8 +65,6 @@ public class LeaderboardRow : MonoBehaviour, IPointerClickHandler
         if (shieldTimeFill != null)
             shieldFillText = shieldTimeFill.GetComponentInChildren<TextMeshProUGUI>();
         
-        if (meteorTimeFill != null)
-            meteorFillText = meteorTimeFill.GetComponentInChildren<TextMeshProUGUI>();
     }
 
     public void SetData(CharacterRankData data)
@@ -252,42 +245,6 @@ public class LeaderboardRow : MonoBehaviour, IPointerClickHandler
             }
         }
         
-        if (cachedMeteorStack != data.MeteorStackCount)
-        {
-            TextMeshProUGUI targetText = meteorCountText != null ? meteorCountText : meteorFillText;
-            
-            if (targetText != null)
-            {
-                if (data.MeteorStackCount > 0)
-                {
-                    targetText.text = $"{data.MeteorStackCount}";
-                    targetText.enabled = true;
-                }
-                else
-                {
-                    targetText.text = " ";
-                    targetText.enabled = true;
-                }
-            }
-            
-            cachedMeteorStack = data.MeteorStackCount;
-        }
-        
-        if (meteorTimeFill != null && currentCharacter != null)
-        {
-            if ((currentCharacter.IsCastingMeteor || currentCharacter.IsMeteorOnCooldown) && data.MeteorCastTimeRemaining > 0f)
-            {
-                float duration = currentCharacter.MeteorCastDuration;
-                float ratio = data.MeteorCastTimeRemaining / duration;
-                meteorTimeFill.fillAmount = 1-ratio;
-                meteorTimeFill.enabled = true;
-            }
-            else
-            {
-                meteorTimeFill.fillAmount = 1;
-            }
-        }
-
         if (avatarImage != null && avatarImage.sprite != data.Avatar)
         {
             avatarImage.enabled = data.Avatar != null;

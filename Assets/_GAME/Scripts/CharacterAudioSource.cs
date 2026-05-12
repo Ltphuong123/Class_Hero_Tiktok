@@ -9,7 +9,6 @@ public class CharacterAudioSource : MonoBehaviour
     [SerializeField] private AudioClip deathClip;
     [SerializeField] private AudioClip levelUpClip;
     [SerializeField] private AudioClip collectSwordClip;
-    [SerializeField] private AudioClip meteorBoosterClip;
 
     [Header("Distance Settings")]
     [SerializeField] private float minDistance = 5f;
@@ -176,9 +175,4 @@ public class CharacterAudioSource : MonoBehaviour
         lastCollectTime = currentTime;
     }
 
-    public void PlayMeteorBooster()
-    {
-        if (meteorBoosterClip != null)
-            oneShotSource.PlayOneShot(meteorBoosterClip);
-    }
 }

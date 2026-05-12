@@ -47,10 +47,7 @@ public class CanvasSettings : MonoBehaviour
     [SerializeField] private TMP_InputField overhealScaleInput;
     [SerializeField] private TMP_InputField maxSwordCountInput;
     [SerializeField] private TMP_InputField maxSwordQueueInput;
-    [SerializeField] private TMP_InputField meteorDamageInput;
     [SerializeField] private TMP_InputField lifestealPercentInput;
-    [SerializeField] private Toggle autoLockOnAttackedToggle;
-    [SerializeField] private Toggle autoUnlockOnNoSwordsToggle;
     [SerializeField] private Button characterBaseSaveButton;
     [SerializeField] private Button characterBaseLoadButton;
     [SerializeField] private Button characterBaseResetButton;
@@ -242,16 +239,10 @@ public class CanvasSettings : MonoBehaviour
         overhealScaleInput.text = characterBaseConfig.overhealScalePerThreshold.ToString();
         maxSwordCountInput.text = characterBaseConfig.maxSwordCount.ToString();
         maxSwordQueueInput.text = characterBaseConfig.maxSwordQueue.ToString();
-        meteorDamageInput.text = characterBaseConfig.meteorDamage.ToString();
-        
+
         if (lifestealPercentInput != null)
             lifestealPercentInput.text = characterBaseConfig.lifestealPercent.ToString();
         
-        if (autoLockOnAttackedToggle != null)
-            autoLockOnAttackedToggle.isOn = characterBaseConfig.enableAutoLockOnAttacked;
-        
-        if (autoUnlockOnNoSwordsToggle != null)
-            autoUnlockOnNoSwordsToggle.isOn = characterBaseConfig.enableAutoUnlockOnNoSwords;
     }
 
     private void SaveCharacterBaseConfig()
@@ -273,21 +264,8 @@ public class CanvasSettings : MonoBehaviour
         if (int.TryParse(maxSwordQueueInput.text, out int maxSwordQueue))
             characterBaseConfig.maxSwordQueue = maxSwordQueue;
         
-        if (float.TryParse(meteorDamageInput.text, out float meteorDamage))
-            characterBaseConfig.meteorDamage = meteorDamage;
-
         if (lifestealPercentInput != null && float.TryParse(lifestealPercentInput.text, out float lifestealPercent))
             characterBaseConfig.lifestealPercent = lifestealPercent;
-
-        if (autoLockOnAttackedToggle != null)
-            characterBaseConfig.enableAutoLockOnAttacked = autoLockOnAttackedToggle.isOn;
-        
-        if (autoUnlockOnNoSwordsToggle != null)
-            characterBaseConfig.enableAutoUnlockOnNoSwords = autoUnlockOnNoSwordsToggle.isOn;
-
-        // Đồng bộ với biến static trong CharacterBase
-        CharacterBase.EnableAutoLockOnAttacked = characterBaseConfig.enableAutoLockOnAttacked;
-        CharacterBase.EnableAutoUnlockOnNoSwords = characterBaseConfig.enableAutoUnlockOnNoSwords;
 
         characterBaseConfig.SaveToJson();
         Debug.Log("Character Base Config saved!");
@@ -311,15 +289,7 @@ public class CanvasSettings : MonoBehaviour
         characterBaseConfig.overhealScalePerThreshold = 0.1f;
         characterBaseConfig.maxSwordCount = 20;
         characterBaseConfig.maxSwordQueue = 50;
-        characterBaseConfig.meteorDamage = 50f;
         characterBaseConfig.lifestealPercent = 0.2f;
-        characterBaseConfig.enableAutoLockOnAttacked = false;
-        characterBaseConfig.enableAutoUnlockOnNoSwords = true;
-        
-        // Đồng bộ với biến static trong CharacterBase
-        CharacterBase.EnableAutoLockOnAttacked = false;
-        CharacterBase.EnableAutoUnlockOnNoSwords = true;
-
         LoadCharacterBaseValuesToUI();
         Debug.Log("Character Base Config reset to default!");
     }

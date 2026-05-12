@@ -19,11 +19,8 @@ public struct CharacterRankData
     
     public int MagnetStackCount;
     public int ShieldStackCount;
-    public int MeteorStackCount;
-    
     public float MagnetTimeRemaining;
     public float ShieldTimeRemaining;
-    public float MeteorCastTimeRemaining;
     
     public int SwordQueue;
 }
@@ -203,10 +200,8 @@ public class CharacterManager : Singleton<CharacterManager>
                 KillPoints = c.KillPoints,
                 MagnetStackCount = c.MagnetStackCount,
                 ShieldStackCount = c.ShieldStackCount,
-                MeteorStackCount = c.MeteorStackCount,
                 MagnetTimeRemaining = c.MagnetTimeRemaining,
                 ShieldTimeRemaining = c.ShieldTimeRemaining,
-                MeteorCastTimeRemaining = c.MeteorCastTimeRemaining,
                 SwordQueue = c.SwordQueue
             });
         }
@@ -657,28 +652,6 @@ public class CharacterManager : Singleton<CharacterManager>
         yield return new WaitForSeconds(0.3f);
         if (character != null && !character.IsDead)
             character.ActivateShieldBooster(count);
-    }
-
-    public bool ActivateMeteorBooster(string characterId, string nickname, int count = 1)
-    {
-        CharacterBase character = EnsureCharacterAlive(characterId, nickname);
-        if (character == null) return false;
-        
-        if (character.IsDead)
-        {
-            StartCoroutine(DelayedActivateMeteor(character, count));
-            return true;
-        }
-
-        character.ActivateMeteorBooster(count);
-        return true;
-    }
-
-    private System.Collections.IEnumerator DelayedActivateMeteor(CharacterBase character, int count)
-    {
-        yield return new WaitForSeconds(0.3f);
-        if (character != null && !character.IsDead)
-            character.ActivateMeteorBooster(count);
     }
 
     public bool ActivateHealBooster(string characterId, string nickname, float healAmount)

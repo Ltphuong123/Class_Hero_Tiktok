@@ -21,20 +21,9 @@ public class CharacterBaseConfigSO : ScriptableObject
     [Tooltip("Hàng đợi kiếm tối đa")]
     public int maxSwordQueue = 50;
 
-    [Header("Meteor Settings")]
-    [Tooltip("Sát thương meteor")]
-    public float meteorDamage = 50f;
-
     [Header("Lifesteal Settings")]
     [Tooltip("Tỷ lệ hút máu khi gây sát thương (0.0 - 1.0)")]
     public float lifestealPercent = 0.2f;
-
-    [Header("AI Combat Settings")]
-    [Tooltip("Tự động lock target khi bị tấn công")]
-    public bool enableAutoLockOnAttacked = false;
-    
-    [Tooltip("Tự động unlock target khi hết kiếm (chỉ auto lock)")]
-    public bool enableAutoUnlockOnNoSwords = true;
 
     private static CharacterBaseConfigSO instance;
     public static CharacterBaseConfigSO Instance
@@ -81,10 +70,7 @@ public class CharacterBaseConfigSO : ScriptableObject
             overhealScalePerThreshold = this.overhealScalePerThreshold,
             maxSwordCount = this.maxSwordCount,
             maxSwordQueue = this.maxSwordQueue,
-            meteorDamage = this.meteorDamage,
             lifestealPercent = this.lifestealPercent,
-            enableAutoLockOnAttacked = this.enableAutoLockOnAttacked,
-            enableAutoUnlockOnNoSwords = this.enableAutoUnlockOnNoSwords
         };
 
         string json = JsonUtility.ToJson(data, true);
@@ -113,15 +99,7 @@ public class CharacterBaseConfigSO : ScriptableObject
             this.overhealScalePerThreshold = data.overhealScalePerThreshold;
             this.maxSwordCount = data.maxSwordCount;
             this.maxSwordQueue = data.maxSwordQueue;
-            this.meteorDamage = data.meteorDamage;
             this.lifestealPercent = data.lifestealPercent;
-            this.enableAutoLockOnAttacked = data.enableAutoLockOnAttacked;
-            this.enableAutoUnlockOnNoSwords = data.enableAutoUnlockOnNoSwords;
-            
-            // Đồng bộ với biến static trong CharacterBase
-            CharacterBase.EnableAutoLockOnAttacked = this.enableAutoLockOnAttacked;
-            CharacterBase.EnableAutoUnlockOnNoSwords = this.enableAutoUnlockOnNoSwords;
-
 #if UNITY_EDITOR
             UnityEditor.EditorUtility.SetDirty(this);
 #endif
@@ -142,9 +120,6 @@ public class CharacterBaseConfigSO : ScriptableObject
         public float overhealScalePerThreshold;
         public int maxSwordCount;
         public int maxSwordQueue;
-        public float meteorDamage;
         public float lifestealPercent;
-        public bool enableAutoLockOnAttacked;
-        public bool enableAutoUnlockOnNoSwords;
     }
 }
