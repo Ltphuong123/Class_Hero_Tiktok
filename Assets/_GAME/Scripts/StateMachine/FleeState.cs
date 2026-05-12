@@ -7,7 +7,7 @@ public class FleeState : ICharacterState
     private float fleeTimer;
     private float repathTimer;
 
-    private const float FleeDuration = 2f;
+    private const float FleeDuration = 1f;
     private const float RepathInterval = 0.5f;
     private const float FleeDistance = 10f;
 
@@ -23,7 +23,7 @@ public class FleeState : ICharacterState
 
     public void Execute(CharacterStateMachine sm, float deltaTime)
     {
-        if (sm.Owner.IsKnockedBack) return;
+        if (sm.Owner.IsKnockedBack) { repathTimer = 0f; return; }
 
         fleeTimer += deltaTime;
         

@@ -9,21 +9,20 @@ public class SwordOrbit : MonoBehaviour
     [SerializeField] private float rotateSpeed = 180f;
     [SerializeField] private float flyAroundDuration = 0.6f;
     [SerializeField] private float flyStartRadius = 4f;
-    
+
     [Header("Sword Settings")]
     [SerializeField] private int initialSwordCount = 0;
     [SerializeField] private SwordType currentSwordType = SwordType.Default;
-    
+
     private readonly List<Sword> swords = new();
     private const float TWO_PI = Mathf.PI * 2f;
     private const float RAD_TO_DEG = Mathf.Rad2Deg;
-    private bool isPaused;
-    private float orbitAngle = 0f;
-    private float baseEulerX, baseEulerY;
-    
-    private float lastSwordDropTime = -1f;
     private const float SwordDropCooldown = 0.1f;
-    
+
+    private bool isPaused;
+    private float orbitAngle;
+    private float lastSwordDropTime = -1f;
+
     public float RotateSpeed => rotateSpeed;
     public float Radius => radius;
     public int SwordCount => swords.Count;
@@ -32,18 +31,12 @@ public class SwordOrbit : MonoBehaviour
     public void OnInit()
     {
         orbitAngle = 0f;
-        Vector3 e = transform.eulerAngles;
-        baseEulerX = -90f;
-        baseEulerY = 0f;
         swords.Clear();
         isPaused = false;
         lastSwordDropTime = -1f;
     }
 
-    public void OnDespawn()
-    {
-        swords.Clear();
-    }
+    public void OnDespawn() => swords.Clear();
 
     public void IncreaseRadius(float amount)
     {
@@ -52,19 +45,18 @@ public class SwordOrbit : MonoBehaviour
         for (int i = 0; i < count; i++)
         {
             Sword s = swords[i];
-            if (s.State == SwordState.Orbiting)
-                PlaceSword(s.transform, s.CurrentAngle);
-            else if (s.State == SwordState.FlyingIn)
-                s.UpdateFlyOrbitRadius(radius);
-            else if (s.State == SwordState.Sliding)
-                s.UpdateSlideRadius(radius);
+            switch (s.State)
+            {
+                case SwordState.Orbiting:  PlaceSword(s.transform, s.CurrentAngle); break;
+                case SwordState.FlyingIn:  s.UpdateFlyOrbitRadius(radius);          break;
+                case SwordState.Sliding:   s.UpdateSlideRadius(radius);             break;
+            }
         }
     }
 
     public void SetSwordType(SwordType type)
     {
         if (currentSwordType == type) return;
-
         currentSwordType = type;
         int count = swords.Count;
         for (int i = 0; i < count; i++)
@@ -76,24 +68,22 @@ public class SwordOrbit : MonoBehaviour
         if (initialSwordCount <= 0) return;
 
         float step = TWO_PI / initialSwordCount;
+        Vector3 pos = transform.position;
+        Quaternion rot = transform.rotation;
+
         for (int i = 0; i < initialSwordCount; i++)
         {
-            Vector3 pos = transform.position;
-            Quaternion rot = transform.rotation;
             Sword sword = ItemManager.Instance.Spawn(pos, rot);
-            
-            if (sword != null)
-            {
-                ItemManager.Instance.Unregister(sword);
-                
-                float angle = step * i;
-                sword.transform.SetParent(transform);
-                sword.AttachToOrbit(this);
-                sword.SetOrbiting();
-                sword.CurrentAngle = angle;
-                PlaceSword(sword.transform, angle);
-                swords.Add(sword);
-            }
+            if (sword == null) continue;
+
+            ItemManager.Instance.Unregister(sword);
+            float angle = step * i;
+            sword.transform.SetParent(transform);
+            sword.AttachToOrbit(this);
+            sword.SetOrbiting();
+            sword.CurrentAngle = angle;
+            PlaceSword(sword.transform, angle);
+            swords.Add(sword);
         }
     }
 
@@ -107,36 +97,33 @@ public class SwordOrbit : MonoBehaviour
         t.localScale = Vector3.one;
 
         swords.Add(sword);
+        owner?.GetAudioSource()?.PlayCollectSword();
 
-        if (owner != null)
-            owner.GetAudioSource()?.PlayCollectSword();
+        int total = swords.Count;
+        float step = TWO_PI / total;
+        int lastIndex = total - 1;
 
-        float step = TWO_PI / swords.Count;
-        int count = swords.Count - 1;
-
-        for (int i = 0; i < count; i++)
+        for (int i = 0; i < lastIndex; i++)
         {
             Sword s = swords[i];
             float target = step * i;
-
-            if (s.State == SwordState.FlyingIn)
-                s.UpdateFlyTarget(target);
-            else if (s.State == SwordState.Sliding)
-                s.UpdateSlideTarget(target, radius);
-            else
-                s.StartSlide(s.CurrentAngle, target, radius);
+            switch (s.State)
+            {
+                case SwordState.FlyingIn: s.UpdateFlyTarget(target);             break;
+                case SwordState.Sliding:  s.UpdateSlideTarget(target, radius);   break;
+                default:                  s.StartSlide(s.CurrentAngle, target, radius); break;
+            }
         }
 
         float startAngle = Mathf.Atan2(t.localPosition.y, t.localPosition.x);
-        float targetAngle = step * count;
-        sword.StartFlyIn(startAngle, targetAngle, flyStartRadius, radius, flyAroundDuration);
+        sword.StartFlyIn(startAngle, step * lastIndex, flyStartRadius, radius, flyAroundDuration);
     }
 
     public void RemoveSword(Sword sword) => swords.Remove(sword);
 
     public void DropSword(int index)
     {
-        if (index >= 0 && index < swords.Count)
+        if ((uint)index < (uint)swords.Count)
             swords[index].KnockOff();
     }
 
@@ -150,20 +137,17 @@ public class SwordOrbit : MonoBehaviour
     {
         if (isPaused) return;
         orbitAngle += rotateSpeed * Time.deltaTime;
-        transform.rotation = Quaternion.Euler(baseEulerX, baseEulerY, orbitAngle);
+        transform.rotation = Quaternion.Euler(-90f, 0f, orbitAngle);
     }
 
-    public void SetPaused(bool paused)
-    {
-        isPaused = paused;
-    }
+    public void SetPaused(bool paused) => isPaused = paused;
 
     public bool CanDropSword()
     {
-        float currentTime = Time.time;
-        if (currentTime - lastSwordDropTime >= SwordDropCooldown)
+        float t = Time.time;
+        if (t - lastSwordDropTime >= SwordDropCooldown)
         {
-            lastSwordDropTime = currentTime;
+            lastSwordDropTime = t;
             return true;
         }
         return false;

@@ -100,7 +100,6 @@ public class CharacterStateMachine : MonoBehaviour
         if (CurrentState == Dead || owner.CurrentHp <= 0f || attacker == null)
             return;
 
-        // Nếu đang lock target, không thay đổi target
         if (owner.IsTargetLocked)
             return;
 
@@ -128,8 +127,17 @@ public class CharacterStateMachine : MonoBehaviour
 
         if (CurrentState == Flee)
         {
+            if (MySwordCount > 3)
+            {
+                Attack.SetTarget(attacker);
+                ChangeState(Attack);
+                lastAttacker = attacker;
+                lastTargetSwitchTime = currentTime;
+                return;
+            }
+
             CharacterBase currentThreat = Flee.GetThreat();
-            
+
             if (currentThreat == null)
             {
                 Flee.SetThreat(attacker);
@@ -145,15 +153,16 @@ public class CharacterStateMachine : MonoBehaviour
             return;
         }
 
-        if (MySwordCount > 3)
-        {
-            Attack.SetTarget(attacker);
-            ChangeState(Attack);
-        }
-        else
+        bool shouldFlee = MySwordCount <= 0 || (MySwordCount <= 3 && attacker.SwordCount >= MySwordCount);
+        if (shouldFlee)
         {
             Flee.SetThreat(attacker);
             ChangeState(Flee);
+        }
+        else
+        {
+            Attack.SetTarget(attacker);
+            ChangeState(Attack);
         }
         
         lastAttacker = attacker;
@@ -229,7 +238,6 @@ public class CharacterStateMachine : MonoBehaviour
 
         if (!map.IsBlockedWorld(to) && !map.IsBlockedWorld(mid)) return;
 
-        // Trượt theo X: giữ X mới, giữ Z cũ
         Vector3 tryX  = new Vector3(toX,   y, fromZ);
         Vector3 midX  = new Vector3((fromX + toX) * 0.5f, y, fromZ);
         if (!map.IsBlockedWorld(tryX) && !map.IsBlockedWorld(midX))
@@ -238,7 +246,6 @@ public class CharacterStateMachine : MonoBehaviour
             return;
         }
 
-        // Trượt theo Z: giữ X cũ, giữ Z mới
         Vector3 tryZ  = new Vector3(fromX, y, toZ);
         Vector3 midZ  = new Vector3(fromX, y, (fromZ + toZ) * 0.5f);
         if (!map.IsBlockedWorld(tryZ) && !map.IsBlockedWorld(midZ))
@@ -267,7 +274,7 @@ public class CharacterStateMachine : MonoBehaviour
         if (charMgr == null) return null;
         
         int mySwords = MySwordCount;
-        charMgr.GetNearbyCharacters(Owner.transform.position, visionRadius * 0.65f, NearbyCharacters);
+        charMgr.GetNearbyCharacters(Owner.transform.position, visionRadius, NearbyCharacters);
 
         CharacterBase best = null;
         float bestDistSq = float.MaxValue;

@@ -9,26 +9,19 @@ public class AttackState : ICharacterState
     private Vector3 currentOrbitPosition;
     private float currentOrbitAngle;
     private bool orbitClockwise;
-    private float orbitHoldTimer;
-    private bool isManualLock;
 
     private const float RepathInterval = 0.5f;
     private const float FleeChaseTimeout = 2f;
     private const float OptimalAttackDistance = 2f;
-    private const float OptimalAttackDistanceSq = OptimalAttackDistance * OptimalAttackDistance;
     private const float AttackDistanceTolerance = 0.5f;
     private const float ChaseSpeedBonus = 0.5f;
     private const float OrbitAngleStep = 45f;
     private const float OrbitArriveThreshold = 0.5f;
-
-    public bool IsManualLock => isManualLock;
+    private const float OrbitArriveThresholdSq = OrbitArriveThreshold * OrbitArriveThreshold;
+    private const float AttackSpeedMultiplier = 1.2f;
+    private static readonly float[] ChaseAngleOffsets = { 0.785f, -0.785f, 1.57f, -1.57f };
 
     public void SetTarget(CharacterBase t) => target = t;
-    public void SetTarget(CharacterBase t, bool manualLock)
-    {
-        target = t;
-        isManualLock = manualLock;
-    }
     public CharacterBase GetTarget() => target;
 
     public void Enter(CharacterStateMachine sm)
@@ -55,16 +48,8 @@ public class AttackState : ICharacterState
         int mySwords = sm.MySwordCount;
         bool isLocked = sm.Owner.IsTargetLocked;
         
-        if (!isLocked && mySwords <= 0)
+        if (mySwords <= 0 && !isLocked)
         {
-            if (target != null) sm.Flee.SetThreat(target);
-            sm.ChangeState(sm.Flee);
-            return;
-        }
-
-        if (isLocked && !isManualLock && mySwords <= 0)
-        {
-            sm.Owner.UnlockTarget();
             if (target != null) sm.Flee.SetThreat(target);
             sm.ChangeState(sm.Flee);
             return;
@@ -126,11 +111,11 @@ public class AttackState : ICharacterState
             {
                 retreatTarget = sm.Map.ClampToMap(retreatTarget);
                 if (!sm.Map.IsBlockedWorld(retreatTarget))
-                    sm.MoveToward(retreatTarget, sm.GetCurrentSpeed() + ChaseSpeedBonus, deltaTime);
+                    sm.MoveToward(retreatTarget, sm.GetCurrentSpeed() * AttackSpeedMultiplier + ChaseSpeedBonus, deltaTime);
             }
             else
             {
-                sm.MoveToward(retreatTarget, sm.GetCurrentSpeed() + ChaseSpeedBonus, deltaTime);
+                sm.MoveToward(retreatTarget, sm.GetCurrentSpeed() * AttackSpeedMultiplier + ChaseSpeedBonus, deltaTime);
             }
             return;
         }
@@ -140,13 +125,11 @@ public class AttackState : ICharacterState
             if ((repathTimer -= deltaTime) <= 0f)
             {
                 repathTimer = RepathInterval;
-                
-                // Thay vì pathfind trực tiếp đến target, pathfind đến orbit position
                 Vector3 chaseTarget = CalculateChaseOrbitPosition(sm, targetPos);
                 BuildPathToPosition(sm, chaseTarget);
             }
 
-            sm.MoveAlongPath(ref pathIndex, sm.GetCurrentSpeed() + ChaseSpeedBonus, deltaTime);
+            sm.MoveAlongPath(ref pathIndex, sm.GetCurrentSpeed() * AttackSpeedMultiplier + ChaseSpeedBonus, deltaTime);
             return;
         }
 
@@ -156,7 +139,6 @@ public class AttackState : ICharacterState
     public void Exit(CharacterStateMachine sm)
     {
         target = null;
-        isManualLock = false;
     }
 
     private void UpdateOrbitMovement(CharacterStateMachine sm, Vector3 targetPos, float deltaTime)
@@ -166,24 +148,25 @@ public class AttackState : ICharacterState
             PickNextOrbitPosition(sm, targetPos);
             return;
         }
-        
-        float distToOrbit = Vector3.Distance(sm.CachedPosition, currentOrbitPosition);
-        float distToTarget = Vector3.Distance(sm.CachedPosition, targetPos);
-        float distanceError = distToTarget - OptimalAttackDistance;
-        
-        if (Mathf.Abs(distanceError) > AttackDistanceTolerance)
+
+        Vector3 myPos = sm.CachedPosition;
+        float dox = myPos.x - currentOrbitPosition.x, doz = myPos.z - currentOrbitPosition.z;
+        float dtx = myPos.x - targetPos.x, dtz = myPos.z - targetPos.z;
+        float distToTarget = Mathf.Sqrt(dtx * dtx + dtz * dtz);
+
+        if (Mathf.Abs(distToTarget - OptimalAttackDistance) > AttackDistanceTolerance)
         {
             PickNextOrbitPosition(sm, targetPos);
             return;
         }
-        
-        if (distToOrbit <= OrbitArriveThreshold)
+
+        if (dox * dox + doz * doz <= OrbitArriveThresholdSq)
         {
             PickNextOrbitPosition(sm, targetPos);
             return;
         }
-        
-        sm.MoveToward(currentOrbitPosition, sm.GetCurrentSpeed(), deltaTime, OrbitArriveThreshold);
+
+        sm.MoveToward(currentOrbitPosition, sm.GetCurrentSpeed() * AttackSpeedMultiplier, deltaTime, OrbitArriveThreshold);
     }
 
     private void PickNextOrbitPosition(CharacterStateMachine sm, Vector3 targetPos)
@@ -266,7 +249,6 @@ public class AttackState : ICharacterState
 
     private Vector3 CalculateChaseOrbitPosition(CharacterStateMachine sm, Vector3 targetPos)
     {
-        // Tính vector từ target đến character
         Vector3 toChar = sm.CachedPosition - targetPos;
         float currentAngle = Mathf.Atan2(toChar.z, toChar.x);
 
@@ -282,27 +264,22 @@ public class AttackState : ICharacterState
 
             if (sm.Map.IsBlockedWorld(orbitPos))
             {
-                float[] angleOffsets = { 0.785f, -0.785f, 1.57f, -1.57f };
-
-                foreach (float offset in angleOffsets)
+                for (int i = 0; i < ChaseAngleOffsets.Length; i++)
                 {
-                    float testAngle = currentAngle + offset;
+                    float testAngle = currentAngle + ChaseAngleOffsets[i];
                     Vector3 testPos = new Vector3(
                         targetPos.x + Mathf.Cos(testAngle) * OptimalAttackDistance,
                         targetPos.y,
                         targetPos.z + Mathf.Sin(testAngle) * OptimalAttackDistance
                     );
-
                     testPos = sm.Map.ClampToMap(testPos);
-
                     if (!sm.Map.IsBlockedWorld(testPos))
                         return testPos;
                 }
-
                 return targetPos;
             }
         }
-        
+
         return orbitPos;
     }
 }

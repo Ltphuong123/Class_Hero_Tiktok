@@ -4,10 +4,8 @@ public class CollectSwordState : ICharacterState
 {
     private Sword targetSword;
     private int pathIndex;
-    private float rescanTimer;
     private float retargetTimer;
 
-    private const float RescanInterval = 0.2f;
     private const float RetargetInterval = 1.5f;
     private const float PickupRadiusSq = 0.64f;
 
@@ -15,11 +13,9 @@ public class CollectSwordState : ICharacterState
 
     public void Enter(CharacterStateMachine sm)
     {
-        rescanTimer = 0f;
         retargetTimer = RetargetInterval;
         pathIndex = 0;
 
-        // Nếu đã đủ kiếm hoặc còn queue, chuyển sang Wander
         if (sm.Owner.IsSwordFull || sm.Owner.SwordQueue > 0)
         {
             sm.ChangeState(sm.Wander);
@@ -39,16 +35,10 @@ public class CollectSwordState : ICharacterState
     {
         if (sm.Owner.IsKnockedBack) return;
 
-        // Nếu đã đủ kiếm hoặc có queue, chuyển sang Wander hoặc Attack
         if (sm.Owner.IsSwordFull || sm.Owner.SwordQueue > 0)
         {
             sm.ChangeState(sm.Wander);
             return;
-        }
-
-        if ((rescanTimer -= deltaTime) <= 0f)
-        {
-            rescanTimer = RescanInterval;
         }
 
         if (targetSword == null || targetSword.State != SwordState.Dropped || !targetSword.gameObject.activeSelf)

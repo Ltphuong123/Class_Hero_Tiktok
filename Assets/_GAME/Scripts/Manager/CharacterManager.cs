@@ -794,7 +794,7 @@ public class CharacterManager : Singleton<CharacterManager>
         if (attacker == target)
             return false;
 
-        attacker.LockTarget(target, true); // true = manual lock (bypass cooldown)
+        attacker.LockTarget(target); 
         return true;
     }
 
