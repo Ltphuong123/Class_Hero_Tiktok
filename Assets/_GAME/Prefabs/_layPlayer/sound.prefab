@@ -54,10 +54,10 @@ AudioSource:
   SpatializePostEffects: 0
   Priority: 128
   DopplerLevel: 1
-  MinDistance: 5
-  MaxDistance: 5.05
+  MinDistance: 15
+  MaxDistance: 80
   Pan2D: 0
-  rolloffMode: 2
+  rolloffMode: 0
   BypassEffects: 0
   BypassListenerEffects: 0
   BypassReverbZones: 0
@@ -65,46 +65,37 @@ AudioSource:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
-      time: 0
+      time: 0.1875
       value: 1
-      inSlope: -12.004798
-      outSlope: -12.004798
+      inSlope: -5.3354664
+      outSlope: -5.3354664
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
       outWeight: 0
     - serializedVersion: 3
-      time: 0.019037887
-      value: 0.4155197
-      inSlope: -5.4858303
-      outSlope: -5.4858303
+      time: 0.3201294
+      value: 0.1767273
+      inSlope: -1.3338666
+      outSlope: -1.3338666
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
-      outWeight: 0.2679277
+      outWeight: 0
     - serializedVersion: 3
-      time: 0.038491577
-      value: 0.08795166
-      inSlope: -0.37539834
-      outSlope: -0.37539834
+      time: 0.75
+      value: 0.04347229
+      inSlope: -0.33346665
+      outSlope: -0.33346665
       tangentMode: 0
       weightedMode: 0
-      inWeight: 1
-      outWeight: 0.18901101
+      inWeight: 0
+      outWeight: 0
     - serializedVersion: 3
-      time: 0.62565106
-      value: 0.04788208
-      inSlope: -0.120578125
-      outSlope: -0.120578125
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.32701185
-      outWeight: 0.2775851
-    - serializedVersion: 3
-      time: 0.9977112
-      value: 0.033040367
-      inSlope: -0.083366595
-      outSlope: -0.083366595
+      time: 1
+      value: 0.043823242
+      inSlope: -0.18757507
+      outSlope: -0.18757507
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
@@ -176,9 +167,10 @@ MonoBehaviour:
   collectSwordClip: {fileID: 8300000, guid: 81ca29529629ad747b3f2978e3a720ec, type: 3}
   attackCooldown: 0.1
   collectCooldown: 0.05
+  minDistance: 5
+  maxDistance: 40
   minHeight: 20
   maxHeight: 70
-  zoomInfluence: 0.1
   loopSource: {fileID: 13383366585783255}
   oneShotSource: {fileID: 2951026274920540193}
 --- !u!82 &2951026274920540193
@@ -202,9 +194,9 @@ AudioSource:
   Priority: 128
   DopplerLevel: 1
   MinDistance: 5
-  MaxDistance: 5.05
+  MaxDistance: 80
   Pan2D: 0
-  rolloffMode: 2
+  rolloffMode: 0
   BypassEffects: 0
   BypassListenerEffects: 0
   BypassReverbZones: 0
