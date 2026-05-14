@@ -1227,6 +1227,7 @@ MonoBehaviour:
   characterLevel: 1
   swordOrbit: {fileID: 2045326788200990283}
   infoUI: {fileID: 1622042048833245966}
+  bodyCollider: {fileID: 3987373342233936594}
   visualTransform: {fileID: 319064977843315158}
   stateMachine: {fileID: 3234615404215644329}
   levelData: {fileID: 11400000, guid: 701ab1f2570d9fc4b81c213a0c232f48, type: 2}
@@ -1298,7 +1299,11 @@ MonoBehaviour:
   characterEffectPosition: {fileID: 6727167563974289628}
   skills:
   - {fileID: 11400000, guid: 495209da442256d46845543414517eb8, type: 2}
+  - {fileID: 11400000, guid: 7dfbb7fce14e2064cb8670e467146c90, type: 2}
+  - {fileID: 11400000, guid: e0742493b524e2f4d890eab9c3529e04, type: 2}
   - {fileID: 11400000, guid: 15f20176fab9fbb4dba7e325f1f8eb44, type: 2}
+  - {fileID: 11400000, guid: 0dae3115814a1ee4db9728fdac57ed8e, type: 2}
+  - {fileID: 11400000, guid: 6944b508f9aafae478e421f40cf1c3c0, type: 2}
 --- !u!65 &3987373342233936594
 BoxCollider:
   m_ObjectHideFlags: 0

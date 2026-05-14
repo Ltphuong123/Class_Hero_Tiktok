@@ -13,6 +13,7 @@ namespace MagicFX5
         
         void OnEnable()
         {
+            if (GameObject == null) return;
             GameObject.SetActive(false);
             Invoke("DelayActivate",               Delay);
             if (LifeTime > 0) Invoke("DelayDeactivate", Delay + LifeTime);
@@ -20,6 +21,7 @@ namespace MagicFX5
 
         void OnDisable()
         {
+            if (GameObject == null) return;
             GameObject.SetActive(false);
             CancelInvoke("DelayActivate");
             CancelInvoke("DelayDeactivate");

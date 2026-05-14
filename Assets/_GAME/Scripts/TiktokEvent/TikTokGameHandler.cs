@@ -273,13 +273,28 @@ public class TikTokGameHandler : MonoBehaviour
                 break;
 
             case TikTokActionType.UseSkill1:
-                for (int i = 0; i < count; i++)
-                    characterManager.ActivateSkill1(userId, nickname);
+                characterManager.ActivateSkill1(userId, nickname, count);
                 break;
 
             case TikTokActionType.UseSkill2:
+                characterManager.ActivateSkill2(userId, nickname, count);
+                break;
+
+            case TikTokActionType.UseSkill3:
                 for (int i = 0; i < count; i++)
-                    characterManager.ActivateSkill2(userId, nickname);
+                    characterManager.ActivateSkill3(userId, nickname);
+                break;
+
+            case TikTokActionType.UseSkill4:
+                characterManager.ActivateSkill4(userId, nickname, count);
+                break;
+
+            case TikTokActionType.UseSkill5:
+                characterManager.ActivateSkill5(userId, nickname, count);
+                break;
+
+            case TikTokActionType.UseSkill6:
+                characterManager.ActivateSkill6(userId, nickname, count);
                 break;
         }
     }

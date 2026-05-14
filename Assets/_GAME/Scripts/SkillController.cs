@@ -20,10 +20,6 @@ public class SkillController : MonoBehaviour
     private int currentSkillIndex = -1;
     private CharacterBase currentTarget;
 
-    private GameObject mainInstance;
-    private GameObject handInstance;
-    private GameObject characterInstance;
-
     public event Action<CharacterBase, float> OnSkillHit;
 
     public bool IsSkillReady(int index)
@@ -55,14 +51,13 @@ public class SkillController : MonoBehaviour
     {
         if (!CanFire(skillIndex, target)) return false;
 
-        CleanupInstances();
-
         currentSkillIndex = skillIndex;
         currentTarget     = target;
         cooldownTimers[skillIndex] = skills[skillIndex].cooldown;
         owner?.StartCast(skills[skillIndex].castDuration);
         StartCoroutine(ShakeAfterDelay(skills[skillIndex]));
 
+        ApplySlowToTarget(skills[skillIndex], target);
         TriggerHandEffect();
         TriggerMainEffect();
         TriggerBuffEffect();
@@ -73,7 +68,6 @@ public class SkillController : MonoBehaviour
     {
         if (!CanFireSkillOnly(skillIndex)) return false;
 
-        CleanupInstances();
         currentSkillIndex = skillIndex;
         currentTarget     = null;
         cooldownTimers[skillIndex] = skills[skillIndex].cooldown;
@@ -87,10 +81,9 @@ public class SkillController : MonoBehaviour
         if (skill.mainEffect != null)
         {
             Transform spawnTF = rightHandPosition ?? transform;
-            mainInstance = Instantiate(skill.mainEffect, spawnTF.position, spawnTF.rotation);
-            if (skill.effectScale != 1f) mainInstance.transform.localScale = Vector3.one * skill.effectScale;
-            MagicFX5_EffectSettings settings = mainInstance.GetComponent<MagicFX5_EffectSettings>();
-            if (settings != null) Destroy(mainInstance, skill.effectLifeTime);
+            GameObject inst = Instantiate(skill.mainEffect, spawnTF.position, spawnTF.rotation);
+            if (skill.effectScale != 1f) inst.transform.localScale = Vector3.one * skill.effectScale;
+            Destroy(inst, skill.effectLifeTime);
         }
 
         return true;
@@ -101,14 +94,13 @@ public class SkillController : MonoBehaviour
         if (targets == null || targets.Count == 0) return false;
         if (!CanFireSkillOnly(skillIndex)) return false;
 
-        CleanupInstances();
-
         currentSkillIndex          = skillIndex;
         currentTarget              = targets[0];
         cooldownTimers[skillIndex] = skills[skillIndex].cooldown;
         owner?.StartCast(skills[skillIndex].castDuration);
         StartCoroutine(ShakeAfterDelay(skills[skillIndex]));
 
+        ApplySlowToTargets(skills[skillIndex], targets);
         TriggerHandEffect();
         TriggerBuffEffect();
         SpawnMainEffectMultiTarget(targets, skills[skillIndex]);
@@ -124,10 +116,72 @@ public class SkillController : MonoBehaviour
         dir.y = 0f;
         Quaternion rot = dir.sqrMagnitude > 0.001f ? Quaternion.LookRotation(dir) : spawnTF.rotation;
 
-        mainInstance = Instantiate(skill.mainEffect, spawnTF.position, rot);
+        GameObject inst = Instantiate(skill.mainEffect, spawnTF.position, rot);
+        if (skill.effectScale != 1f) inst.transform.localScale = Vector3.one * skill.effectScale;
 
-        MagicFX5_EffectSettings settings = mainInstance.GetComponent<MagicFX5_EffectSettings>();
-        if (settings == null) { Destroy(mainInstance, skill.effectLifeTime); return; }
+        MagicFX5_EffectSettings settings = inst.GetComponent<MagicFX5_EffectSettings>();
+        if (settings == null) { Destroy(inst, skill.effectLifeTime); return; }
+
+        var targetTransforms = new Transform[targets.Count];
+        for (int i = 0; i < targets.Count; i++)
+            targetTransforms[i] = targets[i].transform;
+        settings.Targets = targetTransforms;
+
+        float         dmg             = skill.damage;
+        CharacterBase caster          = owner;
+        var           capturedTargets = new System.Collections.Generic.List<CharacterBase>(targets);
+        bool          hit             = false;
+
+        settings.OnEffectCollisionEnter += col =>
+        {
+            if (hit) return;
+            hit = true;
+            foreach (CharacterBase t in capturedTargets)
+            {
+                if (t == null || t == caster || t.IsDead) continue;
+                t.TakeSkillDamage(dmg, caster, skill);
+                OnSkillHit?.Invoke(t, dmg);
+            }
+        };
+
+        Destroy(inst, skill.effectLifeTime);
+    }
+
+    public bool TryFireSkillAtTargetWithAllTargets(CharacterBase primaryTarget, System.Collections.Generic.List<CharacterBase> targets, int skillIndex)
+    {
+        if (targets == null || targets.Count == 0) return false;
+        if (!CanFire(skillIndex, primaryTarget)) return false;
+
+        currentSkillIndex          = skillIndex;
+        currentTarget              = primaryTarget;
+        cooldownTimers[skillIndex] = skills[skillIndex].cooldown;
+        owner?.StartCast(skills[skillIndex].castDuration);
+        StartCoroutine(ShakeAfterDelay(skills[skillIndex]));
+
+        ApplySlowToTargets(skills[skillIndex], targets);
+        TriggerHandEffect();
+        TriggerBuffEffect();
+        SpawnMainEffectAtTargetWithAllTargets(primaryTarget, targets, skills[skillIndex]);
+        return true;
+    }
+
+    private void SpawnMainEffectAtTargetWithAllTargets(CharacterBase primaryTarget, System.Collections.Generic.List<CharacterBase> targets, SkillData skill)
+    {
+        if (skill.mainEffect == null) return;
+
+        Transform spawnTF = rightHandPosition != null ? rightHandPosition : transform;
+        Vector3 dir = primaryTarget.transform.position - spawnTF.position;
+        dir.y = 0f;
+        Quaternion rot = dir.sqrMagnitude > 0.001f ? Quaternion.LookRotation(dir) : spawnTF.rotation;
+
+        GameObject inst = Instantiate(skill.mainEffect, primaryTarget.transform.position, rot);
+        if (skill.effectScale != 1f) inst.transform.localScale = Vector3.one * skill.effectScale;
+
+        var followTarget = inst.GetComponentInChildren<MagicFX5.MagicFX5_FollowTarget>();
+        if (followTarget) followTarget.Target = primaryTarget.transform;
+
+        MagicFX5_EffectSettings settings = inst.GetComponent<MagicFX5_EffectSettings>();
+        if (settings == null) { Destroy(inst, skill.effectLifeTime); return; }
 
         var targetTransforms = new Transform[targets.Count];
         for (int i = 0; i < targets.Count; i++)
@@ -142,11 +196,90 @@ public class SkillController : MonoBehaviour
         {
             CharacterBase hitChar = col.Target?.GetComponent<CharacterBase>();
             if (hitChar == null || hitChar == caster || hitChar.IsDead || !hitSet.Add(hitChar)) return;
-            hitChar.TakeDamage(dmg, caster);
+            hitChar.TakeSkillDamage(dmg, caster, skill);
             OnSkillHit?.Invoke(hitChar, dmg);
         };
 
-        Destroy(mainInstance, skill.effectLifeTime);
+        Destroy(inst, skill.effectLifeTime);
+    }
+
+    public bool TryFireSkillSelfAoE(int skillIndex)
+    {
+        if (!CanFireSkillOnly(skillIndex)) return false;
+        if (owner == null) return false;
+
+        SkillData skill    = skills[skillIndex];
+        currentSkillIndex  = skillIndex;
+        currentTarget      = null;
+        cooldownTimers[skillIndex] = skill.cooldown;
+        owner.StartCast(skill.castDuration);
+        StartCoroutine(ShakeAfterDelay(skill));
+
+        Vector3 center = owner.TF.position;
+
+        var nearby = new System.Collections.Generic.List<CharacterBase>();
+        CharacterManager.Instance?.GetNearbyCharacters(center, skill.damageRadius, nearby);
+
+        var targets = new System.Collections.Generic.List<CharacterBase>();
+        foreach (CharacterBase t in nearby)
+        {
+            if (t == null || t == owner || t.IsDead) continue;
+            targets.Add(t);
+        }
+
+        ApplySlowToTargets(skill, targets);
+
+        TriggerHandEffect();
+        TriggerBuffEffect();
+
+        if (skill.mainEffect == null) return true;
+
+        GameObject inst = Instantiate(skill.mainEffect, center, Quaternion.identity);
+        if (skill.effectScale != 1f) inst.transform.localScale = Vector3.one * skill.effectScale;
+
+        MagicFX5_EffectSettings settings = inst.GetComponent<MagicFX5_EffectSettings>();
+        if (settings == null) { Destroy(inst, skill.effectLifeTime); return true; }
+
+        var targetTransforms = new Transform[targets.Count];
+        for (int i = 0; i < targets.Count; i++)
+            targetTransforms[i] = targets[i].transform;
+        settings.Targets = targetTransforms;
+
+        float         dmg             = skill.damage;
+        CharacterBase caster          = owner;
+        var           capturedTargets = new System.Collections.Generic.List<CharacterBase>(targets);
+        bool          hit             = false;
+
+        settings.OnEffectCollisionEnter += col =>
+        {
+            if (hit) return;
+            hit = true;
+            foreach (CharacterBase t in capturedTargets)
+            {
+                if (t == null || t == caster || t.IsDead) continue;
+                t.TakeSkillDamage(dmg, caster, skill);
+                OnSkillHit?.Invoke(t, dmg);
+            }
+        };
+
+        Destroy(inst, skill.effectLifeTime);
+        return true;
+    }
+
+    private void ApplySlowToTarget(SkillData skill, CharacterBase target)
+    {
+        if (!skill.enableSlow || target == null || target.IsDead) return;
+        target.ApplySlow(skill.slowFactor, skill.slowDuration);
+    }
+
+    private void ApplySlowToTargets(SkillData skill, System.Collections.Generic.List<CharacterBase> targets)
+    {
+        if (!skill.enableSlow) return;
+        foreach (CharacterBase t in targets)
+        {
+            if (t == null || t.IsDead) continue;
+            t.ApplySlow(skill.slowFactor, skill.slowDuration);
+        }
     }
 
     public int GetSkillMaxTargets(int skillIndex)
@@ -164,6 +297,85 @@ public class SkillController : MonoBehaviour
     public Vector3 GetSpawnPosition() =>
         rightHandPosition != null ? rightHandPosition.position : transform.position;
 
+    public bool TryFireSkillAoEAtTarget(CharacterBase target, int skillIndex = 2)
+    {
+        if (!CanFire(skillIndex, target)) return false;
+
+        currentSkillIndex          = skillIndex;
+        currentTarget              = target;
+        cooldownTimers[skillIndex] = skills[skillIndex].cooldown;
+        owner?.StartCast(skills[skillIndex].castDuration);
+        StartCoroutine(ShakeAfterDelay(skills[skillIndex]));
+
+        ApplySlowToTarget(skills[skillIndex], target);
+        TriggerHandEffect();
+        TriggerMainEffectAoEAtTarget(target, skills[skillIndex]);
+        TriggerBuffEffect();
+        return true;
+    }
+
+    private void TriggerMainEffectAoEAtTarget(CharacterBase target, SkillData skill)
+    {
+        if (skill.mainEffect == null) return;
+
+        Transform spawnTF = rightHandPosition != null ? rightHandPosition : transform;
+        Vector3 dir = target.transform.position - spawnTF.position;
+        dir.y = 0f;
+        Quaternion rot = dir.sqrMagnitude > 0.001f ? Quaternion.LookRotation(dir) : spawnTF.rotation;
+
+        GameObject inst = Instantiate(skill.mainEffect, target.transform.position, rot);
+        if (skill.effectScale != 1f) inst.transform.localScale = Vector3.one * skill.effectScale;
+
+        var followTarget = inst.GetComponentInChildren<MagicFX5.MagicFX5_FollowTarget>();
+        if (followTarget) followTarget.Target = target.transform;
+
+        MagicFX5_EffectSettings settings = inst.GetComponent<MagicFX5_EffectSettings>();
+        if (settings == null) { Destroy(inst, skill.effectLifeTime); return; }
+
+        settings.Targets = new[] { target.transform };
+
+        float         dmg       = skill.damage;
+        float         radius    = skill.damageRadius;
+        int           maxCount  = skill.maxTargets;
+        CharacterBase caster    = owner;
+        CharacterBase hitTarget = target;
+        bool          hit       = false;
+
+        settings.OnEffectCollisionEnter += col =>
+        {
+            if (hit) return;
+            hit = true;
+
+            Vector3 aoeCenter = hitTarget != null && !hitTarget.IsDead
+                ? hitTarget.TF.position
+                : col.Position;
+
+            if (radius > 0f)
+            {
+                var nearby = new System.Collections.Generic.List<CharacterBase>(maxCount);
+                CharacterManager.Instance?.GetNearbyCharacters(aoeCenter, radius, nearby);
+
+                int count = 0;
+                for (int i = 0; i < nearby.Count && count < maxCount; i++)
+                {
+                    CharacterBase c = nearby[i];
+                    if (c == caster || c.IsDead) continue;
+                    c.TakeSkillDamage(dmg, caster, skill);
+                    OnSkillHit?.Invoke(c, dmg);
+                    count++;
+                }
+            }
+            else
+            {
+                if (hitTarget == null || hitTarget.IsDead) return;
+                hitTarget.TakeSkillDamage(dmg, caster, skill);
+                OnSkillHit?.Invoke(hitTarget, dmg);
+            }
+        };
+
+        Destroy(inst, skill.effectLifeTime);
+    }
+
     private void TriggerMainEffect()
     {
         if (currentSkillIndex < 0 || currentTarget == null || currentTarget.IsDead) return;
@@ -175,9 +387,9 @@ public class SkillController : MonoBehaviour
         Vector3 dir = currentTarget.transform.position - spawnTF.position;
         dir.y = 0f;
         Quaternion rot = dir.sqrMagnitude > 0.001f ? Quaternion.LookRotation(dir) : spawnTF.rotation;
-        mainInstance = Instantiate(skill.mainEffect, spawnTF.position, rot);
-        if (skill.effectScale != 1f) mainInstance.transform.localScale = Vector3.one * skill.effectScale;
-        ApplyEffectSettings(mainInstance, skill);
+        GameObject inst = Instantiate(skill.mainEffect, spawnTF.position, rot);
+        if (skill.effectScale != 1f) inst.transform.localScale = Vector3.one * skill.effectScale;
+        ApplyEffectSettings(inst, skill);
     }
 
     private void TriggerHandEffect()
@@ -188,8 +400,9 @@ public class SkillController : MonoBehaviour
         if (skill.handEffect == null) return;
 
         Transform parent = rightHandPosition != null ? rightHandPosition : transform;
-        handInstance = Instantiate(skill.handEffect, parent.position, Quaternion.identity, parent);
-        if (skill.effectScale != 1f) handInstance.transform.localScale = Vector3.one * skill.effectScale;
+        GameObject handInst = Instantiate(skill.handEffect, parent.position, Quaternion.identity, parent);
+        if (skill.effectScale != 1f) handInst.transform.localScale = Vector3.one * skill.effectScale;
+        Destroy(handInst, skill.effectLifeTime);
     }
 
     private void TriggerBuffEffect()
@@ -200,8 +413,9 @@ public class SkillController : MonoBehaviour
         if (skill.characterEffect == null) return;
 
         Transform spawnTF = characterEffectPosition != null ? characterEffectPosition : transform;
-        characterInstance = Instantiate(skill.characterEffect, spawnTF.position, spawnTF.rotation);
-        if (skill.effectScale != 1f) characterInstance.transform.localScale = Vector3.one * skill.effectScale;
+        GameObject charInst = Instantiate(skill.characterEffect, spawnTF.position, spawnTF.rotation);
+        if (skill.effectScale != 1f) charInst.transform.localScale = Vector3.one * skill.effectScale;
+        Destroy(charInst, skill.effectLifeTime);
     }
 
     private void ApplyEffectSettings(GameObject instance, SkillData skill)
@@ -235,7 +449,7 @@ public class SkillController : MonoBehaviour
                 {
                     CharacterBase c = nearby[i];
                     if (c == caster || c.IsDead) continue;
-                    c.TakeDamage(dmg, caster);
+                    c.TakeSkillDamage(dmg, caster, skill);
                     OnSkillHit?.Invoke(c, dmg);
                     count++;
                 }
@@ -244,19 +458,12 @@ public class SkillController : MonoBehaviour
             {
                 CharacterBase hitChar = col.Target?.GetComponent<CharacterBase>();
                 if (hitChar == null || hitChar == caster || hitChar.IsDead) return;
-                hitChar.TakeDamage(dmg, caster);
+                hitChar.TakeSkillDamage(dmg, caster, skill);
                 OnSkillHit?.Invoke(hitChar, dmg);
             }
         };
 
         Destroy(instance, skill.effectLifeTime);
-    }
-
-    private void CleanupInstances()
-    {
-        if (mainInstance)      Destroy(mainInstance);
-        if (handInstance)      Destroy(handInstance);
-        if (characterInstance) Destroy(characterInstance);
     }
 
     private System.Collections.IEnumerator ShakeAfterDelay(SkillData skill)

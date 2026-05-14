@@ -268,10 +268,19 @@ public class CharacterManager : Singleton<CharacterManager>
                     characters.RemoveAt(last);
                 }
                 grid.Remove(c);
-                
-                if (!string.IsNullOrEmpty(c.CharacterId))
+
+                if (!string.IsNullOrEmpty(c.CharacterId)
+                    && characterIdMap.TryGetValue(c.CharacterId, out var mappedById)
+                    && mappedById == c)
                 {
                     characterIdMap.Remove(c.CharacterId);
+                }
+
+                if (c.CharacterNumericId > 0
+                    && characterNumericIdMap.TryGetValue(c.CharacterNumericId, out var mappedByNum)
+                    && mappedByNum == c)
+                {
+                    characterNumericIdMap.Remove(c.CharacterNumericId);
                 }
             }
         }
@@ -330,16 +339,40 @@ public class CharacterManager : Singleton<CharacterManager>
         }
         grid.Remove(character);
         
-        if (!string.IsNullOrEmpty(character.CharacterId))
+        if (!string.IsNullOrEmpty(character.CharacterId)
+            && characterIdMap.TryGetValue(character.CharacterId, out var mappedById)
+            && mappedById == character)
         {
             characterIdMap.Remove(character.CharacterId);
         }
-        
-        if (character.CharacterNumericId > 0)
+
+        if (character.CharacterNumericId > 0
+            && characterNumericIdMap.TryGetValue(character.CharacterNumericId, out var mappedByNum)
+            && mappedByNum == character)
         {
             characterNumericIdMap.Remove(character.CharacterNumericId);
         }
         
+        rankDirty = true;
+    }
+
+    public void ReleaseCharacterIdentity(CharacterBase character)
+    {
+        if (!string.IsNullOrEmpty(character.CharacterId)
+            && characterIdMap.TryGetValue(character.CharacterId, out var mappedById)
+            && mappedById == character)
+        {
+            characterIdMap.Remove(character.CharacterId);
+        }
+
+        if (character.CharacterNumericId > 0
+            && characterNumericIdMap.TryGetValue(character.CharacterNumericId, out var mappedByNum)
+            && mappedByNum == character)
+        {
+            characterNumericIdMap.Remove(character.CharacterNumericId);
+        }
+
+        grid.Remove(character);
         rankDirty = true;
     }
 
@@ -860,18 +893,51 @@ public class CharacterManager : Singleton<CharacterManager>
         }
     }
 
-    public bool ActivateSkill1(string characterId, string nickname)
+    public bool ActivateSkill1(string characterId, string nickname, int count = 1)
     {
         CharacterBase character = EnsureCharacterAlive(characterId, nickname);
         if (character == null) return false;
-        return character.UseSkill1();
+        character.AddSkill1Stack(count);
+        return true;
     }
 
-    public bool ActivateSkill2(string characterId, string nickname)
+    public bool ActivateSkill2(string characterId, string nickname, int count = 1)
     {
         CharacterBase character = EnsureCharacterAlive(characterId, nickname);
         if (character == null) return false;
-        return character.UseSkill2();
+        character.AddSkill2Stack(count);
+        return true;
+    }
+
+    public bool ActivateSkill3(string characterId, string nickname)
+    {
+        CharacterBase character = EnsureCharacterAlive(characterId, nickname);
+        if (character == null) return false;
+        return character.UseSkill3();
+    }
+
+    public bool ActivateSkill4(string characterId, string nickname, int count = 1)
+    {
+        CharacterBase character = EnsureCharacterAlive(characterId, nickname);
+        if (character == null) return false;
+        character.AddSkill4Stack(count);
+        return true;
+    }
+
+    public bool ActivateSkill5(string characterId, string nickname, int count = 1)
+    {
+        CharacterBase character = EnsureCharacterAlive(characterId, nickname);
+        if (character == null) return false;
+        character.AddSkill5Stack(count);
+        return true;
+    }
+
+    public bool ActivateSkill6(string characterId, string nickname, int count = 1)
+    {
+        CharacterBase character = EnsureCharacterAlive(characterId, nickname);
+        if (character == null) return false;
+        character.AddSkill6Stack(count);
+        return true;
     }
 
     public bool LockTargetAttack(string attackerId, string targetId)

@@ -397,7 +397,7 @@ public class Sword : GameUnit
         var seq = DOTween.Sequence();
         seq.Join(TF.DOMove(landPos, fallDuration).SetEase(Ease.OutQuad));
         seq.Join(TF.DOScale(1f, fallDuration).SetEase(Ease.InQuad));
-        seq.Join(TF.DORotate(new Vector3(90f, Random.Range(0f, 360f), 0f), fallDuration, RotateMode.FastBeyond360));
+        seq.Join(TF.DORotate(new Vector3(90f, Random.Range(0f, 360f), Random.Range(0f, 360f)), fallDuration, RotateMode.FastBeyond360));
         seq.OnComplete(() =>
         {
             state = SwordState.Dropped;

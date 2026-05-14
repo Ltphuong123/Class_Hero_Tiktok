@@ -56,7 +56,8 @@ namespace MagicFX5
 
         private void OnEffectCollisionEnter(MagicFX5_EffectSettings.EffectCollisionHit hitInfo)
         {
-            var currentAnimator = hitInfo.Target.GetComponent<Animator>();
+            var currentAnimator = hitInfo.Target.GetComponentInChildren<Animator>();
+            if (currentAnimator == null) return;
             _animatorStates.Add(new AnimatorState(currentAnimator, StartNormalizeTimeOffset));
         }
 

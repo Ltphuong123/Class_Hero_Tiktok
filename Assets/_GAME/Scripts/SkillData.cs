@@ -32,4 +32,30 @@ public class SkillData : ScriptableObject
     public int maxTargets = 1;
     [Tooltip("Bán kính vùng sát thương tính từ điểm va chạm (0 = chỉ trúng target chính)")]
     public float damageRadius = 0f;
+
+    [Header("Hit Effect")]
+    [Tooltip("Hiệu ứng áp lên mục tiêu khi trúng skill")]
+    public SkillHitEffect hitEffect = SkillHitEffect.None;
+    [Tooltip("Thời gian stun (giây)")]
+    public float stunDuration = 0.5f;
+    [Tooltip("Lực knockback của skill (0 = dùng lực mặc định)")]
+    public float skillKnockbackForce = 10f;
+    [Tooltip("Thời gian bay của knockback (giây)")]
+    public float skillKnockbackDuration = 0.2f;
+
+    [Header("Slow Effect")]
+    [Tooltip("Bật hiệu ứng làm chậm khi trúng skill")]
+    public bool enableSlow = false;
+    [Tooltip("Hệ số chậm (0 = đứng yên hoàn toàn, 1 = không chậm)")]
+    [Range(0f, 1f)]
+    public float slowFactor = 0.5f;
+    [Tooltip("Thời gian làm chậm (giây)")]
+    public float slowDuration = 2f;
+}
+
+public enum SkillHitEffect
+{
+    None,
+    Stun,
+    KnockbackStun
 }

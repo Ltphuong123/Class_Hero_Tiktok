@@ -29,7 +29,11 @@ public enum TikTokActionType
     MeteorBooster,
     HealBooster,
     UseSkill1,
-    UseSkill2
+    UseSkill2,
+    UseSkill3,
+    UseSkill4,
+    UseSkill5,
+    UseSkill6
 }
 
 [System.Serializable]
