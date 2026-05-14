@@ -19,10 +19,17 @@ public enum TikTokActionType
     UpgradeToLevel3,
     UpgradeToLevel4,
     UpgradeToLevel5,
+    UpgradeToLevel6,
+    UpgradeToLevel7,
+    UpgradeToLevel8,
+    UpgradeToLevel9,
+    UpgradeToLevel10,
     MagnetBooster,
     ShieldBooster,
     MeteorBooster,
-    HealBooster
+    HealBooster,
+    UseSkill1,
+    UseSkill2
 }
 
 [System.Serializable]

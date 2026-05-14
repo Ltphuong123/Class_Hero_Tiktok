@@ -8,7 +8,7 @@ public class Sword : GameUnit
     [Header("Sword Settings")]
     [SerializeField] private SpriteRenderer spriteRenderer;
     [SerializeField] private SwordDataSO swordData;
-    [SerializeField] private SwordType swordType = SwordType.Default;
+    [SerializeField] private SwordType swordType = SwordType.kiem1;
 
     [Header("Combat Mode")]
     public static bool DestroyOnZeroHp = true;
@@ -403,7 +403,7 @@ public class Sword : GameUnit
             state = SwordState.Dropped;
             currentHp = maxHp;
             if (spriteRenderer != null) spriteRenderer.color = Color.white;
-            SetSwordType(SwordType.Default);
+            SetSwordType(SwordType.kiem1);
 
             Vector3 finalPos = TF.position;
             finalPos.y = 0f;

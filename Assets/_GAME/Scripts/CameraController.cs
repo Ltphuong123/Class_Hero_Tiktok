@@ -30,10 +30,19 @@ public class CameraController : MonoBehaviour
     private float lastPinchDist;
     private readonly Plane groundPlane = new Plane(Vector3.up, Vector3.zero);
 
+    private float shakeDuration;
+    private float shakeMagnitude;
+    private float shakeTimer;
+    private float shakeSeed;
+
+    public static CameraController Instance { get; private set; }
+
     private void Awake()
     {
+        Instance = this;
         cam = GetComponent<Camera>();
         targetHeight = transform.position.y;
+        shakeSeed = Random.Range(0f, 100f);
     }
 
     private void LateUpdate()
@@ -42,6 +51,7 @@ public class CameraController : MonoBehaviour
         HandleDrag();
         FollowTarget();
         ClampToBounds();
+        ApplyShake();
     }
 
     private void HandleZoom()
@@ -181,6 +191,29 @@ public class CameraController : MonoBehaviour
         }
         worldPos = Vector3.zero;
         return false;
+    }
+
+    public void Shake(float duration, float magnitude)
+    {
+        if (duration <= 0f || magnitude <= 0f) return;
+        if (shakeTimer <= 0f || magnitude > shakeMagnitude)
+            shakeMagnitude = magnitude;
+        shakeDuration = duration;
+        shakeTimer    = duration;
+    }
+
+    private void ApplyShake()
+    {
+        if (shakeTimer <= 0f) return;
+
+        shakeTimer -= Time.deltaTime;
+        float t = shakeTimer / shakeDuration;
+        float currentMag = shakeMagnitude * t;
+
+        float offsetX = (Mathf.PerlinNoise(shakeSeed + Time.time * 20f, 0f) - 0.5f) * 2f * currentMag;
+        float offsetZ = (Mathf.PerlinNoise(0f, shakeSeed + Time.time * 20f) - 0.5f) * 2f * currentMag;
+
+        transform.position += new Vector3(offsetX, 0f, offsetZ);
     }
 
     public void SetTarget(Transform newTarget) => target = newTarget;

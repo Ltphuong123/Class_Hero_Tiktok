@@ -22,11 +22,18 @@ public class TikTokActionRow : MonoBehaviour
         onDeleteCallback = onDelete;
 
         if (actionTypeDropdown != null)
+        {
+            actionTypeDropdown.ClearOptions();
+            var options = new System.Collections.Generic.List<TMP_Dropdown.OptionData>();
+            foreach (TikTokActionType t in System.Enum.GetValues(typeof(TikTokActionType)))
+                options.Add(new TMP_Dropdown.OptionData(t.ToString()));
+            actionTypeDropdown.AddOptions(options);
             actionTypeDropdown.value = (int)config.actionType;
-        
+        }
+
         if (swordCountInput != null)
             swordCountInput.text = config.swordCount.ToString();
-        
+
         if (healAmountInput != null)
             healAmountInput.text = config.healAmount.ToString();
 

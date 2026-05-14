@@ -30,15 +30,17 @@ public class AttackState : ICharacterState
         chaseTimer = 0f;
         pathIndex = 0;
         currentOrbitPosition = Vector3.zero;
-        
+
         if (target != null)
         {
             Vector3 toChar = sm.CachedPosition - target.TF.position;
             currentOrbitAngle = Mathf.Atan2(toChar.z, toChar.x) * Mathf.Rad2Deg;
             orbitClockwise = Random.value > 0.5f;
-            
+
             BuildPathToTarget(sm);
         }
+
+        sm.SetAttackEffects(true);
     }
 
     public void Execute(CharacterStateMachine sm, float deltaTime)
@@ -133,12 +135,14 @@ public class AttackState : ICharacterState
             return;
         }
 
+        sm.Owner.UseSkill(target);
         UpdateOrbitMovement(sm, targetPos, deltaTime);
     }
 
     public void Exit(CharacterStateMachine sm)
     {
         target = null;
+        sm.SetAttackEffects(false);
     }
 
     private void UpdateOrbitMovement(CharacterStateMachine sm, Vector3 targetPos, float deltaTime)

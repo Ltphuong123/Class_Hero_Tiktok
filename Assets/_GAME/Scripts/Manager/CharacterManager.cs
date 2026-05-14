@@ -610,6 +610,86 @@ public class CharacterManager : Singleton<CharacterManager>
             character.AddLevelReserveTime(5, count);
     }
 
+    public bool UpgradeToLevel6(string characterId, string nickname, int count = 1)
+    {
+        CharacterBase character = EnsureCharacterAlive(characterId, nickname);
+        if (character == null) return false;
+        if (character.IsDead) { StartCoroutine(DelayedUpgradeLevel6(character, count)); return true; }
+        character.AddLevelReserveTime(6, count);
+        return true;
+    }
+
+    private System.Collections.IEnumerator DelayedUpgradeLevel6(CharacterBase character, int count)
+    {
+        yield return new WaitForSeconds(0.3f);
+        if (character != null && !character.IsDead)
+            character.AddLevelReserveTime(6, count);
+    }
+
+    public bool UpgradeToLevel7(string characterId, string nickname, int count = 1)
+    {
+        CharacterBase character = EnsureCharacterAlive(characterId, nickname);
+        if (character == null) return false;
+        if (character.IsDead) { StartCoroutine(DelayedUpgradeLevel7(character, count)); return true; }
+        character.AddLevelReserveTime(7, count);
+        return true;
+    }
+
+    private System.Collections.IEnumerator DelayedUpgradeLevel7(CharacterBase character, int count)
+    {
+        yield return new WaitForSeconds(0.3f);
+        if (character != null && !character.IsDead)
+            character.AddLevelReserveTime(7, count);
+    }
+
+    public bool UpgradeToLevel8(string characterId, string nickname, int count = 1)
+    {
+        CharacterBase character = EnsureCharacterAlive(characterId, nickname);
+        if (character == null) return false;
+        if (character.IsDead) { StartCoroutine(DelayedUpgradeLevel8(character, count)); return true; }
+        character.AddLevelReserveTime(8, count);
+        return true;
+    }
+
+    private System.Collections.IEnumerator DelayedUpgradeLevel8(CharacterBase character, int count)
+    {
+        yield return new WaitForSeconds(0.3f);
+        if (character != null && !character.IsDead)
+            character.AddLevelReserveTime(8, count);
+    }
+
+    public bool UpgradeToLevel9(string characterId, string nickname, int count = 1)
+    {
+        CharacterBase character = EnsureCharacterAlive(characterId, nickname);
+        if (character == null) return false;
+        if (character.IsDead) { StartCoroutine(DelayedUpgradeLevel9(character, count)); return true; }
+        character.AddLevelReserveTime(9, count);
+        return true;
+    }
+
+    private System.Collections.IEnumerator DelayedUpgradeLevel9(CharacterBase character, int count)
+    {
+        yield return new WaitForSeconds(0.3f);
+        if (character != null && !character.IsDead)
+            character.AddLevelReserveTime(9, count);
+    }
+
+    public bool UpgradeToLevel10(string characterId, string nickname, int count = 1)
+    {
+        CharacterBase character = EnsureCharacterAlive(characterId, nickname);
+        if (character == null) return false;
+        if (character.IsDead) { StartCoroutine(DelayedUpgradeLevel10(character, count)); return true; }
+        character.AddLevelReserveTime(10, count);
+        return true;
+    }
+
+    private System.Collections.IEnumerator DelayedUpgradeLevel10(CharacterBase character, int count)
+    {
+        yield return new WaitForSeconds(0.3f);
+        if (character != null && !character.IsDead)
+            character.AddLevelReserveTime(10, count);
+    }
+
     public bool ActivateMagnetBooster(string characterId, string nickname, int count = 1)
     {
         CharacterBase character = EnsureCharacterAlive(characterId, nickname);
@@ -778,6 +858,20 @@ public class CharacterManager : Singleton<CharacterManager>
         {
             character.AddToSwordQueue(remainingSwords);
         }
+    }
+
+    public bool ActivateSkill1(string characterId, string nickname)
+    {
+        CharacterBase character = EnsureCharacterAlive(characterId, nickname);
+        if (character == null) return false;
+        return character.UseSkill1();
+    }
+
+    public bool ActivateSkill2(string characterId, string nickname)
+    {
+        CharacterBase character = EnsureCharacterAlive(characterId, nickname);
+        if (character == null) return false;
+        return character.UseSkill2();
     }
 
     public bool LockTargetAttack(string attackerId, string targetId)

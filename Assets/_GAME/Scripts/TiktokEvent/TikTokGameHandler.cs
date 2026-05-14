@@ -223,6 +223,36 @@ public class TikTokGameHandler : MonoBehaviour
                     notificationManager.ShowUpgradeNotification(nickname, 5, count);
                 break;
 
+            case TikTokActionType.UpgradeToLevel6:
+                success = characterManager.UpgradeToLevel6(userId, nickname, count);
+                if (success && notificationManager != null)
+                    notificationManager.ShowUpgradeNotification(nickname, 6, count);
+                break;
+
+            case TikTokActionType.UpgradeToLevel7:
+                success = characterManager.UpgradeToLevel7(userId, nickname, count);
+                if (success && notificationManager != null)
+                    notificationManager.ShowUpgradeNotification(nickname, 7, count);
+                break;
+
+            case TikTokActionType.UpgradeToLevel8:
+                success = characterManager.UpgradeToLevel8(userId, nickname, count);
+                if (success && notificationManager != null)
+                    notificationManager.ShowUpgradeNotification(nickname, 8, count);
+                break;
+
+            case TikTokActionType.UpgradeToLevel9:
+                success = characterManager.UpgradeToLevel9(userId, nickname, count);
+                if (success && notificationManager != null)
+                    notificationManager.ShowUpgradeNotification(nickname, 9, count);
+                break;
+
+            case TikTokActionType.UpgradeToLevel10:
+                success = characterManager.UpgradeToLevel10(userId, nickname, count);
+                if (success && notificationManager != null)
+                    notificationManager.ShowUpgradeNotification(nickname, 10, count);
+                break;
+
             case TikTokActionType.MagnetBooster:
                 success = characterManager.ActivateMagnetBooster(userId, nickname, count);
                 if (success && notificationManager != null)
@@ -240,6 +270,16 @@ public class TikTokGameHandler : MonoBehaviour
                 success = characterManager.ActivateHealBooster(userId, nickname, healAmount);
                 if (success && notificationManager != null)
                     notificationManager.ShowHealBoosterNotification(nickname, healAmount);
+                break;
+
+            case TikTokActionType.UseSkill1:
+                for (int i = 0; i < count; i++)
+                    characterManager.ActivateSkill1(userId, nickname);
+                break;
+
+            case TikTokActionType.UseSkill2:
+                for (int i = 0; i < count; i++)
+                    characterManager.ActivateSkill2(userId, nickname);
                 break;
         }
     }

@@ -12,6 +12,10 @@ public class CharacterStateMachine : MonoBehaviour
     private CharacterManager charMgr;
     private ItemManager itemMgr;
 
+    [Header("Attack Effects")]
+    [SerializeField] private GameObject attackEffectObject;
+    [SerializeField] private ParticleSystem attackParticle;
+
     [Header("AI Settings")]
     [SerializeField] private float visionRadius = 15f;
     [SerializeField] private float stateMinDuration = 0.4f;
@@ -64,6 +68,7 @@ public class CharacterStateMachine : MonoBehaviour
         lastTargetSwitchTime = 0f;
         lastAttacker = null;
         CachedPosition = owner.transform.position;
+        SetAttackEffects(false);
         ChangeState(Wander);
     }
 
@@ -82,6 +87,7 @@ public class CharacterStateMachine : MonoBehaviour
     public void ManagedUpdate(float deltaTime)
     {
         CachedPosition = owner.transform.position;
+        if (owner.IsCasting) return;
         StateTimer += deltaTime;
         CurrentState?.Execute(this, deltaTime);
     }
@@ -267,6 +273,16 @@ public class CharacterStateMachine : MonoBehaviour
             return pathIndex >= PathBuffer.Count;
         }
         return false;
+    }
+
+    public void SetAttackEffects(bool active)
+    {
+        if (attackEffectObject != null) attackEffectObject.SetActive(active);
+        if (attackParticle != null)
+        {
+            if (active) attackParticle.Play();
+            else        attackParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        }
     }
 
     public CharacterBase FindWeakerTarget()

@@ -12,7 +12,7 @@ public class SwordOrbit : MonoBehaviour
 
     [Header("Sword Settings")]
     [SerializeField] private int initialSwordCount = 0;
-    [SerializeField] private SwordType currentSwordType = SwordType.Default;
+    [SerializeField] private SwordType currentSwordType = SwordType.kiem1;
 
     private readonly List<Sword> swords = new();
     private const float TWO_PI = Mathf.PI * 2f;

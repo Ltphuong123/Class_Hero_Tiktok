@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 27401ba593d242a4caa84efb9c9b5df1, type: 3}
+  m_Name: SkillData 1
+  m_EditorClassIdentifier: 
+  mainEffect: {fileID: 8147570803319536380, guid: 8b7f6a371a28f2d4f9afb218e46c2597, type: 3}
+  handEffect: {fileID: 1070803304771118239, guid: 307bd42b68e548a46926afa09cc38a95, type: 3}
+  characterEffect: {fileID: 0}
+  effectLifeTime: 8
+  effectScale: 1.5
+  damage: 20
+  cooldown: 1.5
+  castDuration: 3
+  shakeOnFireDuration: 0.3
+  shakeOnFireMagnitude: 1
+  shakeDelay: 2.5
+  maxTargets: 1
+  damageRadius: 10

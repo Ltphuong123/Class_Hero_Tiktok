@@ -1,6 +1,12 @@
 using UnityEngine;
 using System.Collections.Generic;
 
+[System.Serializable]
+public class LevelParticleGroup
+{
+    public ParticleSystem[] particles;
+}
+
 public class CharacterBase : GameUnit, IManagedUpdate
 {
     [Header("Character Info")]
@@ -19,6 +25,17 @@ public class CharacterBase : GameUnit, IManagedUpdate
     [SerializeField] private CharacterLevelDataSO levelData;
     [SerializeField] private Animator animator;
     [SerializeField] private CharacterAudioSource audioSource;
+    [SerializeField] private SkillController skillController;
+    [SerializeField] private MagicFX5_EnemyDisintegration disintegration;
+
+    [Header("Level Particles")]
+    [Tooltip("Mỗi phần tử = 1 level (index 0 = level 1). Mỗi group có thể chứa nhiều particle. Để trống nếu level không có particle.")]
+    [SerializeField] private LevelParticleGroup[] levelParticles;
+
+    [Header("Booster Particles")]
+    [SerializeField] private ParticleSystem magnetParticle;
+    [SerializeField] private ParticleSystem shieldParticle;
+    [SerializeField] private ParticleSystem healParticle;
 
     private float lifestealCooldown = 0.5f;
     private float magnetRadius = 10f;
@@ -71,6 +88,7 @@ public class CharacterBase : GameUnit, IManagedUpdate
     private int   swordQueue;
     private bool  isTargetLocked;
     private CharacterBase lockedTarget;
+    private float castTimer;
 
     private readonly List<Sword> magnetSwordBuffer = new();
     private readonly List<CharacterBase> freezeCharBuffer = new();
@@ -105,7 +123,73 @@ public class CharacterBase : GameUnit, IManagedUpdate
     public int   MaxSwordQueue     => maxSwordQueue;
     public bool  IsTargetLocked    => isTargetLocked;
     public CharacterBase LockedTarget => lockedTarget;
+    public bool  IsCasting         => castTimer > 0f;
+    public void  StartCast(float duration) { if (duration > 0f) castTimer = duration; }
     public SwordOrbit GetSwordOrbit()           => swordOrbit;
+    public void TriggerDisintegration(float delay = 0f) => disintegration?.Disintegrate(delay);
+    public bool UseSkill(CharacterBase target, int skillIndex = 0) =>
+        skillController != null && skillController.TryFireSkill(target, skillIndex);
+
+    public bool UseSkill1()
+    {
+        if (skillController == null || IsDead) return false;
+
+        int maxTargets = skillController.GetSkillMaxTargets(0);
+
+        if (maxTargets <= 1)
+        {
+            CharacterBase nearest = CharacterManager.Instance?.GetNearestCharacter(TF.position, 50f, this);
+            if (nearest == null || nearest.IsDead) return false;
+            return skillController.TryFireSkill(nearest, 0);
+        }
+
+        var nearby = new System.Collections.Generic.List<CharacterBase>(maxTargets * 2);
+        CharacterManager.Instance?.GetNearbyCharacters(TF.position, 50f, nearby);
+
+        var targets = new System.Collections.Generic.List<CharacterBase>(maxTargets);
+        float myX = TF.position.x, myZ = TF.position.z;
+        nearby.Sort((a, b) =>
+        {
+            float dxa = a.TF.position.x - myX, dza = a.TF.position.z - myZ;
+            float dxb = b.TF.position.x - myX, dzb = b.TF.position.z - myZ;
+            return (dxa * dxa + dza * dza).CompareTo(dxb * dxb + dzb * dzb);
+        });
+
+        for (int i = 0; i < nearby.Count && targets.Count < maxTargets; i++)
+        {
+            CharacterBase c = nearby[i];
+            if (c == this || c.IsDead) continue;
+            targets.Add(c);
+        }
+
+        return targets.Count > 0 && skillController.TryFireSkillMultiTarget(targets, 0);
+    }
+
+    public bool UseSkill2()
+    {
+        Debug.Log(1);
+        if (skillController == null || IsDead) return false;
+
+        int   maxTargets = skillController.GetSkillMaxTargets(1);
+        float radius     = skillController.GetSkillDamageRadius(1);
+        if (radius <= 0f) radius = 5f;
+
+        Vector3 spawnPos = skillController.GetSpawnPosition();
+
+        var nearby = new System.Collections.Generic.List<CharacterBase>(maxTargets * 2);
+        CharacterManager.Instance?.GetNearbyCharacters(spawnPos, radius, nearby);
+
+        var targets = new System.Collections.Generic.List<CharacterBase>(maxTargets);
+        for (int i = 0; i < nearby.Count && targets.Count < maxTargets; i++)
+        {
+            CharacterBase c = nearby[i];
+            if (c == this || c.IsDead) continue;
+            targets.Add(c);
+        }
+
+        if (targets.Count == 0) return skillController.TryFireSkillNoTarget(1);
+        return skillController.TryFireSkillMultiTarget(targets, 1);
+    }
     public CharacterStateMachine GetStateMachine() => stateMachine;
     public Animator GetAnimator()               => animator;
     public CharacterAudioSource GetAudioSource() => audioSource;
@@ -155,6 +239,8 @@ public class CharacterBase : GameUnit, IManagedUpdate
         swordQueue    = 0;
         isTargetLocked = false;
         lockedTarget  = null;
+        castTimer     = 0f;
+        StopAllLevelParticles();
 
         levelReserveTime = new float[levelData.GetMaxLevel() + 1];
         if (stateMachine == null) stateMachine = GetComponent<CharacterStateMachine>();
@@ -172,7 +258,8 @@ public class CharacterBase : GameUnit, IManagedUpdate
 
         UpdateLevelStats();
         CharacterManager.Instance.Register(this);
-
+        
+        StopBoosterParticles();
         ActivateShieldBooster();
     }
 
@@ -193,6 +280,8 @@ public class CharacterBase : GameUnit, IManagedUpdate
             stateMachine.ManagedUpdate(deltaTime);
             return;
         }
+
+        if (castTimer > 0f) castTimer -= deltaTime;
 
         if (isFrozen)
         {
@@ -295,6 +384,42 @@ public class CharacterBase : GameUnit, IManagedUpdate
     {
         if (levelReserveTime == null || level < 0 || level >= levelReserveTime.Length) return 0f;
         return levelReserveTime[level];
+    }
+
+    private void StopBoosterParticles()
+    {
+        if (magnetParticle != null) magnetParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        if (shieldParticle != null) shieldParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        if (healParticle   != null) healParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+    }
+
+    private void StopAllLevelParticles()
+    {
+        if (levelParticles == null) return;
+        for (int i = 0; i < levelParticles.Length; i++)
+        {
+            LevelParticleGroup group = levelParticles[i];
+            if (group?.particles == null) continue;
+            for (int j = 0; j < group.particles.Length; j++)
+            {
+                if (group.particles[j] != null)
+                    group.particles[j].Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            }
+        }
+    }
+
+    private void PlayLevelParticle(int level)
+    {
+        StopAllLevelParticles();
+        int idx = level - 1;
+        if (levelParticles == null || idx < 0 || idx >= levelParticles.Length) return;
+        LevelParticleGroup group = levelParticles[idx];
+        if (group?.particles == null) return;
+        for (int j = 0; j < group.particles.Length; j++)
+        {
+            if (group.particles[j] != null)
+                group.particles[j].Play();
+        }
     }
 
     private void UpdateLevelStats()
@@ -408,6 +533,7 @@ public class CharacterBase : GameUnit, IManagedUpdate
             magnetTimer = magnetDuration;
             magnetStackCount = count - 1;
         }
+        if (magnetParticle != null) magnetParticle.Play();
     }
 
     private void UpdateShieldBooster(float deltaTime)
@@ -442,6 +568,7 @@ public class CharacterBase : GameUnit, IManagedUpdate
             shieldTimer = shieldDuration;
             shieldStackCount = count - 1;
         }
+        if (shieldParticle != null) shieldParticle.Play();
     }
 
     public void Freeze(float duration)
@@ -489,6 +616,7 @@ public class CharacterBase : GameUnit, IManagedUpdate
         }
         infoUI?.UpdateHp(currentHp, currentMaxHp);
         audioSource?.PlayLevelUp();
+        if (healParticle != null) healParticle.Play();
     }
 
     private void UpdateOverhealScale()
@@ -517,6 +645,7 @@ public class CharacterBase : GameUnit, IManagedUpdate
         currentLevel++;
         levelTimer = 0f;
         UpdateLevelStats();
+        PlayLevelParticle(currentLevel);
     }
 
     public void SetLevel(int level)
@@ -527,6 +656,7 @@ public class CharacterBase : GameUnit, IManagedUpdate
         levelTimer = 0f;
         UpdateLevelStats();
         if (currentLevel > oldLevel) audioSource?.PlayLevelUp();
+        PlayLevelParticle(currentLevel);
     }
 
     public int GetMaxLevel() => levelData?.GetMaxLevel() ?? 1;

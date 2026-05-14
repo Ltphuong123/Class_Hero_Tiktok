@@ -71,7 +71,7 @@ public class CharacterLevelDataSO : ScriptableObject
     public SwordType GetSwordType(int level)
     {
         LevelData data = GetLevelData(level);
-        return data != null ? data.swordType : SwordType.Default;
+        return data != null ? data.swordType : SwordType.kiem1;
     }
 
     public float GetDuration(int level)
@@ -204,7 +204,7 @@ public class CharacterLevelDataSO : ScriptableObject
             levels[i].duration = 10f;
             levels[i].speed = 5f;
             levels[i].bodyScale = 1f;
-            levels[i].swordType = SwordType.Default;
+            levels[i].swordType = SwordType.kiem1;
             levels[i].damageReduction = 0f;
         }
         SaveToFile();

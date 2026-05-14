@@ -30,7 +30,14 @@ public class TikTokEventRow : MonoBehaviour
         onDeleteCallback = onDelete;
         
         if (eventTypeDropdown != null)
+        {
+            eventTypeDropdown.ClearOptions();
+            var options = new List<TMP_Dropdown.OptionData>();
+            foreach (TikTokEventType t in System.Enum.GetValues(typeof(TikTokEventType)))
+                options.Add(new TMP_Dropdown.OptionData(t.ToString()));
+            eventTypeDropdown.AddOptions(options);
             eventTypeDropdown.value = (int)config.eventType;
+        }
         
         if (likeThresholdInput != null)
             likeThresholdInput.text = config.likeThreshold.ToString();

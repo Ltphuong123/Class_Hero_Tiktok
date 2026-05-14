@@ -3,11 +3,12 @@ using UnityEngine;
 public class DeadState : ICharacterState
 {
     private float deathTimer;
-    private const float DEATH_DELAY = 1f;
+    private const float DEATH_DELAY = 5f;
 
     public void Enter(CharacterStateMachine sm)
     {
         deathTimer = 0f;
+        sm.Owner.TriggerDisintegration(0f);
     }
 
     public void Execute(CharacterStateMachine sm, float deltaTime)
