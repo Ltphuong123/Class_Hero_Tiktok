@@ -13,11 +13,13 @@ public class CanvasSettings : MonoBehaviour
     [SerializeField] private Button swordDataTabButton;
     [SerializeField] private Button characterLevelTabButton;
     [SerializeField] private Button characterBaseTabButton;
-    
+    [SerializeField] private Button skillDataTabButton;
+
     [Header("Tab Panels")]
     [SerializeField] private GameObject swordDataPanel;
     [SerializeField] private GameObject characterLevelPanel;
     [SerializeField] private GameObject characterBasePanel;
+    [SerializeField] private GameObject skillDataPanel;
     
     [Header("Tab Button Colors")]
     [SerializeField] private Color activeTabColor = new Color(0.3f, 0.6f, 1f);
@@ -40,6 +42,13 @@ public class CanvasSettings : MonoBehaviour
     [SerializeField] private Button characterLevelSaveButton;
     [SerializeField] private Button characterLevelResetButton;
 
+    [Header("Skill Data Settings")]
+    [SerializeField] private SkillData[] skills;
+    [SerializeField] private Transform skillDataContent;
+    [SerializeField] private GameObject skillDataRowPrefab;
+    [SerializeField] private Button skillDataSaveButton;
+    [SerializeField] private Button skillDataResetButton;
+
     [Header("Character Base Settings")]
     [SerializeField] private CharacterBaseConfigSO characterBaseConfig;
     [SerializeField] private TMP_InputField maxHpInput;
@@ -54,6 +63,7 @@ public class CanvasSettings : MonoBehaviour
 
     private List<SwordDataRow> swordDataRows = new List<SwordDataRow>();
     private List<CharacterLevelRow> characterLevelRows = new List<CharacterLevelRow>();
+    private List<SkillDataRow> skillDataRows = new List<SkillDataRow>();
 
     private void Start()
     {
@@ -62,6 +72,7 @@ public class CanvasSettings : MonoBehaviour
         swordDataTabButton?.onClick.AddListener(() => ShowTab(0));
         characterLevelTabButton?.onClick.AddListener(() => ShowTab(1));
         characterBaseTabButton?.onClick.AddListener(() => ShowTab(2));
+        skillDataTabButton?.onClick.AddListener(() => ShowTab(3));
         closeButton?.onClick.AddListener(Close);
         
         swordDataSaveButton?.onClick.AddListener(SaveSwordData);
@@ -76,6 +87,9 @@ public class CanvasSettings : MonoBehaviour
         characterBaseSaveButton?.onClick.AddListener(SaveCharacterBaseConfig);
         characterBaseLoadButton?.onClick.AddListener(LoadCharacterBaseConfig);
         characterBaseResetButton?.onClick.AddListener(ResetCharacterBaseConfig);
+
+        skillDataSaveButton?.onClick.AddListener(SaveSkillData);
+        skillDataResetButton?.onClick.AddListener(ResetSkillData);
         
         ShowTab(0);
     }
@@ -85,15 +99,18 @@ public class CanvasSettings : MonoBehaviour
         swordDataPanel?.SetActive(tabIndex == 0);
         characterLevelPanel?.SetActive(tabIndex == 1);
         characterBasePanel?.SetActive(tabIndex == 2);
-        
+        skillDataPanel?.SetActive(tabIndex == 3);
+
         UpdateTabButtonColors(tabIndex);
-        
+
         if (tabIndex == 0)
             InitializeSwordDataUI();
         else if (tabIndex == 1)
             InitializeCharacterLevelUI();
         else if (tabIndex == 2)
             LoadCharacterBaseValuesToUI();
+        else if (tabIndex == 3)
+            InitializeSkillDataUI();
     }
 
     private void UpdateTabButtonColors(int activeIndex)
@@ -101,6 +118,7 @@ public class CanvasSettings : MonoBehaviour
         UpdateButtonColor(swordDataTabButton, activeIndex == 0);
         UpdateButtonColor(characterLevelTabButton, activeIndex == 1);
         UpdateButtonColor(characterBaseTabButton, activeIndex == 2);
+        UpdateButtonColor(skillDataTabButton, activeIndex == 3);
     }
 
     private void UpdateButtonColor(Button button, bool isActive)
@@ -292,6 +310,66 @@ public class CanvasSettings : MonoBehaviour
         characterBaseConfig.lifestealPercent = 0.2f;
         LoadCharacterBaseValuesToUI();
         Debug.Log("Character Base Config reset to default!");
+    }
+
+    private void InitializeSkillDataUI()
+    {
+        if (skills == null || skillDataContent == null || skillDataRowPrefab == null)
+        {
+            Debug.LogError("SkillData: Missing references!");
+            return;
+        }
+
+        ClearSkillDataRows();
+
+        foreach (var skill in skills)
+        {
+            if (skill == null) continue;
+            GameObject rowObj = Instantiate(skillDataRowPrefab, skillDataContent);
+            SkillDataRow row = rowObj.GetComponent<SkillDataRow>();
+            if (row != null)
+            {
+                row.Initialize(skill);
+                skillDataRows.Add(row);
+            }
+        }
+    }
+
+    private void ClearSkillDataRows()
+    {
+        foreach (var row in skillDataRows)
+        {
+            if (row != null && row.gameObject != null)
+                Destroy(row.gameObject);
+        }
+        skillDataRows.Clear();
+    }
+
+    private void SaveSkillData()
+    {
+        foreach (var row in skillDataRows)
+        {
+            if (row == null || row.SkillData == null) continue;
+            var sd = row.SkillData;
+            sd.damage        = row.Damage;
+            // sd.cooldown      = row.Cooldown;
+            // sd.castDuration  = row.CastDuration;
+            // sd.damageRadius  = row.DamageRadius;
+            // sd.maxTargets    = row.MaxTargets;
+            sd.SaveToJson();
+        }
+        Debug.Log("Skill Data saved!");
+    }
+
+    private void ResetSkillData()
+    {
+        foreach (var row in skillDataRows)
+        {
+            if (row?.SkillData == null) continue;
+            row.SkillData.DeleteJson();
+        }
+        InitializeSkillDataUI();
+        Debug.Log("Skill Data reset to default!");
     }
 
     public void Show()

@@ -9,11 +9,12 @@ public class LeaderboardRow : MonoBehaviour, IPointerClickHandler
     [Header("Texts")]
     [SerializeField] private TextMeshProUGUI rankText;
     [SerializeField] private TextMeshProUGUI idText;
-    [SerializeField] private TextMeshProUGUI nameText;
+    [SerializeField] private Text nameText;
     [SerializeField] private TextMeshProUGUI hpText;
     [SerializeField] private TextMeshProUGUI swordCountText;
     [SerializeField] private TextMeshProUGUI killPointsText;
-    
+    [SerializeField] private TextMeshProUGUI scoreText;
+
     [Header("Booster Texts")]
     [SerializeField] private TextMeshProUGUI magnetCountText;
     [SerializeField] private TextMeshProUGUI shieldCountText;
@@ -29,6 +30,7 @@ public class LeaderboardRow : MonoBehaviour, IPointerClickHandler
     [SerializeField] private Image avatarImage;
     [SerializeField] private Image levelIcon;
     [SerializeField] private Image levelTimeFill;
+    [SerializeField] private Image deadOverlay;
 
     [Header("Level Icons")]
     [SerializeField] private Sprite[] levelSprites;
@@ -51,7 +53,9 @@ public class LeaderboardRow : MonoBehaviour, IPointerClickHandler
     private int cachedLevel = -1;
     private int cachedRank = -1;
     private int cachedKillPoints = -1;
+    private int cachedScore = -1;
     private int cachedMagnetStack = -1;
+    private bool cachedIsDead = false;
     private int cachedShieldStack = -1;
     private CharacterBase currentCharacter;
 
@@ -71,12 +75,24 @@ public class LeaderboardRow : MonoBehaviour, IPointerClickHandler
     {
         currentCharacter = data.Character;
 
+        if (cachedIsDead != data.IsDead)
+        {
+            cachedIsDead = data.IsDead;
+            SetDeadVisuals(data.IsDead);
+        }
+
+        if (data.IsDead)
+        {
+            SetDeadData(data);
+            return;
+        }
+
         if (rankText != null && cachedRank != data.Rank)
         {
             rankText.text = $"#{data.Rank}";
             cachedRank = data.Rank;
         }
-        
+
         if (idText != null)
             idText.text = $"#{data.NumericId}";
 
@@ -130,7 +146,7 @@ public class LeaderboardRow : MonoBehaviour, IPointerClickHandler
 
         if (hpText != null && !Mathf.Approximately(cachedHp, data.CurrentHp))
         {
-            hpText.text = $"{data.CurrentHp:F0}";
+            hpText.text = $"{data.CurrentHp:N0}";
             
             if (cachedHp >= 0f && data.CurrentHp > cachedHp)
             {
@@ -146,7 +162,7 @@ public class LeaderboardRow : MonoBehaviour, IPointerClickHandler
         {
             int oldTotal = (cachedSwordCount >= 0 && cachedSwordQueue >= 0) ? (cachedSwordCount + cachedSwordQueue) : -1;
             int totalSwords = data.SwordCount + data.SwordQueue;
-            swordCountText.text = $"{totalSwords}";
+            swordCountText.text = $"{totalSwords:N0}";
             
             if (oldTotal >= 0 && totalSwords > oldTotal)
             {
@@ -161,16 +177,30 @@ public class LeaderboardRow : MonoBehaviour, IPointerClickHandler
         
         if (killPointsText != null && cachedKillPoints != data.KillPoints)
         {
-            killPointsText.text = $"{data.KillPoints}";
-            
+            killPointsText.text = $"{data.KillPoints:N0}";
+
             if (cachedKillPoints >= 0 && data.KillPoints > cachedKillPoints)
             {
                 killPointsText.transform.DOKill();
                 killPointsText.transform.localScale = Vector3.one;
                 killPointsText.transform.DOPunchScale(Vector3.one * 0.3f, 0.3f, 5, 0.5f);
             }
-            
+
             cachedKillPoints = data.KillPoints;
+        }
+
+        if (scoreText != null && cachedScore != data.Score)
+        {
+            scoreText.text = FormatScore(data.Score);
+
+            if (cachedScore >= 0 && data.Score > cachedScore)
+            {
+                scoreText.transform.DOKill();
+                scoreText.transform.localScale = Vector3.one;
+                scoreText.transform.DOPunchScale(Vector3.one * 0.3f, 0.3f, 5, 0.5f);
+            }
+
+            cachedScore = data.Score;
         }
         
         if (cachedMagnetStack != data.MagnetStackCount)
@@ -277,12 +307,115 @@ public class LeaderboardRow : MonoBehaviour, IPointerClickHandler
 
             Vector3 characterPos = currentCharacter.transform.position;
             Vector3 targetPos = mainCam.transform.position;
-            
+
             targetPos.x = characterPos.x;
             targetPos.y = characterPos.y;
-            
+
             mainCam.transform.DOKill();
             mainCam.transform.DOMove(targetPos, cameraMoveSpeed).SetEase(Ease.OutQuad);
+        }
+    }
+
+    private static string FormatScore(int value)
+    {
+        if (value >= 1_000_000) return $"{value / 1_000_000f:0.#}M";
+        if (value >= 1_000)     return $"{value / 1_000f:0.#}k";
+        return value.ToString();
+    }
+
+    private void SetDeadVisuals(bool isDead)
+    {
+        if (deadOverlay != null) deadOverlay.gameObject.SetActive(isDead);
+
+        if (!isDead)
+        {
+            levelIcon?.gameObject.SetActive(true);
+            magnetTimeFill?.gameObject.SetActive(true);
+            shieldTimeFill?.gameObject.SetActive(true);
+            cachedLevel = -1;
+            cachedMagnetStack = -1;
+            cachedShieldStack = -1;
+        }
+    }
+
+    private void SetDeadData(CharacterRankData data)
+    {
+
+        if (rankText != null && cachedRank != data.Rank)
+        {
+            rankText.text = $"#{data.Rank}";
+            cachedRank = data.Rank;
+        }
+
+        if (idText != null) idText.text = $"#{data.NumericId}";
+        if (nameText != null) nameText.text = data.Name;
+
+        if (avatarImage != null)
+        {
+            avatarImage.enabled = data.Avatar != null;
+            if (data.Avatar != null) avatarImage.sprite = data.Avatar;
+        }
+
+        // Level — hiển thị sprite level 1 khi chết
+        if (levelIcon != null && levelSprites != null && levelSprites.Length > 0)
+        {
+            levelIcon.sprite = levelSprites[0];
+            levelIcon.enabled = true;
+            levelIcon.gameObject.SetActive(true);
+        }
+        if (levelTimeFill != null) levelTimeFill.gameObject.SetActive(false);
+
+        // HP — hiển thị 0
+        if (hpText != null && !Mathf.Approximately(cachedHp, data.CurrentHp))
+        {
+            hpText.text = $"{data.CurrentHp:N0}";
+            cachedHp = data.CurrentHp;
+        }
+
+        // Sword
+        if (swordCountText != null && (cachedSwordCount != data.SwordCount || cachedSwordQueue != data.SwordQueue))
+        {
+            swordCountText.text = $"{data.SwordCount + data.SwordQueue:N0}";
+            cachedSwordCount = data.SwordCount;
+            cachedSwordQueue = data.SwordQueue;
+        }
+
+        // KillPoints
+        if (killPointsText != null && cachedKillPoints != data.KillPoints)
+        {
+            killPointsText.text = $"{data.KillPoints:N0}";
+            cachedKillPoints = data.KillPoints;
+        }
+
+        // Score
+        if (scoreText != null && cachedScore != data.Score)
+        {
+            scoreText.text = FormatScore(data.Score);
+            cachedScore = data.Score;
+        }
+
+        // Booster — ẩn timer fill, chỉ hiện stack count
+        if (magnetTimeFill != null) magnetTimeFill.gameObject.SetActive(false);
+        if (shieldTimeFill != null) shieldTimeFill.gameObject.SetActive(false);
+
+        if (cachedMagnetStack != data.MagnetStackCount)
+        {
+            if (magnetCountText != null)
+            {
+                magnetCountText.text = data.MagnetStackCount > 0 ? $"{data.MagnetStackCount}" : " ";
+                magnetCountText.enabled = true;
+            }
+            cachedMagnetStack = data.MagnetStackCount;
+        }
+
+        if (cachedShieldStack != data.ShieldStackCount)
+        {
+            if (shieldCountText != null)
+            {
+                shieldCountText.text = data.ShieldStackCount > 0 ? $"{data.ShieldStackCount}" : " ";
+                shieldCountText.enabled = true;
+            }
+            cachedShieldStack = data.ShieldStackCount;
         }
     }
 }

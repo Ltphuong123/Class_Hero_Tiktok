@@ -2,6 +2,22 @@ using UnityEngine;
 
 public class CharacterAudioSource : MonoBehaviour
 {
+    private const string VolumePref = "CHARACTER_AUDIO_VOLUME";
+    public static float MasterVolume { get; private set; } = 1f;
+
+    public static void SetMasterVolume(float value)
+    {
+        MasterVolume = Mathf.Clamp01(value);
+        PlayerPrefs.SetFloat(VolumePref, MasterVolume);
+        PlayerPrefs.Save();
+    }
+
+    public static float LoadMasterVolume()
+    {
+        MasterVolume = PlayerPrefs.GetFloat(VolumePref, 1f);
+        return MasterVolume;
+    }
+
     [Header("Audio Clips")]
     [SerializeField] private AudioClip footstepClip;
     [SerializeField] private AudioClip attackClip;
@@ -46,10 +62,10 @@ public class CharacterAudioSource : MonoBehaviour
 
         float distVolume   = 1f - Mathf.InverseLerp(minDistance, maxDistance, dist);
         float heightVolume = 1f - Mathf.InverseLerp(minHeight, maxHeight, camPos.y);
-        float volume = distVolume * heightVolume;
+        float volume = distVolume * heightVolume * MasterVolume;
 
-        loopSource.volume    = volume;
-        oneShotSource.volume = volume;
+        loopSource.volume    = MasterVolume;
+        oneShotSource.volume = MasterVolume;
     }
 
     public void PlayFootstep()

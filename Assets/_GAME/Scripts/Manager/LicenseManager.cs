@@ -14,6 +14,9 @@ public class LicenseManager : MonoBehaviour
     public Button checkButton;
     public Button logoutButton;
 
+    [Header("License")]
+    public bool requireLicense = true;
+
     [Header("API")]
     public string apiUrl = "http://localhost:5047/api/license/check";
 
@@ -24,20 +27,24 @@ public class LicenseManager : MonoBehaviour
 
     void Start()
     {
+        if (!requireLicense)
+        {
+            EnterGame();
+            return;
+        }
+
         checkButton.onClick.AddListener(OnCheckClick);
         logoutButton.onClick.AddListener(OnLogoutClick);
 
-        // Nếu có key đã lưu thì điền sẵn vào input
         string savedKey = PlayerPrefs.GetString(SavedKeyPref, "");
-        
         if (!string.IsNullOrEmpty(savedKey))
         {
-            keyInput.text = savedKey;
+            keyInput.text   = savedKey;
             statusText.text = "Key đã lưu. Nhấn Check để đăng nhập";
         }
         else
         {
-            keyInput.text = "";
+            keyInput.text   = "";
             statusText.text = "Nhập key để tiếp tục";
         }
     }

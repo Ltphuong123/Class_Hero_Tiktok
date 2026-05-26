@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 27401ba593d242a4caa84efb9c9b5df1, type: 3}
+  m_Name: Skill6
+  m_EditorClassIdentifier: 
+  mainEffect: {fileID: 4459237529612523296, guid: 0be98bd65d1ce5e44ba2b487975e9f8b, type: 3}
+  handEffect: {fileID: 0}
+  characterEffect: {fileID: 0}
+  effectLifeTime: 5
+  damage: 1500
+  cooldown: 4
+  castDuration: 1
+  shakeOnFireDuration: 0.5
+  shakeOnFireMagnitude: 1
+  shakeDelay: 2.3
+  maxTargets: 1
+  damageRadius: 8
+  hitEffect: 1
+  stunDuration: 2
+  skillKnockbackForce: 40
+  skillKnockbackDuration: 0.01
+  enableSlow: 0
+  slowFactor: 0.5
+  slowDuration: 2

@@ -8,50 +8,41 @@ public class TopCharacterData
     public string characterId;
     public string characterName;
     public Sprite avatar;
-    public int level;
-    public int swordCount;
     public int killPoints;
-    public float hp;
-    public float maxHp;
-    public int swordQueue;
-    
+    public int score;
+    public int bonusScore;
+
     public TopCharacterData(int rank, CharacterRankData data)
     {
-        this.rank = rank;
-        this.characterId = data.Id;
+        this.rank          = rank;
+        this.characterId   = data.Id;
         this.characterName = data.Name;
-        this.avatar = data.Avatar;
-        this.level = data.Level;
-        this.swordCount = data.SwordCount;
-        this.killPoints = data.KillPoints;
-        this.hp = data.CurrentHp;
-        this.maxHp = data.MaxHp;
-        this.swordQueue = data.SwordQueue;
+        this.avatar        = data.Avatar;
+        this.killPoints    = data.KillPoints;
+        this.score         = data.Score;
     }
 }
 
 public static class GameEndData
 {
     private static List<TopCharacterData> topCharacters = new List<TopCharacterData>();
-    
-    public static List<TopCharacterData> TopCharacters => topCharacters;
-    
-    public static void SetTopCharacters(List<CharacterRankData> rankedCharacters)
+
+    public static List<TopCharacterData> TopCharacters  => topCharacters;
+    public static int                    TotalMatchScore { get; private set; }
+
+    public static void SetTopCharacters(List<CharacterRankData> rankedCharacters, int totalMatchScore = 0)
     {
         topCharacters.Clear();
-        
-        // Lấy top 3
-        int count = Mathf.Min(3, rankedCharacters.Count);
-        for (int i = 0; i < count; i++)
-        {
+        for (int i = 0; i < rankedCharacters.Count; i++)
             topCharacters.Add(new TopCharacterData(i + 1, rankedCharacters[i]));
-        }
-        
-        Debug.Log($"[GameEndData] Saved {topCharacters.Count} top characters");
+
+        TotalMatchScore = totalMatchScore;
+        Debug.Log($"[GameEndData] Saved {topCharacters.Count} characters, TotalMatchScore={totalMatchScore}");
     }
-    
+
     public static void Clear()
     {
         topCharacters.Clear();
+        TotalMatchScore = 0;
     }
 }

@@ -130,10 +130,14 @@ public class TikTokGameHandler : MonoBehaviour
             {
                 if (config.eventType != TikTokEventType.Gift) continue;
                 if (config.giftMinPrice != highestMinPrice) continue;
-                
+
                 ExecuteActions(config.actions, userId, nickname, delta);
             }
         }
+
+        int scoreGain = delta * giftPrice * 5;
+        if (scoreGain > 0)
+            characterManager.AddScore(userId, nickname, scoreGain);
     }
 
     private void HandleLike(TikEvent ev)
@@ -281,8 +285,7 @@ public class TikTokGameHandler : MonoBehaviour
                 break;
 
             case TikTokActionType.UseSkill3:
-                for (int i = 0; i < count; i++)
-                    characterManager.ActivateSkill3(userId, nickname);
+                characterManager.ActivateSkill3(userId, nickname, count);
                 break;
 
             case TikTokActionType.UseSkill4:
@@ -295,6 +298,36 @@ public class TikTokGameHandler : MonoBehaviour
 
             case TikTokActionType.UseSkill6:
                 characterManager.ActivateSkill6(userId, nickname, count);
+                break;
+
+            case TikTokActionType.UseSkill7:
+                success = characterManager.ActivateSkill7(userId, nickname, count);
+                if (success && notificationManager != null)
+                    notificationManager.ShowSkill7Notification(nickname, count);
+                break;
+
+            case TikTokActionType.UseSkill8:
+                success = characterManager.ActivateSkill8(userId, nickname, count);
+                if (success && notificationManager != null)
+                    notificationManager.ShowSkill8Notification(nickname, count);
+                break;
+
+            case TikTokActionType.UseSkill9:
+                success = characterManager.ActivateSkill9(userId, nickname, count);
+                if (success && notificationManager != null)
+                    notificationManager.ShowSkill9Notification(nickname, count);
+                break;
+
+            case TikTokActionType.UseSkill10:
+                success = characterManager.ActivateSkill10(userId, nickname, count);
+                if (success && notificationManager != null)
+                    notificationManager.ShowSkill10Notification(nickname, count);
+                break;
+
+            case TikTokActionType.UseSkill11:
+                success = characterManager.ActivateSkill11(userId, nickname, count);
+                if (success && notificationManager != null)
+                    notificationManager.ShowSkill11Notification(nickname, count);
                 break;
         }
     }

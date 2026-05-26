@@ -89,15 +89,13 @@ public class CharacterBase : GameUnit, IManagedUpdate
     private float slowTimer;
     private float slowMultiplier = 1f;
     private int   killPoints;
+    private int   score;
     private int   swordQueue;
-    private int   skill1StackCount;
-    private int   skill2StackCount;
-    private int   skill4StackCount;
-    private int   skill5StackCount;
-    private int   skill6StackCount;
+    private readonly int[] skillStacks = new int[11];
     private bool  isTargetLocked;
     private CharacterBase lockedTarget;
     private float castTimer;
+    private bool  isInvulnerable;
 
     private readonly List<Sword> magnetSwordBuffer = new();
     private readonly List<CharacterBase> freezeCharBuffer = new();
@@ -128,164 +126,56 @@ public class CharacterBase : GameUnit, IManagedUpdate
     public bool  IsFrozen          => isFrozen;
     public float FrozenTimeRemaining => isFrozen ? Mathf.Max(0f, frozenTimer) : 0f;
     public int   KillPoints        => killPoints;
+    public int   Score             => score;
     public int   SwordQueue        => swordQueue;
-    public int   Skill1StackCount  => skill1StackCount;
-    public int   Skill2StackCount  => skill2StackCount;
-    public int   Skill4StackCount  => skill4StackCount;
-    public int   Skill5StackCount  => skill5StackCount;
-    public int   Skill6StackCount  => skill6StackCount;
+    public int   Skill1StackCount  => skillStacks[0];
+    public int   Skill2StackCount  => skillStacks[1];
+    public int   Skill3StackCount  => skillStacks[2];
+    public int   Skill4StackCount  => skillStacks[3];
+    public int   Skill5StackCount  => skillStacks[4];
+    public int   Skill6StackCount  => skillStacks[5];
+    public int   Skill7StackCount  => skillStacks[6];
+    public int   Skill8StackCount  => skillStacks[7];
+    public int   Skill9StackCount  => skillStacks[8];
+    public int   Skill10StackCount => skillStacks[9];
+    public int   Skill11StackCount => skillStacks[10];
     public int   MaxSwordQueue     => maxSwordQueue;
     public bool  IsTargetLocked    => isTargetLocked;
     public CharacterBase LockedTarget => lockedTarget;
     public bool  IsCasting         => castTimer > 0f;
-    public void  StartCast(float duration) { if (duration > 0f) castTimer = duration; }
+    public void StartCast(float duration)
+    {
+        if (duration <= 0f) return;
+        castTimer = duration;
+        if (animator != null) animator.speed = 0f;
+        audioSource?.StopFootstep();
+    }
     public SwordOrbit GetSwordOrbit()           => swordOrbit;
     public void TriggerDisintegration(float delay = 0f) => disintegration?.Disintegrate(delay);
     public bool UseSkill(CharacterBase target, int skillIndex = 0) =>
         skillController != null && skillController.TryFireSkill(target, skillIndex);
 
-    public bool UseSkill1()
-    {
-        if (skillController == null || IsDead) return false;
+    public void AddSkill1Stack(int count = 1) { if (!isDead && count > 0) skillStacks[0] += count * 3; }
+    public void AddSkill2Stack(int count = 1) { if (!isDead && count > 0) skillStacks[1] += count * 3; }
+    public void AddSkill3Stack(int count = 1) { if (!isDead && count > 0) skillStacks[2] += count * 3; }
+    public void AddSkill4Stack(int count = 1) { if (!isDead && count > 0) skillStacks[3] += count * 3; }
+    public void AddSkill5Stack(int count = 1) { if (!isDead && count > 0) skillStacks[4] += count; }
+    public void AddSkill6Stack(int count = 1) { if (!isDead && count > 0) skillStacks[5] += count; }
+    public void AddSkill7Stack(int count = 1) { if (!isDead && count > 0) skillStacks[6] += count; }
+    public void AddSkill8Stack(int count = 1) { if (!isDead && count > 0) skillStacks[7] += count; }
+    public void AddSkill9Stack(int count = 1)  { if (!isDead && count > 0) skillStacks[8]  += count; }
+    public void AddSkill10Stack(int count = 1) { if (!isDead && count > 0) skillStacks[9]  += count; }
+    public void AddSkill11Stack(int count = 1) { if (!isDead && count > 0) skillStacks[10] += count; }
 
-        CharacterBase nearest = CharacterManager.Instance.GetNearestCharacter(TF.position, 50f, this);
-        if (nearest == null || nearest.IsDead) return false;
-        return skillController.TryFireSkill(nearest, 0);
+    private void UpdateSkillStacks()
+    {
+        if (skillController == null) return;
+        for (int i = 0; i < skillStacks.Length; i++)
+            if (skillStacks[i] > 0 && skillController.IsSkillReady(i) && skillController.UseSkill(i))
+                skillStacks[i]--;
     }
 
-    public bool UseSkill2()
-    {
-        if (skillController == null || IsDead) return false;
-
-        CharacterBase nearest = CharacterManager.Instance?.GetNearestCharacter(TF.position, 50f, this);
-        if (nearest == null || nearest.IsDead) return false;
-        return skillController.TryFireSkill(nearest, 1);
-    }
-
-    public bool UseSkill3()
-    {
-        if (skillController == null || IsDead) return false;
-
-        CharacterBase nearest = CharacterManager.Instance?.GetNearestCharacter(TF.position, 50f, this);
-        if (nearest == null || nearest.IsDead) return false;
-        return skillController.TryFireSkill(nearest, 2);
-    }
-
-    public bool UseSkill4()
-    {
-        if (skillController == null || IsDead) return false;
-
-        int maxTargets = skillController.GetSkillMaxTargets(3);
-
-        var nearby = new System.Collections.Generic.List<CharacterBase>(maxTargets * 2);
-        CharacterManager.Instance?.GetCharactersInRadius(TF.position, 999f, nearby);
-
-        var targets = new System.Collections.Generic.List<CharacterBase>(maxTargets);
-        for (int i = 0; i < nearby.Count && targets.Count < maxTargets; i++)
-        {
-            CharacterBase c = nearby[i];
-            if (c == this || c.IsDead) continue;
-            targets.Add(c);
-        }
-
-        if (targets.Count == 0) return false;
-        return skillController.TryFireSkillMultiTarget(targets, 3);
-    }
-
-    public bool UseSkill5()
-    {
-        if (skillController == null || IsDead) return false;
-
-        CharacterBase nearest = CharacterManager.Instance?.GetNearestCharacter(TF.position, 50f, this);
-        if (nearest == null || nearest.IsDead) return false;
-
-        float radius = skillController.GetSkillDamageRadius(4);
-
-        var nearby = new System.Collections.Generic.List<CharacterBase>();
-        CharacterManager.Instance?.GetCharactersInRadius(nearest.TF.position, radius, nearby);
-
-        var targets = new System.Collections.Generic.List<CharacterBase>();
-        foreach (CharacterBase c in nearby)
-        {
-            if (c == this || c.IsDead) continue;
-            targets.Add(c);
-        }
-
-        if (targets.Count == 0) targets.Add(nearest);
-        Debug.Log($"targets.Count: {targets.Count}");
-        return skillController.TryFireSkillAtTargetWithAllTargets(nearest, targets, 4);
-    }
-
-    public void AddSkill1Stack(int count = 1)
-    {
-        if (isDead || count <= 0) return;
-        skill1StackCount += count;
-    }
-
-    private void UpdateSkill1Stack()
-    {
-        if (skill1StackCount <= 0) return;
-        if (skillController == null || !skillController.IsSkillReady(0)) return;
-        if (UseSkill1()) skill1StackCount--;
-    }
-
-    public void AddSkill2Stack(int count = 1)
-    {
-        if (isDead || count <= 0) return;
-        skill2StackCount += count;
-    }
-
-    private void UpdateSkill2Stack()
-    {
-        if (skill2StackCount <= 0) return;
-        if (skillController == null || !skillController.IsSkillReady(1)) return;
-        if (UseSkill2()) skill2StackCount--;
-    }
-
-    public void AddSkill4Stack(int count = 1)
-    {
-        if (isDead || count <= 0) return;
-        skill4StackCount += count;
-    }
-
-    private void UpdateSkill4Stack()
-    {
-        if (skill4StackCount <= 0) return;
-        if (skillController == null || !skillController.IsSkillReady(3)) return;
-        if (UseSkill4()) skill4StackCount--;
-    }
-
-    public bool UseSkill6()
-    {
-        if (skillController == null || IsDead) return false;
-        return skillController.TryFireSkillSelfAoE(5);
-    }
-
-    public void AddSkill5Stack(int count = 1)
-    {
-        if (isDead || count <= 0) return;
-        skill5StackCount += count;
-    }
-
-    private void UpdateSkill5Stack()
-    {
-        if (skill5StackCount <= 0) return;
-        if (skillController == null || !skillController.IsSkillReady(4)) return;
-        if (UseSkill5()) skill5StackCount--;
-    }
-
-    public void AddSkill6Stack(int count = 1)
-    {
-        if (isDead || count <= 0) return;
-        skill6StackCount += count;
-    }
-
-    private void UpdateSkill6Stack()
-    {
-        if (skill6StackCount <= 0) return;
-        if (skillController == null || !skillController.IsSkillReady(5)) return;
-        if (UseSkill6()) skill6StackCount--;
-    }
+    public void SetInvulnerable(bool value) => isInvulnerable = value;
 
     public CharacterStateMachine GetStateMachine() => stateMachine;
     public Animator GetAnimator()               => animator;
@@ -336,15 +226,13 @@ public class CharacterBase : GameUnit, IManagedUpdate
         slowTimer     = 0f;
         slowMultiplier = 1f;
         killPoints       = 0;
+        score            = 0;
         swordQueue       = 0;
-        skill1StackCount = 0;
-        skill2StackCount = 0;
-        skill4StackCount = 0;
-        skill5StackCount = 0;
-        skill6StackCount = 0;
+        System.Array.Clear(skillStacks, 0, skillStacks.Length);
         isTargetLocked = false;
         lockedTarget  = null;
         castTimer     = 0f;
+        isInvulnerable = false;
         StopAllLevelParticles();
 
         levelReserveTime = new float[levelData.GetMaxLevel() + 1];
@@ -359,6 +247,8 @@ public class CharacterBase : GameUnit, IManagedUpdate
         infoUI.Init(characterName, avatar, currentHp, currentMaxHp);
         infoUI.SetCharacter(this);
 
+        animator.Rebind();
+        animator.Update(0f);
         animator.SetTrigger("walk");
 
         if (bodyCollider) bodyCollider.enabled = true;
@@ -389,7 +279,15 @@ public class CharacterBase : GameUnit, IManagedUpdate
             return;
         }
 
-        if (castTimer > 0f) castTimer -= deltaTime;
+        if (castTimer > 0f)
+        {
+            castTimer -= deltaTime;
+            if (castTimer <= 0f)
+            {
+                if (animator != null) animator.speed = 1f;
+                animator?.SetTrigger("walk");
+            }
+        }
 
         if (isFrozen)
         {
@@ -447,11 +345,7 @@ public class CharacterBase : GameUnit, IManagedUpdate
         UpdateShieldBooster(deltaTime);
         UpdateSlow(deltaTime);
         ProcessSwordQueue();
-        UpdateSkill1Stack();
-        UpdateSkill2Stack();
-        UpdateSkill4Stack();
-        UpdateSkill5Stack();
-        UpdateSkill6Stack();
+        UpdateSkillStacks();
 
         stateMachine?.ManagedUpdate(deltaTime);
 
@@ -542,6 +436,7 @@ public class CharacterBase : GameUnit, IManagedUpdate
 
         swordOrbit.SetSwordType(levelData.GetSwordType(currentLevel));
         moveSpeed = levelData.GetSpeed(currentLevel);
+        if (moveSpeed <= 1f) moveSpeed = 2f;
         float totalScale = levelData.GetBodyScale(currentLevel) + overhealScaleBonus;
         TF.localScale = Vector3.one * totalScale;
 
@@ -785,7 +680,7 @@ public class CharacterBase : GameUnit, IManagedUpdate
 
     public void TakeDamage(float damage, CharacterBase attacker = null)
     {
-        if (isDead || isShieldActive) return;
+        if (isDead || isShieldActive || isInvulnerable) return;
 
         if (levelData != null)
             damage *= 1f - levelData.GetDamageReduction(currentLevel);
@@ -852,7 +747,7 @@ public class CharacterBase : GameUnit, IManagedUpdate
 
     public void Stun(float duration)
     {
-        if (isDead || duration <= 0f) return;
+        if (isDead || duration <= 0f || isInvulnerable) return;
         isFrozen = true;
         frozenTimer = Mathf.Max(frozenTimer, duration);
         if (animator) animator.speed = 0f;
@@ -881,6 +776,7 @@ public class CharacterBase : GameUnit, IManagedUpdate
 
     private void ApplySkillKnockback(Vector3 direction, float force, float duration, float stunDuration)
     {
+        if (isInvulnerable) return;
         float currentTime = Time.time;
         if (isKnockedBack || currentTime - lastKnockbackTime < knockbackCooldown) return;
 
@@ -921,7 +817,7 @@ public class CharacterBase : GameUnit, IManagedUpdate
 
     public void OnSwordInteraction(CharacterBase attacker)
     {
-        if (isDead || attacker == null) return;
+        if (isDead || attacker == null || isInvulnerable) return;
         float currentTime = Time.time;
         if (isKnockedBack || currentTime - lastKnockbackTime < knockbackCooldown) return;
 
@@ -933,7 +829,7 @@ public class CharacterBase : GameUnit, IManagedUpdate
 
     public void OnSwordToSwordKnockback(CharacterBase attacker)
     {
-        if (isDead || attacker == null) return;
+        if (isDead || attacker == null || isInvulnerable) return;
         float currentTime = Time.time;
         if (isKnockedBack || currentTime - lastKnockbackTime < knockbackCooldown) return;
 
@@ -1016,16 +912,25 @@ public class CharacterBase : GameUnit, IManagedUpdate
                 swordOrbit.DropSword(i);
         }
 
+        skillController?.CancelAllEffects();
+        StopBoosterParticles();
+        StopAllLevelParticles();
+
         animator?.SetTrigger("die");
 
         if (stateMachine != null) stateMachine.ChangeState(stateMachine.Dead);
         else                      OnDespawn();
     }
 
+    public void AddScore(int points) { if (!isDead && points > 0) score += points; }
+
     public void OnKilledBy(CharacterBase killer)
     {
         if (killer == null || killer.IsDead) return;
-        killer.killPoints += killPoints + 1;
+        killer.killPoints += 1;
+        int killScore = 10 * killer.killPoints;
+        killer.score += killScore;
+        CharacterManager.Instance?.AddKillScore(killScore);
         if (EventNotificationManager.Instance != null)
             EventNotificationManager.Instance.ShowKillNotification(killer.CharacterName, characterName);
     }
@@ -1071,6 +976,9 @@ public class CharacterBase : GameUnit, IManagedUpdate
             stateMachine.ChangeState(stateMachine.Attack);
         }
     }
+
+    public void RestoreKillPoints(int points) => killPoints = points;
+    public void RestoreScore(int points)      => score      = points;
 
     public void SetCharacterNumericId(int numericId)
     {

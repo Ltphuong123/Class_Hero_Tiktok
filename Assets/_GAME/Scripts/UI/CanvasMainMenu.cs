@@ -9,8 +9,9 @@ using UnityEngine.Networking;
 
 public class CanvasMainMenu : UICanvas
 {
-    [Header("License API")]
-    public string apiUrl = "http://localhost:5047/api/license/check";
+    [Header("License")]
+    public bool   requireLicense = true;
+    public string apiUrl         = "http://localhost:5047/api/license/check";
     
     [Header("UI Elements")]
     public GameObject objectToHide; // GameObject cần ẩn khi load game
@@ -80,6 +81,8 @@ public class CanvasMainMenu : UICanvas
 
     IEnumerator CheckLicenseAndLoadGame()
     {
+        if (!requireLicense) { LoadGamePlaySceneInternal(); yield break; }
+
         // Lấy key đã lưu
         string savedKey = PlayerPrefs.GetString(SavedKeyPref, "");
 

@@ -6,12 +6,12 @@ public class MagicFX5_EffectSettings : MonoBehaviour
 {
     public                                       Transform[] Targets;
     public                                       float       TargetCenterHeightOffset = 0.35f;
-#if UNITY_EDITOR
-    [ShowIf("_isProjectile", true, true)]
-# endif
+// #if UNITY_EDITOR
+//     [ShowIf("_isProjectile", true, true)]
+// # endif
     public float       ProjectileSpeed          = 15;
 
-    [Space(25)]
+    // [Space(25)]
     public bool            UseSkinMeshImpactEffects  = true;
     public bool            UseCameraShakeCinemachine = true;
 

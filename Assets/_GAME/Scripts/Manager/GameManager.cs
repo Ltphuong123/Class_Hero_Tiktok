@@ -181,7 +181,8 @@ public class GameManager : Singleton<GameManager>
         if (CharacterManager.Instance != null)
         {
             var rankedCharacters = CharacterManager.Instance.RankedCharacters;
-            GameEndData.SetTopCharacters(new List<CharacterRankData>(rankedCharacters));
+            GameEndData.SetTopCharacters(new List<CharacterRankData>(rankedCharacters),
+                                         CharacterManager.Instance.TotalMatchScore);
         }
         
         // Tạm dừng game ngay lập tức

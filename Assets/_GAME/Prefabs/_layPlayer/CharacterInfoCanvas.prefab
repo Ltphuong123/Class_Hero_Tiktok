@@ -261,7 +261,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 124}
+  m_AnchoredPosition: {x: 0, y: 100}
   m_SizeDelta: {x: 509.21, y: 72.24}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1216639319903653782
@@ -294,8 +294,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: '#111'
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8a89fa14b10d46a99122fd4f73fca9a2, type: 2}
-  m_sharedMaterial: {fileID: 2140474, guid: 8a89fa14b10d46a99122fd4f73fca9a2, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 5302535af1044152a457ed104f1f4b91, type: 2}
+  m_sharedMaterial: {fileID: 2100000, guid: b246c4190f4e46ec9352fe15a7b09ce0, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -329,7 +329,7 @@ MonoBehaviour:
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 256
   m_textAlignment: 65535
-  m_characterSpacing: 0
+  m_characterSpacing: -7
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -524,7 +524,7 @@ MonoBehaviour:
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
   m_DynamicPixelsPerUnit: 1
-  m_PresetInfoIsWorld: 0
+  m_PresetInfoIsWorld: 1
 --- !u!114 &5914795889391802106
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -555,10 +555,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   avatarImage: {fileID: 0}
-  nameText: {fileID: 0}
-  numericIdText: {fileID: 0}
-  hpFill: {fileID: 0}
-  levelTimeFill: {fileID: 0}
+  nameText: {fileID: 8208087754654943380}
+  numericIdText: {fileID: 4997664220258426970}
+  hpFill: {fileID: 8390184726732908733}
+  levelTimeFill: {fileID: 8007950974536766918}
 --- !u!1 &7194107257871995653
 GameObject:
   m_ObjectHideFlags: 0

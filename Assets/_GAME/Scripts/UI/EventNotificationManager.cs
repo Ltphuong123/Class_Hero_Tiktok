@@ -14,6 +14,11 @@ public class EventNotificationManager : Singleton<EventNotificationManager>
     [SerializeField] private Sprite shieldIcon;
     [SerializeField] private Sprite respawnIcon;
     [SerializeField] private Sprite healIcon;
+    [SerializeField] private Sprite skill7Icon;
+    [SerializeField] private Sprite skill8Icon;
+    [SerializeField] private Sprite skill9Icon;
+    [SerializeField] private Sprite skill10Icon;
+    [SerializeField] private Sprite skill11Icon;
 
     [Header("Background Colors")]
     [SerializeField] private Color joinColor = new Color(0.1f, 0.4f, 0.1f, 0.5f);        // Xanh lá tối
@@ -24,6 +29,11 @@ public class EventNotificationManager : Singleton<EventNotificationManager>
     [SerializeField] private Color shieldColor = new Color(0.5f, 0.32f, 0f, 0.5f);       // Cam tối
     [SerializeField] private Color respawnColor = new Color(0.25f, 0.25f, 0.5f, 0.5f);   // Tím tối
     [SerializeField] private Color healColor = new Color(0f, 0.5f, 0.2f, 0.5f);          // Xanh lá sáng
+    [SerializeField] private Color skill7Color  = new Color(0.5f, 0f, 0.5f, 0.5f);
+    [SerializeField] private Color skill8Color  = new Color(0.4f, 0f, 0.3f, 0.5f);
+    [SerializeField] private Color skill9Color  = new Color(0f, 0.3f, 0.5f, 0.5f);
+    [SerializeField] private Color skill10Color = new Color(0f, 0.3f, 0.5f, 0.5f);
+    [SerializeField] private Color skill11Color = new Color(0f, 0.3f, 0.5f, 0.5f);
 
     [Header("Settings")]
     [SerializeField] private int maxMessageLength = 30;
@@ -153,6 +163,51 @@ public class EventNotificationManager : Singleton<EventNotificationManager>
         {
             string message = TruncateMessage($"<color=#00FF88>{characterName}</color> +{healAmount:F0} HP");
             notificationUI.ShowNotification(message, healIcon, healColor);
+        }
+    }
+
+    public void ShowSkill7Notification(string characterName, int count)
+    {
+        if (notificationUI != null)
+        {
+            string message = TruncateMessage($"<color=#DD88FF>{characterName}</color> Teleport Blast x{count}");
+            notificationUI.ShowNotification(message, skill7Icon, skill7Color);
+        }
+    }
+
+    public void ShowSkill8Notification(string characterName, int count)
+    {
+        if (notificationUI != null)
+        {
+            string message = TruncateMessage($"<color=#FF88DD>{characterName}</color> Teleport Blast x{count}");
+            notificationUI.ShowNotification(message, skill8Icon, skill8Color);
+        }
+    }
+
+    public void ShowSkill9Notification(string characterName, int count)
+    {
+        if (notificationUI != null)
+        {
+            string message = TruncateMessage($"<color=#88DDFF>{characterName}</color> Global Blast x{count}");
+            notificationUI.ShowNotification(message, skill9Icon, skill9Color);
+        }
+    }
+
+    public void ShowSkill10Notification(string characterName, int count)
+    {
+        if (notificationUI != null)
+        {
+            string message = TruncateMessage($"<color=#88DDFF>{characterName}</color> Global Blast x{count}");
+            notificationUI.ShowNotification(message, skill10Icon, skill10Color);
+        }
+    }
+
+    public void ShowSkill11Notification(string characterName, int count)
+    {
+        if (notificationUI != null)
+        {
+            string message = TruncateMessage($"<color=#88DDFF>{characterName}</color> Global Blast x{count}");
+            notificationUI.ShowNotification(message, skill11Icon, skill11Color);
         }
     }
 }

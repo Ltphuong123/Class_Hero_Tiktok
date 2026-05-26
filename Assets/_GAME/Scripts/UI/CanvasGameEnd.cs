@@ -1,105 +1,98 @@
-using System;
 using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
 public class CanvasGameEnd : UICanvas
 {
-    [Header("Top 3 Display")]
-    [SerializeField] private GameObject[] topCharacterPanels;
-    [SerializeField] private Image[] avatarImages;
-    [SerializeField] private TextMeshProUGUI[] nameTexts;
-    [SerializeField] private TextMeshProUGUI[] levelTexts;
-    [SerializeField] private TextMeshProUGUI[] swordCountTexts;
-    [SerializeField] private TextMeshProUGUI[] killPointsTexts;
-    [SerializeField] private TextMeshProUGUI[] rankTexts;
-    
+    [Header("Top 1-2-3 (riêng)")]
+    [SerializeField] private GameEndRow top1Row;
+    [SerializeField] private GameEndRow top2Row;
+    [SerializeField] private GameEndRow top3Row;
+
+    [Header("Scroll List (rank 4 trở đi)")]
+    [SerializeField] private Transform content;
+    [SerializeField] private GameEndRow rowPrefab;
+
+    private readonly List<GameEndRow> rows = new();
+
+    private static readonly float[] RankBonusPercent = { 0.40f, 0.25f, 0.15f, 0.12f, 0.08f };
+
     private void Start()
     {
-        // Hiển thị top 3 characters khi canvas được mở
-        DisplayTopCharacters();
+        ApplyRankBonus(GameEndData.TopCharacters);
+        DisplayAllCharacters();
+
+        RankServerService rankService = gameObject.AddComponent<RankServerService>();
+        rankService.SubmitResults(GameEndData.TopCharacters);
     }
-    
-    private void DisplayTopCharacters()
+
+    private static void ApplyRankBonus(List<TopCharacterData> players)
     {
-        List<TopCharacterData> topCharacters = GameEndData.TopCharacters;
-        
-        Debug.Log($"[CanvasGameEnd] Displaying {topCharacters.Count} top characters");
-        
-        // Hiển thị từng character trong top 3
-        for (int i = 0; i < 3; i++)
+        int totalScore = GameEndData.TotalMatchScore;
+
+        if (totalScore <= 0) return;
+
+        for (int i = 0; i < players.Count && i < RankBonusPercent.Length; i++)
         {
-            if (i < topCharacters.Count)
+            int bonus = Mathf.RoundToInt(totalScore * RankBonusPercent[i]);
+            players[i].bonusScore = bonus;
+            players[i].score     += bonus;
+        }
+    }
+
+    private void DisplayAllCharacters()
+    {
+        List<TopCharacterData> all = GameEndData.TopCharacters;
+
+        // Top 1-2-3
+        SetTopSlot(top1Row, all, 0);
+        SetTopSlot(top2Row, all, 1);
+        SetTopSlot(top3Row, all, 2);
+
+        // Rank 4 trở đi vào scroll list
+        int scrollCount = all.Count > 3 ? all.Count - 3 : 0;
+
+        while (rows.Count < scrollCount)
+        {
+            GameEndRow row = Instantiate(rowPrefab, content);
+            rows.Add(row);
+        }
+
+        for (int i = 0; i < rows.Count; i++)
+        {
+            if (i < scrollCount)
             {
-                // Có data cho vị trí này
-                TopCharacterData data = topCharacters[i];
-                
-                if (topCharacterPanels != null && i < topCharacterPanels.Length && topCharacterPanels[i] != null)
-                {
-                    topCharacterPanels[i].SetActive(true);
-                }
-                
-                // Set avatar
-                if (avatarImages != null && i < avatarImages.Length && avatarImages[i] != null)
-                {
-                    avatarImages[i].sprite = data.avatar;
-                    avatarImages[i].enabled = data.avatar != null;
-                }
-                
-                // Set name
-                if (nameTexts != null && i < nameTexts.Length && nameTexts[i] != null)
-                {
-                    nameTexts[i].text = data.characterName;
-                }
-                
-                // Set level
-                if (levelTexts != null && i < levelTexts.Length && levelTexts[i] != null)
-                {
-                    levelTexts[i].text = $"Level {data.level}";
-                }
-                
-                // Set sword count
-                if (swordCountTexts != null && i < swordCountTexts.Length && swordCountTexts[i] != null)
-                {
-                    int totalSwords = data.swordCount + data.swordQueue;
-                    swordCountTexts[i].text = $"{totalSwords} Swords";
-                }
-                
-                // Set kill points
-                if (killPointsTexts != null && i < killPointsTexts.Length && killPointsTexts[i] != null)
-                {
-                    killPointsTexts[i].text = $"{data.killPoints}";
-                }
-                
-                // Set rank
-                if (rankTexts != null && i < rankTexts.Length && rankTexts[i] != null)
-                {
-                    rankTexts[i].text = $"#{data.rank}";
-                }
-                
-                Debug.Log($"[CanvasGameEnd] Rank {data.rank}: {data.characterName} - Level {data.level} - {data.swordCount} swords - {data.killPoints} points");
+                rows[i].gameObject.SetActive(true);
+                rows[i].SetData(all[i + 3]);
             }
             else
             {
-                // Không có data cho vị trí này, ẩn panel
-                if (topCharacterPanels != null && i < topCharacterPanels.Length && topCharacterPanels[i] != null)
-                {
-                    topCharacterPanels[i].SetActive(false);
-                }
+                rows[i].gameObject.SetActive(false);
             }
         }
+
+        Debug.Log($"[CanvasGameEnd] Top3 + {scrollCount} in scroll list");
     }
-    
+
+    private void SetTopSlot(GameEndRow slot, List<TopCharacterData> all, int index)
+    {
+        if (slot == null) return;
+        if (index < all.Count)
+        {
+            slot.gameObject.SetActive(true);
+            slot.SetData(all[index]);
+        }
+        else
+        {
+            slot.gameObject.SetActive(false);
+        }
+    }
+
     public void LoadMainMenuScene()
     {
-        // Reset timeScale về bình thường (phòng trường hợp bị pause)
+        Debug.Log("[CanvasGameEnd] Loading MainMenu scene...");
         Time.timeScale = 1f;
-        
-        // Clear data trước khi chuyển scene
         GameEndData.Clear();
-        
         SceneManager.LoadScene("MainMenu");
     }
 }

@@ -3,7 +3,7 @@ using UnityEngine;
 public class MapManager : Singleton<MapManager>
 {
     [Header("Map List")]
-    // [SerializeField] private GameObject[] maps;
+    [SerializeField] private GameObject[] maps;
     
     [Header("Grid Settings (Shared)")]
     [SerializeField] private float cellSize = 1f;
@@ -29,7 +29,7 @@ public class MapManager : Singleton<MapManager>
     public float MapHeight => rows * cellSize;
     public Vector2 MapMin => cachedMin;
     public Vector2 MapMax => cachedMax;
-    // public int MapCount => maps?.Length ?? 0;
+    public int MapCount => maps?.Length ?? 0;
 
     protected override void Awake()
     {
@@ -42,7 +42,7 @@ public class MapManager : Singleton<MapManager>
     private void LoadSelectedMap()
     {
         int selectedIndex = PlayerPrefs.GetInt(SelectedMapPref, 0);
-        // maps[selectedIndex].SetActive(true);
+        maps[selectedIndex].SetActive(true);
     }
 
     private void CacheBounds()

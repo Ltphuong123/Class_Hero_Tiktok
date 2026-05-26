@@ -19,14 +19,22 @@ public class CanvasGamePlay : UICanvas
     
     [Header("Setting Panel")]
     [SerializeField] private GameObject settingPanel;
-    [SerializeField] private Button settingButton; // Nút mở setting
-    [SerializeField] private Button closeButton; // Nút đóng setting
-    [SerializeField] private Button mainMenuButton; // Nút về MainMenu
-    [SerializeField] private Button endGameButton; // Nút kết thúc game ngay
+    [SerializeField] private Button settingButton;
+    [SerializeField] private Button closeButton;
+    [SerializeField] private Button mainMenuButton;
+    [SerializeField] private Button endGameButton;
+
+    [Header("Leaderboard")]
+    [SerializeField] private Button            leaderboardButton;
+    [SerializeField] private CanvasLeaderboard leaderboardPanel;
+
+    [Header("Score")]
+    [SerializeField] private TextMeshProUGUI totalScoreText;
     
     private GameManager gameManager;
     private int lastSecond = -1;
     private bool isCountdownActive = false;
+    private int lastTotalScore = 0;
     
     private void Start()
     {
@@ -37,6 +45,7 @@ public class CanvasGamePlay : UICanvas
     {
         base.Setup();
         gameManager = GameManager.Instance;
+        if (leaderboardPanel != null) leaderboardPanel.ClearCache();
    
         
         // Ẩn setting panel khi khởi tạo
@@ -69,6 +78,12 @@ public class CanvasGamePlay : UICanvas
             endGameButton.onClick.RemoveAllListeners();
             endGameButton.onClick.AddListener(EndGameNow);
         }
+
+        if (leaderboardButton != null)
+        {
+            leaderboardButton.onClick.RemoveAllListeners();
+            leaderboardButton.onClick.AddListener(ShowLeaderboard);
+        }
     }
     
     private void Update()
@@ -81,6 +96,21 @@ public class CanvasGamePlay : UICanvas
         if (gameManager != null && timerText != null)
         {
             UpdateTimerDisplay();
+        }
+
+        if (totalScoreText != null && CharacterManager.Instance != null)
+        {
+            int s = CharacterManager.Instance.TotalMatchScore;
+            if (s != lastTotalScore)
+            {
+                lastTotalScore = s;
+                totalScoreText.text = s >= 1_000_000 ? $"{s / 1_000_000f:0.#}m"
+                                    : s >= 1_000     ? $"{s / 1_000f:0.#}k"
+                                    : s.ToString();
+                totalScoreText.transform.DOKill();
+                totalScoreText.transform.localScale = Vector3.one;
+                totalScoreText.transform.DOPunchScale(Vector3.one * 0.4f, 0.3f, 5, 0.5f);
+            }
         }
     }
 
@@ -120,6 +150,18 @@ public class CanvasGamePlay : UICanvas
         SceneManager.LoadScene("MainMenu");
     }
     
+    private void ShowLeaderboard()
+    {
+        if (leaderboardPanel == null) return;
+        if (leaderboardButton != null) leaderboardButton.gameObject.SetActive(false);
+        leaderboardPanel.onClosed = () =>
+        {
+            if (leaderboardButton != null) leaderboardButton.gameObject.SetActive(true);
+        };
+        leaderboardPanel.gameObject.SetActive(true);
+        leaderboardPanel.OpenForGamePlay();
+    }
+
     // Kết thúc game ngay lập tức
     private void EndGameNow()
     {
@@ -249,6 +291,11 @@ public class CanvasGamePlay : UICanvas
         if (endGameButton != null)
         {
             endGameButton.onClick.RemoveListener(EndGameNow);
+        }
+
+        if (leaderboardButton != null)
+        {
+            leaderboardButton.onClick.RemoveListener(ShowLeaderboard);
         }
     }
 }

@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir \"C:\\\\Users\\\\Admin\\\\Desktop\\\\Backup\\\\Class_Hero_Tiktok\\\\Assets\\\\_GAME\\\\Scripts\\\\StateMachine\" /b)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Admin\\\\Desktop\\\\Backup\\\\Class_Hero_Tiktok\\\\Assets\\\\_GAME\\\\Scripts\" -Recurse -File)",
+      "Bash(Select-Object FullName)",
+      "Bash(Sort-Object FullName)"
+    ]
+  }
+}

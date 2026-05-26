@@ -1,4 +1,11 @@
 using UnityEngine;
+using System.IO;
+
+[System.Serializable]
+public class SkillDataSave
+{
+    public float damage;
+}
 
 [CreateAssetMenu(fileName = "SkillData", menuName = "Game/Skill Data")]
 public class SkillData : ScriptableObject
@@ -14,8 +21,6 @@ public class SkillData : ScriptableObject
 
     [Tooltip("Thời gian tồn tại của tất cả effect (giây)")]
     public float effectLifeTime = 8f;
-    [Tooltip("Scale của toàn bộ effect (1 = mặc định)")]
-    public float effectScale = 1f;
 
     [Header("Combat")]
     public float damage = 20f;
@@ -51,6 +56,33 @@ public class SkillData : ScriptableObject
     public float slowFactor = 0.5f;
     [Tooltip("Thời gian làm chậm (giây)")]
     public float slowDuration = 2f;
+
+    private string SavePath => Path.Combine(Application.persistentDataPath, "SkillData", name + ".json");
+
+    private void OnEnable() => LoadFromJson();
+
+    [ContextMenu("Save to JSON")]
+    public void SaveToJson()
+    {
+        SkillDataSave data = new() { damage = damage };
+        string dir = Path.GetDirectoryName(SavePath);
+        if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+        File.WriteAllText(SavePath, JsonUtility.ToJson(data, true));
+    }
+
+    [ContextMenu("Load from JSON")]
+    public void LoadFromJson()
+    {
+        if (!File.Exists(SavePath)) return;
+        SkillDataSave data = JsonUtility.FromJson<SkillDataSave>(File.ReadAllText(SavePath));
+        damage = data.damage;
+    }
+
+    [ContextMenu("Delete saved JSON")]
+    public void DeleteJson()
+    {
+        if (File.Exists(SavePath)) File.Delete(SavePath);
+    }
 }
 
 public enum SkillHitEffect

@@ -33,7 +33,12 @@ public enum TikTokActionType
     UseSkill3,
     UseSkill4,
     UseSkill5,
-    UseSkill6
+    UseSkill6,
+    UseSkill7,
+    UseSkill8,
+    UseSkill9,
+    UseSkill10,
+    UseSkill11
 }
 
 [System.Serializable]

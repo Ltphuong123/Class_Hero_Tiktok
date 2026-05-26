@@ -653,13 +653,12 @@ MonoBehaviour:
   target: {fileID: 0}
   followSpeed: 5
   offset: {x: 0, y: 0, z: -10}
-  targetFollowZoom: 18
+  targetFollowHeight: 20
   zoomSpeed: 3
-  minZoom: 3
-  maxZoom: 100
+  minHeight: 5
+  maxHeight: 50
   pinchZoomSpeed: 0.05
   allowDrag: 1
-  dragSpeed: 1
   useBounds: 1
   boundsMin: {x: -55, y: -35}
   boundsMax: {x: 55, y: 35}
@@ -692,23 +691,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8ff65edd245658848b37a31310f2a85b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  targetWidth: 1080
-  targetHeight: 1920
-  forceResolutionOnStart: 1
-  allowResize: 0
-  presets:
-  - name: Portrait HD
-    width: 1080
-    height: 1920
-  - name: Portrait 720p
-    width: 720
-    height: 1280
-  - name: Landscape HD
-    width: 1920
-    height: 1080
-  - name: Landscape 720p
-    width: 1280
-    height: 720
 --- !u!4 &655230020
 Transform:
   m_ObjectHideFlags: 0
@@ -959,6 +941,7 @@ MonoBehaviour:
   statusText: {fileID: 664523707}
   checkButton: {fileID: 172838320}
   logoutButton: {fileID: 1104551974}
+  requireLicense: 1
   apiUrl: https://license-server-production-3cd1.up.railway.app/api/license/check
   gameSceneName: MainMenu
 --- !u!4 &844107990
@@ -1890,8 +1873,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isDestroyOnclose: 1
+  requireLicense: 1
   apiUrl: http://localhost:5047/api/license/check
   objectToHide: {fileID: 0}
+  mapDropdown: {fileID: 0}
+  numberOfMaps: 4
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

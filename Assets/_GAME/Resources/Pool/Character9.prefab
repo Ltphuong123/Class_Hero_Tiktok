@@ -286,6 +286,11 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 15f20176fab9fbb4dba7e325f1f8eb44, type: 2}
   - {fileID: 11400000, guid: 0dae3115814a1ee4db9728fdac57ed8e, type: 2}
   - {fileID: 11400000, guid: 6944b508f9aafae478e421f40cf1c3c0, type: 2}
+  - {fileID: 11400000, guid: 6eb1d0cbcec455b4f8ec55312e1e26f7, type: 2}
+  - {fileID: 11400000, guid: 9aa5f88817650684888bd48f9470cefe, type: 2}
+  - {fileID: 11400000, guid: f5d36d5f3abea144eb68584a9ca7220b, type: 2}
+  - {fileID: 11400000, guid: f7496c20dd664484a986a3d0326cbd57, type: 2}
+  - {fileID: 11400000, guid: df0f59a4b27b07a4ea44d2f899924b96, type: 2}
 --- !u!65 &7393476647705435922
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1368,9 +1373,17 @@ PrefabInstance:
       value: 500
       objectReference: {fileID: 0}
     - target: {fileID: 5790369380387206934, guid: 35a58adab70c38f43b62c9dd828c97b1, type: 3}
+      propertyPath: minHeight
+      value: 35
+      objectReference: {fileID: 0}
+    - target: {fileID: 5790369380387206934, guid: 35a58adab70c38f43b62c9dd828c97b1, type: 3}
       propertyPath: levelUpClip
       value: 
       objectReference: {fileID: 8300000, guid: 05eaead230ce1ef4787365ba0aad951f, type: 3}
+    - target: {fileID: 5790369380387206934, guid: 35a58adab70c38f43b62c9dd828c97b1, type: 3}
+      propertyPath: minDistance
+      value: 20
+      objectReference: {fileID: 0}
     - target: {fileID: 6713398737819397099, guid: 35a58adab70c38f43b62c9dd828c97b1, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0

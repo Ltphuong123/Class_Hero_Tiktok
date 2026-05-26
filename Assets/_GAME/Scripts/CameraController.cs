@@ -218,6 +218,13 @@ public class CameraController : MonoBehaviour
 
     public void SetTarget(Transform newTarget) => target = newTarget;
 
+    public void MoveTo(Vector3 worldPos)
+    {
+        target = null;
+        transform.position = worldPos;
+        targetHeight = worldPos.y;
+    }
+
     public void SetHeight(float height) => targetHeight = Mathf.Clamp(height, minHeight, maxHeight);
     public float GetTargetFollowHeight() => targetFollowHeight;
 

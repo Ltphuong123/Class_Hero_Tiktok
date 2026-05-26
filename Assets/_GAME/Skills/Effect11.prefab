@@ -28,8 +28,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.6, y: 0.6, z: 0.6}
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 6904602009536815879}
   m_Father: {fileID: 2572682437577841559}
@@ -4921,7 +4921,7 @@ Transform:
   m_GameObject: {fileID: 743008574066531330}
   serializedVersion: 2
   m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: -0.7071068}
-  m_LocalPosition: {x: 0, y: 1.07, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -9903,9 +9903,9 @@ Transform:
   m_GameObject: {fileID: 807756352526000289}
   serializedVersion: 2
   m_LocalRotation: {x: 0.6864874, y: 0.16951436, z: -0.16951437, w: 0.6864873}
-  m_LocalPosition: {x: 0, y: 0.13000011, z: 0}
-  m_LocalScale: {x: 18.102467, y: 18.102467, z: 0.9051234}
-  m_ConstrainProportionsScale: 0
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 9.56, y: 9.56, z: 0.4780001}
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 8091497202026023419}
   m_Father: {fileID: 6842387879523774325}
@@ -10004,7 +10004,7 @@ MonoBehaviour:
     m_ColorSpace: -1
     m_NumColorKeys: 2
     m_NumAlphaKeys: 4
-  Duration: 9
+  Duration: 5
   Loop: 0
 --- !u!1 &1031507770071400572
 GameObject:
@@ -10059,10 +10059,10 @@ AudioSource:
   SpatializePostEffects: 0
   Priority: 128
   DopplerLevel: 1
-  MinDistance: 10
-  MaxDistance: 500
+  MinDistance: 5
+  MaxDistance: 100
   Pan2D: 0
-  rolloffMode: 0
+  rolloffMode: 1
   BypassEffects: 0
   BypassListenerEffects: 0
   BypassReverbZones: 0
@@ -10294,7 +10294,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Targets: []
   TargetCenterHeightOffset: 0.35
-  ProjectileSpeed: 15
+  ProjectileSpeed: 70
   UseSkinMeshImpactEffects: 1
   UseCameraShakeCinemachine: 1
   UseForce: 1
@@ -10334,7 +10334,7 @@ Transform:
   m_GameObject: {fileID: 3257702922748584067}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.14000034, z: 0}
+  m_LocalPosition: {x: 0, y: 0.56, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -10348,7 +10348,7 @@ ParticleSystem:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3257702922748584067}
   serializedVersion: 8
-  lengthInSec: 5
+  lengthInSec: 3
   simulationSpeed: 1
   stopAction: 0
   cullingMode: 0
@@ -15344,10 +15344,10 @@ AudioSource:
   SpatializePostEffects: 0
   Priority: 128
   DopplerLevel: 1
-  MinDistance: 4
-  MaxDistance: 500
+  MinDistance: 5
+  MaxDistance: 100
   Pan2D: 0
-  rolloffMode: 0
+  rolloffMode: 1
   BypassEffects: 0
   BypassListenerEffects: 0
   BypassReverbZones: 0
@@ -15655,7 +15655,7 @@ Transform:
   m_GameObject: {fileID: 4492153992725242938}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.9904689, z: -0, w: -0.13773668}
-  m_LocalPosition: {x: 0.35, y: 0.22, z: -0.36}
+  m_LocalPosition: {x: 0.35, y: 0, z: -0.36}
   m_LocalScale: {x: 7.53558, y: 1, z: 7.53558}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -15755,7 +15755,7 @@ MonoBehaviour:
     m_ColorSpace: -1
     m_NumColorKeys: 3
     m_NumAlphaKeys: 4
-  Duration: 5
+  Duration: 3
   Loop: 0
 --- !u!114 &5886333561526777575
 MonoBehaviour:
@@ -15800,7 +15800,7 @@ Transform:
   m_GameObject: {fileID: 4685142174444417130}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.81915206, z: -0, w: 0.57357645}
-  m_LocalPosition: {x: -0.5499997, y: 0.19, z: -0.61000013}
+  m_LocalPosition: {x: -0.5499997, y: 0.72, z: -0.61000013}
   m_LocalScale: {x: 1, y: 0.5, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -16060,7 +16060,7 @@ ParticleSystem:
     startSize:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 20
+      scalar: 18
       minScalar: 1
       maxCurve:
         serializedVersion: 2
@@ -20757,7 +20757,7 @@ Transform:
   m_GameObject: {fileID: 5017955993383476197}
   serializedVersion: 2
   m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: -0.7071068}
-  m_LocalPosition: {x: 0, y: 0.125, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -20847,8 +20847,8 @@ ParticleSystem:
     startLifetime:
       serializedVersion: 2
       minMaxState: 3
-      scalar: 4.5
-      minScalar: 3
+      scalar: 2
+      minScalar: 1.6
       maxCurve:
         serializedVersion: 2
         m_Curve:
@@ -25769,8 +25769,8 @@ MonoBehaviour:
   Transform: {fileID: 2572682437577841559}
   MoveMode: 1
   Target: {fileID: 1110903025925933776}
-  Speed: 18
-  Gravity: 0
+  Speed: 200
+  Gravity: 100
   AccelerationTime: 1
   MaxDistance: 100
   TargetDistanceThreshold: 0.4
@@ -25804,7 +25804,7 @@ Transform:
   m_GameObject: {fileID: 5349300223412422217}
   serializedVersion: 2
   m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: -0.7071068}
-  m_LocalPosition: {x: 0, y: 0.9, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -30786,7 +30786,7 @@ Transform:
   m_GameObject: {fileID: 5383604263275726608}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.19999981, y: 1.03, z: -0.55999994}
+  m_LocalPosition: {x: -0.19999981, y: 0, z: -0.55999994}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -31007,8 +31007,8 @@ ParticleSystem:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5564578703263884501}
   serializedVersion: 8
-  lengthInSec: 1
-  simulationSpeed: 1
+  lengthInSec: 0.5
+  simulationSpeed: 2
   stopAction: 0
   cullingMode: 0
   ringBufferMode: 0
@@ -31253,7 +31253,7 @@ ParticleSystem:
     startSize:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 17
+      scalar: 12
       minScalar: 14
       maxCurve:
         serializedVersion: 2
@@ -36150,8 +36150,8 @@ ParticleSystem:
     startSize:
       serializedVersion: 2
       minMaxState: 3
-      scalar: 3.5
-      minScalar: 2.75
+      scalar: 2
+      minScalar: 1.5
       maxCurve:
         serializedVersion: 2
         m_Curve:
@@ -40802,9 +40802,9 @@ Transform:
   m_GameObject: {fileID: 5942117631748262940}
   serializedVersion: 2
   m_LocalRotation: {x: -0.30788764, y: -0.6365574, z: -0.6365573, w: 0.30788764}
-  m_LocalPosition: {x: 0.05000019, y: 0.27000004, z: -0.32000017}
-  m_LocalScale: {x: 5, y: 5, z: 4}
-  m_ConstrainProportionsScale: 0
+  m_LocalPosition: {x: 0.05000019, y: 0, z: -0.32000017}
+  m_LocalScale: {x: 4.1, y: 4.1, z: 3.28}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6842387879523774325}
   m_LocalEulerAnglesHint: {x: -90, y: 0, z: -128.376}
@@ -40958,8 +40958,8 @@ ParticleSystem:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6559847238147659674}
   serializedVersion: 8
-  lengthInSec: 3
-  simulationSpeed: 1
+  lengthInSec: 0.5
+  simulationSpeed: 2
   stopAction: 0
   cullingMode: 0
   ringBufferMode: 0
@@ -41204,7 +41204,7 @@ ParticleSystem:
     startSize:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 14
+      scalar: 9
       minScalar: 14
       maxCurve:
         serializedVersion: 2
@@ -46075,8 +46075,8 @@ ParticleSystem:
     startSize:
       serializedVersion: 2
       minMaxState: 3
-      scalar: 4.5
-      minScalar: 3
+      scalar: 2
+      minScalar: 1.5
       maxCurve:
         serializedVersion: 2
         m_Curve:
@@ -50755,10 +50755,10 @@ AudioSource:
   SpatializePostEffects: 0
   Priority: 128
   DopplerLevel: 5
-  MinDistance: 10
-  MaxDistance: 500
+  MinDistance: 5
+  MaxDistance: 100
   Pan2D: 0
-  rolloffMode: 0
+  rolloffMode: 1
   BypassEffects: 0
   BypassListenerEffects: 0
   BypassReverbZones: 0
@@ -51116,7 +51116,7 @@ Transform:
   m_GameObject: {fileID: 7356233202244965558}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 20, y: 40, z: 0}
+  m_LocalPosition: {x: 20, y: 80, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children:
@@ -51154,7 +51154,7 @@ Transform:
   m_GameObject: {fileID: 8210612838793503481}
   serializedVersion: 2
   m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: -0.7071068}
-  m_LocalPosition: {x: 0.49, y: 0.98, z: -0.3}
+  m_LocalPosition: {x: 0.49, y: 0, z: -0.3}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -56152,10 +56152,10 @@ AudioSource:
   SpatializePostEffects: 0
   Priority: 128
   DopplerLevel: 5
-  MinDistance: 10
-  MaxDistance: 500
+  MinDistance: 5
+  MaxDistance: 100
   Pan2D: 0
-  rolloffMode: 0
+  rolloffMode: 1
   BypassEffects: 0
   BypassListenerEffects: 0
   BypassReverbZones: 0
