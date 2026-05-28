@@ -19,6 +19,12 @@ public class CharacterBase : GameUnit, IManagedUpdate
 
     [Header("References")]
     [SerializeField] private SwordOrbit swordOrbit;
+    [SerializeField] private SwordOrbit kimOrbit;
+    [SerializeField] private SwordOrbit mocOrbit;
+    [SerializeField] private SwordOrbit thuyOrbit;
+    [SerializeField] private SwordOrbit hoaOrbit;
+    [SerializeField] private SwordOrbit thoOrbit;
+    [SerializeField] private int maxElementalSwordCount = 10;
     [SerializeField] private CharacterInfoUI infoUI;
     [SerializeField] private Collider bodyCollider;
     [SerializeField] private Transform visualTransform;
@@ -91,7 +97,7 @@ public class CharacterBase : GameUnit, IManagedUpdate
     private int   killPoints;
     private int   score;
     private int   swordQueue;
-    private readonly int[] skillStacks = new int[11];
+    private readonly int[] skillStacks = new int[8];
     private bool  isTargetLocked;
     private CharacterBase lockedTarget;
     private float castTimer;
@@ -108,7 +114,12 @@ public class CharacterBase : GameUnit, IManagedUpdate
     public string CharacterId      => characterId;
     public string CharacterName    => characterName;
     public Sprite Avatar           => avatar;
-    public int   SwordCount        => swordOrbit?.SwordCount ?? 0;
+    public int   SwordCount        => (swordOrbit?.SwordCount ?? 0)
+                                    + (kimOrbit?.SwordCount  ?? 0)
+                                    + (mocOrbit?.SwordCount  ?? 0)
+                                    + (thuyOrbit?.SwordCount ?? 0)
+                                    + (hoaOrbit?.SwordCount  ?? 0)
+                                    + (thoOrbit?.SwordCount  ?? 0);
     public int   MaxSwordCount     => maxSwordCount;
     public bool  IsSwordFull       => SwordCount >= maxSwordCount;
     public string CurrentStateName => stateMachine?.CurrentState.GetType().Name ?? "None";
@@ -136,9 +147,6 @@ public class CharacterBase : GameUnit, IManagedUpdate
     public int   Skill6StackCount  => skillStacks[5];
     public int   Skill7StackCount  => skillStacks[6];
     public int   Skill8StackCount  => skillStacks[7];
-    public int   Skill9StackCount  => skillStacks[8];
-    public int   Skill10StackCount => skillStacks[9];
-    public int   Skill11StackCount => skillStacks[10];
     public int   MaxSwordQueue     => maxSwordQueue;
     public bool  IsTargetLocked    => isTargetLocked;
     public CharacterBase LockedTarget => lockedTarget;
@@ -151,21 +159,66 @@ public class CharacterBase : GameUnit, IManagedUpdate
         audioSource?.StopFootstep();
     }
     public SwordOrbit GetSwordOrbit()           => swordOrbit;
+    public SwordOrbit GetElementalOrbit(ElementalSwordType type) => type switch
+    {
+        ElementalSwordType.Kim  => kimOrbit,
+        ElementalSwordType.Moc  => mocOrbit,
+        ElementalSwordType.Thuy => thuyOrbit,
+        ElementalSwordType.Hoa  => hoaOrbit,
+        ElementalSwordType.Tho  => thoOrbit,
+        _                       => null
+    };
+    public int  GetElementalSwordCount(ElementalSwordType type) => GetElementalOrbit(type)?.SwordCount ?? 0;
+    public bool IsElementalOrbitFull(ElementalSwordType type) => GetElementalSwordCount(type) >= maxElementalSwordCount;
+    public bool IsElementalOrbit(SwordOrbit orbitToCheck) =>
+        orbitToCheck == kimOrbit  ||
+        orbitToCheck == mocOrbit  ||
+        orbitToCheck == thuyOrbit ||
+        orbitToCheck == hoaOrbit  ||
+        orbitToCheck == thoOrbit;
+
+    private static PoolType GetElementalPoolType(ElementalSwordType type) => type switch
+    {
+        ElementalSwordType.Kim  => PoolType.SwordKim,
+        ElementalSwordType.Moc  => PoolType.SwordMoc,
+        ElementalSwordType.Thuy => PoolType.SwordThuy,
+        ElementalSwordType.Hoa  => PoolType.SwordHoa,
+        ElementalSwordType.Tho  => PoolType.SwordTho,
+        _                       => PoolType.None
+    };
+
+    public void AddElementalSword(ElementalSwordType type, int count = 1)
+    {
+        if (isDead || count <= 0) return;
+        SwordOrbit targetOrbit = GetElementalOrbit(type);
+        if (targetOrbit == null) return;
+        PoolType poolType = GetElementalPoolType(type);
+        if (poolType == PoolType.None) return;
+
+        int canAdd = Mathf.Min(count, maxElementalSwordCount - targetOrbit.SwordCount);
+        for (int i = 0; i < canAdd; i++)
+        {
+            Vector2 rnd = UnityEngine.Random.insideUnitCircle.normalized * 2f;
+            Vector3 spawnPos = TF.position + new Vector3(rnd.x, 0f, rnd.y);
+            Sword sword = SimplePool.Spawn<Sword>(poolType, spawnPos, Quaternion.identity);
+            if (sword == null) break;
+            sword.OnInit();
+            targetOrbit.AddSword(sword);
+        }
+    }
+
     public void TriggerDisintegration(float delay = 0f) => disintegration?.Disintegrate(delay);
     public bool UseSkill(CharacterBase target, int skillIndex = 0) =>
         skillController != null && skillController.TryFireSkill(target, skillIndex);
 
     public void AddSkill1Stack(int count = 1) { if (!isDead && count > 0) skillStacks[0] += count * 3; }
-    public void AddSkill2Stack(int count = 1) { if (!isDead && count > 0) skillStacks[1] += count * 3; }
-    public void AddSkill3Stack(int count = 1) { if (!isDead && count > 0) skillStacks[2] += count * 3; }
-    public void AddSkill4Stack(int count = 1) { if (!isDead && count > 0) skillStacks[3] += count * 3; }
+    public void AddSkill2Stack(int count = 1) { if (!isDead && count > 0) skillStacks[1] += count; }
+    public void AddSkill3Stack(int count = 1) { if (!isDead && count > 0) skillStacks[2] += count; }
+    public void AddSkill4Stack(int count = 1) { if (!isDead && count > 0) skillStacks[3] += count; }
     public void AddSkill5Stack(int count = 1) { if (!isDead && count > 0) skillStacks[4] += count; }
     public void AddSkill6Stack(int count = 1) { if (!isDead && count > 0) skillStacks[5] += count; }
     public void AddSkill7Stack(int count = 1) { if (!isDead && count > 0) skillStacks[6] += count; }
     public void AddSkill8Stack(int count = 1) { if (!isDead && count > 0) skillStacks[7] += count; }
-    public void AddSkill9Stack(int count = 1)  { if (!isDead && count > 0) skillStacks[8]  += count; }
-    public void AddSkill10Stack(int count = 1) { if (!isDead && count > 0) skillStacks[9]  += count; }
-    public void AddSkill11Stack(int count = 1) { if (!isDead && count > 0) skillStacks[10] += count; }
 
     private void UpdateSkillStacks()
     {
@@ -242,6 +295,11 @@ public class CharacterBase : GameUnit, IManagedUpdate
         if (cachedMap    == null) cachedMap    = MapManager.Instance;
 
         swordOrbit.OnInit();
+        kimOrbit?.OnInit();  kimOrbit?.SetSwordType(SwordType.kiem_kim);
+        mocOrbit?.OnInit();  mocOrbit?.SetSwordType(SwordType.kiem_moc);
+        thuyOrbit?.OnInit(); thuyOrbit?.SetSwordType(SwordType.kiem_thuy);
+        hoaOrbit?.OnInit();  hoaOrbit?.SetSwordType(SwordType.kiem10_hoa);
+        thoOrbit?.OnInit();  thoOrbit?.SetSwordType(SwordType.kiem10_tho);
         stateMachine.OnInit();
 
         infoUI.Init(characterName, avatar, currentHp, currentMaxHp);
@@ -266,6 +324,11 @@ public class CharacterBase : GameUnit, IManagedUpdate
         audioSource.StopFootstep();
 
         swordOrbit.OnDespawn();
+        kimOrbit?.DespawnAllSwords();
+        mocOrbit?.DespawnAllSwords();
+        thuyOrbit?.DespawnAllSwords();
+        hoaOrbit?.DespawnAllSwords();
+        thoOrbit?.DespawnAllSwords();
         stateMachine.OnDespawn();
         CharacterManager.Instance.Despawn(this);
     }
@@ -588,6 +651,11 @@ public class CharacterBase : GameUnit, IManagedUpdate
         frozenTimer = duration;
         if (animator    != null) animator.speed = 0f;
         if (swordOrbit  != null) swordOrbit.SetPaused(true);
+        kimOrbit?.SetPaused(true);
+        mocOrbit?.SetPaused(true);
+        thuyOrbit?.SetPaused(true);
+        hoaOrbit?.SetPaused(true);
+        thoOrbit?.SetPaused(true);
         if (audioSource != null) audioSource.StopFootstep();
     }
 
@@ -596,6 +664,11 @@ public class CharacterBase : GameUnit, IManagedUpdate
         isFrozen = false;
         if (animator   != null) animator.speed = 1f;
         if (swordOrbit != null) swordOrbit.SetPaused(false);
+        kimOrbit?.SetPaused(false);
+        mocOrbit?.SetPaused(false);
+        thuyOrbit?.SetPaused(false);
+        hoaOrbit?.SetPaused(false);
+        thoOrbit?.SetPaused(false);
     }
 
     public void ActivateFreezeBooster()
@@ -752,6 +825,11 @@ public class CharacterBase : GameUnit, IManagedUpdate
         frozenTimer = Mathf.Max(frozenTimer, duration);
         if (animator) animator.speed = 0f;
         swordOrbit?.SetPaused(true);
+        kimOrbit?.SetPaused(true);
+        mocOrbit?.SetPaused(true);
+        thuyOrbit?.SetPaused(true);
+        hoaOrbit?.SetPaused(true);
+        thoOrbit?.SetPaused(true);
         audioSource?.StopFootstep();
     }
 
@@ -896,6 +974,11 @@ public class CharacterBase : GameUnit, IManagedUpdate
         knockbackTimer    = 0f;
         if (animator) animator.speed = 1f;
         swordOrbit?.SetPaused(false);
+        kimOrbit?.SetPaused(false);
+        mocOrbit?.SetPaused(false);
+        thuyOrbit?.SetPaused(false);
+        hoaOrbit?.SetPaused(false);
+        thoOrbit?.SetPaused(false);
 
         CharacterManager.Instance?.ReleaseCharacterIdentity(this);
         characterId      = string.Empty;
@@ -911,6 +994,12 @@ public class CharacterBase : GameUnit, IManagedUpdate
             for (int i = count - 1; i >= 0; i--)
                 swordOrbit.DropSword(i);
         }
+
+        DropElementalOrbit(kimOrbit);
+        DropElementalOrbit(mocOrbit);
+        DropElementalOrbit(thuyOrbit);
+        DropElementalOrbit(hoaOrbit);
+        DropElementalOrbit(thoOrbit);
 
         skillController?.CancelAllEffects();
         StopBoosterParticles();
@@ -975,6 +1064,12 @@ public class CharacterBase : GameUnit, IManagedUpdate
             stateMachine.Attack.SetTarget(target);
             stateMachine.ChangeState(stateMachine.Attack);
         }
+    }
+
+    private void DropElementalOrbit(SwordOrbit orbit)
+    {
+        if (orbit == null) return;
+        orbit.DespawnAllSwords();
     }
 
     public void RestoreKillPoints(int points) => killPoints = points;

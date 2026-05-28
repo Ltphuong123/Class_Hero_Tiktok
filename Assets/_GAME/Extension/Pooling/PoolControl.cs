@@ -59,4 +59,9 @@ public enum PoolType
     Character7 = 8,
     Character8 = 9,
     Character9 = 10,
+    SwordKim  = 11,
+    SwordMoc  = 12,
+    SwordThuy = 13,
+    SwordHoa  = 14,
+    SwordTho  = 15,
 }

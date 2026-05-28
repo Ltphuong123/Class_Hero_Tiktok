@@ -9,6 +9,7 @@ public class SwordOrbit : MonoBehaviour
     [SerializeField] private float rotateSpeed = 180f;
     [SerializeField] private float flyAroundDuration = 0.6f;
     [SerializeField] private float flyStartRadius = 4f;
+    [SerializeField] private float initialAngle = 0f;
 
     [Header("Sword Settings")]
     [SerializeField] private int initialSwordCount = 0;
@@ -30,7 +31,7 @@ public class SwordOrbit : MonoBehaviour
 
     public void OnInit()
     {
-        orbitAngle = 0f;
+        orbitAngle = initialAngle;
         swords.Clear();
         isPaused = false;
         lastSwordDropTime = -1f;
@@ -121,10 +122,27 @@ public class SwordOrbit : MonoBehaviour
 
     public void RemoveSword(Sword sword) => swords.Remove(sword);
 
+    public Sword GetRandomSword()
+    {
+        if (swords.Count == 0) return null;
+        return swords[UnityEngine.Random.Range(0, swords.Count)];
+    }
+
     public void DropSword(int index)
     {
         if ((uint)index < (uint)swords.Count)
             swords[index].KnockOff();
+    }
+
+    public void DespawnAllSwords()
+    {
+        for (int i = swords.Count - 1; i >= 0; i--)
+        {
+            Sword s = swords[i];
+            s.transform.SetParent(null);
+            s.OnDespawn();
+        }
+        swords.Clear();
     }
 
     private void PlaceSword(Transform sw, float angle)

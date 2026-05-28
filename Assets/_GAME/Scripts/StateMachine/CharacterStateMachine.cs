@@ -190,7 +190,7 @@ public class CharacterStateMachine : MonoBehaviour
     public int MySwordCount
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => orbit?.SwordCount ?? 0;
+        get => owner?.SwordCount ?? 0;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

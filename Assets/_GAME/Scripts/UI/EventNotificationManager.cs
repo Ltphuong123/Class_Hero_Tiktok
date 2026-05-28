@@ -166,12 +166,39 @@ public class EventNotificationManager : Singleton<EventNotificationManager>
         }
     }
 
+    public void ShowSkill4Notification(string characterName, int count)
+    {
+        if (notificationUI != null)
+        {
+            string message = TruncateMessage($"<color=#DD88FF>{characterName}</color> Skill 4 x{count}");
+            notificationUI.ShowNotification(message, skill7Icon, skill7Color);
+        }
+    }
+
+    public void ShowSkill5Notification(string characterName, int count)
+    {
+        if (notificationUI != null)
+        {
+            string message = TruncateMessage($"<color=#FF88DD>{characterName}</color> Skill 5 x{count}");
+            notificationUI.ShowNotification(message, skill8Icon, skill8Color);
+        }
+    }
+
+    public void ShowSkill6Notification(string characterName, int count)
+    {
+        if (notificationUI != null)
+        {
+            string message = TruncateMessage($"<color=#88DDFF>{characterName}</color> Skill 6 x{count}");
+            notificationUI.ShowNotification(message, skill9Icon, skill9Color);
+        }
+    }
+
     public void ShowSkill7Notification(string characterName, int count)
     {
         if (notificationUI != null)
         {
-            string message = TruncateMessage($"<color=#DD88FF>{characterName}</color> Teleport Blast x{count}");
-            notificationUI.ShowNotification(message, skill7Icon, skill7Color);
+            string message = TruncateMessage($"<color=#88DDFF>{characterName}</color> Skill 7 x{count}");
+            notificationUI.ShowNotification(message, skill10Icon, skill10Color);
         }
     }
 
@@ -179,34 +206,7 @@ public class EventNotificationManager : Singleton<EventNotificationManager>
     {
         if (notificationUI != null)
         {
-            string message = TruncateMessage($"<color=#FF88DD>{characterName}</color> Teleport Blast x{count}");
-            notificationUI.ShowNotification(message, skill8Icon, skill8Color);
-        }
-    }
-
-    public void ShowSkill9Notification(string characterName, int count)
-    {
-        if (notificationUI != null)
-        {
-            string message = TruncateMessage($"<color=#88DDFF>{characterName}</color> Global Blast x{count}");
-            notificationUI.ShowNotification(message, skill9Icon, skill9Color);
-        }
-    }
-
-    public void ShowSkill10Notification(string characterName, int count)
-    {
-        if (notificationUI != null)
-        {
-            string message = TruncateMessage($"<color=#88DDFF>{characterName}</color> Global Blast x{count}");
-            notificationUI.ShowNotification(message, skill10Icon, skill10Color);
-        }
-    }
-
-    public void ShowSkill11Notification(string characterName, int count)
-    {
-        if (notificationUI != null)
-        {
-            string message = TruncateMessage($"<color=#88DDFF>{characterName}</color> Global Blast x{count}");
+            string message = TruncateMessage($"<color=#88DDFF>{characterName}</color> Skill 8 x{count}");
             notificationUI.ShowNotification(message, skill11Icon, skill11Color);
         }
     }

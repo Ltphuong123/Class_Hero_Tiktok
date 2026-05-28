@@ -289,15 +289,21 @@ public class TikTokGameHandler : MonoBehaviour
                 break;
 
             case TikTokActionType.UseSkill4:
-                characterManager.ActivateSkill4(userId, nickname, count);
+                success = characterManager.ActivateSkill4(userId, nickname, count);
+                if (success && notificationManager != null)
+                    notificationManager.ShowSkill4Notification(nickname, count);
                 break;
 
             case TikTokActionType.UseSkill5:
-                characterManager.ActivateSkill5(userId, nickname, count);
+                success = characterManager.ActivateSkill5(userId, nickname, count);
+                if (success && notificationManager != null)
+                    notificationManager.ShowSkill5Notification(nickname, count);
                 break;
 
             case TikTokActionType.UseSkill6:
-                characterManager.ActivateSkill6(userId, nickname, count);
+                success = characterManager.ActivateSkill6(userId, nickname, count);
+                if (success && notificationManager != null)
+                    notificationManager.ShowSkill6Notification(nickname, count);
                 break;
 
             case TikTokActionType.UseSkill7:
@@ -312,22 +318,34 @@ public class TikTokGameHandler : MonoBehaviour
                     notificationManager.ShowSkill8Notification(nickname, count);
                 break;
 
-            case TikTokActionType.UseSkill9:
-                success = characterManager.ActivateSkill9(userId, nickname, count);
+            case TikTokActionType.AddKimSword:
+                success = characterManager.AddKimSwords(userId, nickname, actionConfig.swordCount * count);
                 if (success && notificationManager != null)
-                    notificationManager.ShowSkill9Notification(nickname, count);
+                    notificationManager.ShowAddSwordsNotification(nickname, actionConfig.swordCount * count);
                 break;
 
-            case TikTokActionType.UseSkill10:
-                success = characterManager.ActivateSkill10(userId, nickname, count);
+            case TikTokActionType.AddMocSword:
+                success = characterManager.AddMocSwords(userId, nickname, actionConfig.swordCount * count);
                 if (success && notificationManager != null)
-                    notificationManager.ShowSkill10Notification(nickname, count);
+                    notificationManager.ShowAddSwordsNotification(nickname, actionConfig.swordCount * count);
                 break;
 
-            case TikTokActionType.UseSkill11:
-                success = characterManager.ActivateSkill11(userId, nickname, count);
+            case TikTokActionType.AddThuySword:
+                success = characterManager.AddThuySwords(userId, nickname, actionConfig.swordCount * count);
                 if (success && notificationManager != null)
-                    notificationManager.ShowSkill11Notification(nickname, count);
+                    notificationManager.ShowAddSwordsNotification(nickname, actionConfig.swordCount * count);
+                break;
+
+            case TikTokActionType.AddHoaSword:
+                success = characterManager.AddHoaSwords(userId, nickname, actionConfig.swordCount * count);
+                if (success && notificationManager != null)
+                    notificationManager.ShowAddSwordsNotification(nickname, actionConfig.swordCount * count);
+                break;
+
+            case TikTokActionType.AddThoSword:
+                success = characterManager.AddThoSwords(userId, nickname, actionConfig.swordCount * count);
+                if (success && notificationManager != null)
+                    notificationManager.ShowAddSwordsNotification(nickname, actionConfig.swordCount * count);
                 break;
         }
     }

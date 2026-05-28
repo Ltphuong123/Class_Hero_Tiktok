@@ -257,24 +257,22 @@ public class Sword : GameUnit
 
         if (character != null)
         {
-            SwordOrbit hitOrbit = character.GetSwordOrbit();
-            if (hitOrbit != orbit)
+            if (orbit.Owner == character) return;
+            ParticlePool.Spawn(ParticleType.SwordVsCharacter, other.ClosestPoint(TF.position));
+            CharacterBase attacker = orbit.Owner;
+            if (character.SwordCount <= 45)
             {
-                ParticlePool.Spawn(ParticleType.SwordVsCharacter, other.ClosestPoint(TF.position));
-                CharacterBase attacker = orbit.Owner;
-                if (character.SwordCount <= 45)
-                {
-                    character.TakeDamage(damage, attacker);
-                    character.OnSwordInteraction(attacker);
-                    attacker?.OnLifesteal(damage);
-                    attacker?.GetAudioSource()?.PlayAttack();
-                }
+                character.TakeDamage(damage, attacker);
+                character.OnSwordInteraction(attacker);
+                attacker?.OnLifesteal(damage);
+                attacker?.GetAudioSource()?.PlayAttack();
             }
             return;
         }
 
         Sword otherSword = other.GetComponent<Sword>();
         if (otherSword == null || otherSword.orbit == null || otherSword.orbit == orbit) return;
+        if (orbit.Owner != null && orbit.Owner == otherSword.orbit.Owner) return;
         if (otherSword.state != SwordState.Orbiting && otherSword.state != SwordState.Sliding) return;
         if (GetInstanceID() > otherSword.GetInstanceID()) return;
 
@@ -300,6 +298,17 @@ public class Sword : GameUnit
     public void TakeDamage(float dmg, Sword attackerSword = null)
     {
         if (orbit != null && orbit.Owner != null && orbit.Owner.IsShieldActive) return;
+
+        // Kiếm ngũ hành chuyển damage cho kiếm thường khi còn kiếm thường
+        if (orbit != null && orbit.Owner != null && orbit.Owner.IsElementalOrbit(orbit))
+        {
+            SwordOrbit regularOrbit = orbit.Owner.GetSwordOrbit();
+            if (regularOrbit != null && regularOrbit.SwordCount > 0)
+            {
+                Sword target = regularOrbit.GetRandomSword();
+                if (target != null) { target.TakeDamage(dmg, attackerSword); return; }
+            }
+        }
 
         int currentFrame = Time.frameCount;
         if (lastDamageFrame == currentFrame) return;

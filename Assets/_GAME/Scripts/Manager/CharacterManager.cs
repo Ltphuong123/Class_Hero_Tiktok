@@ -116,15 +116,15 @@ public class CharacterManager : Singleton<CharacterManager>
 
     private PoolType GetRandomCharacterPoolType() => UnityEngine.Random.Range(1, 10) switch
     {
-        1 => PoolType.Character1,
-        2 => PoolType.Character2,
-        3 => PoolType.Character3,
-        4 => PoolType.Character4,
-        5 => PoolType.Character5,
-        6 => PoolType.Character6,
-        7 => PoolType.Character7,
-        8 => PoolType.Character8,
-        9 => PoolType.Character9,
+        // 1 => PoolType.Character1,
+        // 2 => PoolType.Character2,
+        // 3 => PoolType.Character3,
+        // 4 => PoolType.Character4,
+        // 5 => PoolType.Character5,
+        // 6 => PoolType.Character6,
+        // 7 => PoolType.Character7,
+        // 8 => PoolType.Character8,
+        // 9 => PoolType.Character9,
         _ => PoolType.Character1
     };
 
@@ -549,9 +549,6 @@ public class CharacterManager : Singleton<CharacterManager>
     public bool ActivateSkill6(string id, string name, int count = 1) => ActivateSkillInternal(id, name, c => c.AddSkill6Stack(count));
     public bool ActivateSkill7(string id, string name, int count = 1) => ActivateSkillInternal(id, name, c => c.AddSkill7Stack(count));
     public bool ActivateSkill8(string id, string name, int count = 1) => ActivateSkillInternal(id, name, c => c.AddSkill8Stack(count));
-    public bool ActivateSkill9(string id, string name, int count = 1)  => ActivateSkillInternal(id, name, c => c.AddSkill9Stack(count));
-    public bool ActivateSkill10(string id, string name, int count = 1) => ActivateSkillInternal(id, name, c => c.AddSkill10Stack(count));
-    public bool ActivateSkill11(string id, string name, int count = 1) => ActivateSkillInternal(id, name, c => c.AddSkill11Stack(count));
 
     private CharacterBase EnsureCharacterAlive(string characterId, string nickname)
     {
@@ -610,6 +607,27 @@ public class CharacterManager : Singleton<CharacterManager>
         int remaining = swordsToAdd - actual;
         if (remaining > 0) c.AddToSwordQueue(remaining);
     }
+
+    public bool AddElementalSwordsToCharacter(string characterId, string nickname, ElementalSwordType type, int count)
+    {
+        CharacterBase c = EnsureCharacterAlive(characterId, nickname);
+        if (c == null) return false;
+        if (c.IsDead) { StartCoroutine(DelayedElementalSwords(c, type, count)); return true; }
+        c.AddElementalSword(type, count);
+        return true;
+    }
+
+    private System.Collections.IEnumerator DelayedElementalSwords(CharacterBase c, ElementalSwordType type, int count)
+    {
+        yield return new WaitForSeconds(0.3f);
+        if (c != null && !c.IsDead) c.AddElementalSword(type, count);
+    }
+
+    public bool AddKimSwords(string id, string name, int count = 1)  => AddElementalSwordsToCharacter(id, name, ElementalSwordType.Kim,  count);
+    public bool AddMocSwords(string id, string name, int count = 1)  => AddElementalSwordsToCharacter(id, name, ElementalSwordType.Moc,  count);
+    public bool AddThuySwords(string id, string name, int count = 1) => AddElementalSwordsToCharacter(id, name, ElementalSwordType.Thuy, count);
+    public bool AddHoaSwords(string id, string name, int count = 1)  => AddElementalSwordsToCharacter(id, name, ElementalSwordType.Hoa,  count);
+    public bool AddThoSwords(string id, string name, int count = 1)  => AddElementalSwordsToCharacter(id, name, ElementalSwordType.Tho,  count);
 
     public bool LockTargetAttack(string attackerId, string targetId)
     {

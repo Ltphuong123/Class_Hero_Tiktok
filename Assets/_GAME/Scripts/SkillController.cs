@@ -387,30 +387,21 @@ public class SkillController : MonoBehaviour
     {
         return slot switch
         {
-            0 or 1 or 2 => UseSkillNearestTarget(slot),
-            3            => UseSkill4(),
-            4 or 5       => UseSkillAtTargetAoE(slot),
-            6 or 7 or 9 or 10         => UseSkillGlobalAoE(slot),
-            8     => UseSkillGlobalTeleport(slot),
+            0            => UseSkillMultiTarget(0),
+            1 or 2       => UseSkillAtTargetAoE(slot),
+            3 or 4 or 6 or 7 => UseSkillGlobalAoE(slot),
+            5            => UseSkillGlobalTeleport(slot),
             _            => false
         };
     }
 
-    private bool UseSkillNearestTarget(int slot)
+    private bool UseSkillMultiTarget(int slot)
     {
         if (owner == null || owner.IsDead) return false;
-        List<CharacterBase> nearest = CharacterManager.Instance?.GetNearestEnemies(owner.TF.position, owner, 1);
-        if (nearest == null || nearest.Count == 0) return false;
-        return TryFireSkill(nearest[0], slot);
-    }
-
-    private bool UseSkill4()
-    {
-        if (owner == null || owner.IsDead) return false;
-        int maxTargets = GetSkillMaxTargets(3);
+        int maxTargets = GetSkillMaxTargets(slot);
         List<CharacterBase> targets = CharacterManager.Instance?.GetNearestEnemies(owner.TF.position, owner, maxTargets);
         if (targets == null || targets.Count == 0) return false;
-        return TryFireSkillMultiTarget(targets, 3);
+        return TryFireSkillMultiTarget(targets, slot);
     }
 
     private bool UseSkillAtTargetAoE(int slot)

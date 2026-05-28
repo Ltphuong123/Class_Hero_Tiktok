@@ -28,17 +28,19 @@ public enum TikTokActionType
     ShieldBooster,
     MeteorBooster,
     HealBooster,
-    UseSkill1,
-    UseSkill2,
-    UseSkill3,
-    UseSkill4,
-    UseSkill5,
-    UseSkill6,
-    UseSkill7,
-    UseSkill8,
-    UseSkill9,
-    UseSkill10,
-    UseSkill11
+    UseSkill1 = 19,
+    UseSkill2 = 20,
+    UseSkill3 = 21,
+    UseSkill4 = 22,
+    UseSkill5 = 23,
+    UseSkill6 = 24,
+    UseSkill7 = 25,
+    UseSkill8 = 26,
+    AddKimSword,
+    AddMocSword,
+    AddThuySword,
+    AddHoaSword,
+    AddThoSword
 }
 
 [System.Serializable]
