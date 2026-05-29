@@ -135,7 +135,6 @@ public class AttackState : ICharacterState
             return;
         }
 
-        sm.Owner.UseSkill(target);
         UpdateOrbitMovement(sm, targetPos, deltaTime);
     }
 

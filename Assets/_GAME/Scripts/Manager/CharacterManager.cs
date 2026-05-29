@@ -549,6 +549,7 @@ public class CharacterManager : Singleton<CharacterManager>
     public bool ActivateSkill6(string id, string name, int count = 1) => ActivateSkillInternal(id, name, c => c.AddSkill6Stack(count));
     public bool ActivateSkill7(string id, string name, int count = 1) => ActivateSkillInternal(id, name, c => c.AddSkill7Stack(count));
     public bool ActivateSkill8(string id, string name, int count = 1) => ActivateSkillInternal(id, name, c => c.AddSkill8Stack(count));
+    public bool ActivateSkill9(string id, string name, int count = 1) => ActivateSkillInternal(id, name, c => c.AddSkill9Stack(count));
 
     private CharacterBase EnsureCharacterAlive(string characterId, string nickname)
     {

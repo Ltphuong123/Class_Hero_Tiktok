@@ -388,9 +388,10 @@ public class SkillController : MonoBehaviour
         return slot switch
         {
             0            => UseSkillMultiTarget(0),
-            1 or 2       => UseSkillAtTargetAoE(slot),
-            3 or 4 or 6 or 7 => UseSkillGlobalAoE(slot),
-            5            => UseSkillGlobalTeleport(slot),
+            1            => UseSkillAtThreeNearestTargets(1),
+            2            => UseSkillAtThreeNearestTargets(2),
+            3 or 4 or 5  => TryFireSkillSelfAoE(slot),
+            6 or 7 or 8  => UseSkillGlobalAoE(slot),
             _            => false
         };
     }
@@ -414,6 +415,54 @@ public class SkillController : MonoBehaviour
         List<CharacterBase> targets = CharacterManager.Instance?.GetEnemiesInRadius(nearest.TF.position, radius, owner) ?? new List<CharacterBase>();
         if (targets.Count == 0) targets.Add(nearest);
         return TryFireSkillAtTargetWithAllTargets(nearest, targets, slot);
+    }
+
+    private bool UseSkillAtThreeNearestTargets(int slot)
+    {
+        if (owner == null || owner.IsDead) return false;
+        List<CharacterBase> targets = CharacterManager.Instance?.GetNearestEnemies(owner.TF.position, owner, 3);
+        if (targets == null || targets.Count == 0) return false;
+        if (!CanFireSkillOnly(slot)) return false;
+        SetupSkill(slot, targets[0]);
+        TriggerHandEffect();
+        TriggerBuffEffect();
+        StartCoroutine(SpawnSkillsWithDelay(new List<CharacterBase>(targets), skills[slot], 0.3f));
+        return true;
+    }
+
+    private System.Collections.IEnumerator SpawnSkillsWithDelay(List<CharacterBase> targets, SkillData skill, float interval)
+    {
+        for (int i = 0; i < targets.Count; i++)
+        {
+            SpawnSkillAtTarget(targets[i], skill);
+            if (i < targets.Count - 1)
+                yield return new WaitForSeconds(interval);
+        }
+    }
+
+    private void SpawnSkillAtTarget(CharacterBase target, SkillData skill)
+    {
+        if (skill.mainEffect == null || target == null || target.IsDead) return;
+        if (skill.enableSlow)
+            target.ApplySlow(skill.slowFactor, skill.slowDuration);
+        GameObject inst = Instantiate(skill.mainEffect, target.TF.position, Quaternion.identity);
+        MagicFX5_FollowTarget followTarget = inst.GetComponentInChildren<MagicFX5_FollowTarget>();
+        if (followTarget != null) followTarget.Target = target.transform;
+        MagicFX5_EffectSettings settings = inst.GetComponent<MagicFX5_EffectSettings>();
+        if (settings == null) { DestroyEffect(inst, skill.effectLifeTime); return; }
+        settings.Targets = new[] { target.transform };
+        float dmg = skill.damage;
+        CharacterBase caster = owner;
+        CharacterBase hitTarget = target;
+        bool hit = false;
+        settings.OnEffectCollisionEnter += col =>
+        {
+            if (hit) return;
+            hit = true;
+            if (hitTarget == null || hitTarget.IsDead) return;
+            hitTarget.TakeSkillDamage(dmg, caster, skill);
+        };
+        DestroyEffect(inst, skill.effectLifeTime);
     }
 
     private bool UseSkillGlobalAoE(int slot)

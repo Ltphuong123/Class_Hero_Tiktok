@@ -159,6 +159,17 @@ public class SwordOrbit : MonoBehaviour
     }
 
     public void SetPaused(bool paused) => isPaused = paused;
+    public void SetRotateSpeed(float speed) => rotateSpeed = speed;
+
+    public void SumNegativeDebuffs(ref float dr, ref float ls, ref float os)
+    {
+        foreach (var sword in swords)
+        {
+            if (sword == null) continue;
+            sword.GetDebuffValues(out float sdr, out float sls, out float sos);
+            dr += sdr; ls += sls; os += sos;
+        }
+    }
 
     public bool CanDropSword()
     {

@@ -24,6 +24,9 @@ public class LevelData
     [Tooltip("% giảm sát thương nhận vào (0 = không giảm, 0.5 = giảm 50%, tối đa 0.9)")]
     [Range(0f, 1f)]
     public float damageReduction = 0f;
+
+    [Tooltip("Tốc độ quay của orbit kiếm thường (độ/giây, âm = ngược chiều)")]
+    public float orbitRotateSpeed = 180f;
 }
 
 [CreateAssetMenu(fileName = "CharacterLevelData", menuName = "Game/Character Level Data")]
@@ -98,6 +101,12 @@ public class CharacterLevelDataSO : ScriptableObject
         return data != null ? Mathf.Clamp(data.damageReduction, 0f, 1f) : 0f;
     }
 
+    public float GetOrbitRotateSpeed(int level)
+    {
+        LevelData data = GetLevelData(level);
+        return data != null ? data.orbitRotateSpeed : 180f;
+    }
+
     public int GetMaxLevel()
     {
         if (levels == null || levels.Length == 0) return 1;
@@ -111,7 +120,7 @@ public class CharacterLevelDataSO : ScriptableObject
         return max;
     }
 
-    public void SetLevelData(int level, SwordType swordType, float duration, float speed, float bodyScale, float damageReduction = 0f)
+    public void SetLevelData(int level, SwordType swordType, float duration, float speed, float bodyScale, float damageReduction = 0f, float orbitRotateSpeed = 180f)
     {
         for (int i = 0; i < levels.Length; i++)
         {
@@ -122,6 +131,7 @@ public class CharacterLevelDataSO : ScriptableObject
                 levels[i].speed = speed;
                 levels[i].bodyScale = bodyScale;
                 levels[i].damageReduction = Mathf.Clamp(damageReduction, 0f, 1f);
+                levels[i].orbitRotateSpeed = orbitRotateSpeed;
                 return;
             }
         }
@@ -206,6 +216,7 @@ public class CharacterLevelDataSO : ScriptableObject
             levels[i].bodyScale = 1f;
             levels[i].swordType = SwordType.kiem1;
             levels[i].damageReduction = 0f;
+            levels[i].orbitRotateSpeed = 180f;
         }
         SaveToFile();
     }

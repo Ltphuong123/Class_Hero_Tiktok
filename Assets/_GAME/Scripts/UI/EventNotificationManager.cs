@@ -210,4 +210,13 @@ public class EventNotificationManager : Singleton<EventNotificationManager>
             notificationUI.ShowNotification(message, skill11Icon, skill11Color);
         }
     }
+
+    public void ShowSkill9Notification(string characterName, int count)
+    {
+        if (notificationUI != null)
+        {
+            string message = TruncateMessage($"<color=#88DDFF>{characterName}</color> Skill 9 x{count}");
+            notificationUI.ShowNotification(message, skill11Icon, skill11Color);
+        }
+    }
 }

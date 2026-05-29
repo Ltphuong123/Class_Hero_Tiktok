@@ -13,6 +13,13 @@ public class SwordDataSO : ScriptableObject
         public Sprite sprite;
         public float maxHp;
         public float damage;
+
+        [Tooltip("% giảm sát thương cộng thêm khi có kiếm này (0.1 = +10%)")]
+        public float damageReductionBonus;
+        [Tooltip("% hút máu nhân thêm khi có kiếm này (0.5 = +50% lifesteal)")]
+        public float lifestealBonus;
+        [Tooltip("% tốc độ quay nhân thêm khi có kiếm này (0.3 = +30% speed)")]
+        public float orbitSpeedBonus;
     }
 
     [System.Serializable]
@@ -27,6 +34,9 @@ public class SwordDataSO : ScriptableObject
         public SwordType type;
         public float maxHp;
         public float damage;
+        public float damageReductionBonus;
+        public float lifestealBonus;
+        public float orbitSpeedBonus;
     }
 
     [SerializeField] private SwordEntry[] entries;
@@ -94,6 +104,20 @@ public class SwordDataSO : ScriptableObject
         }
     }
 
+    public void SetBonusStats(SwordType type, float damageReductionBonus, float lifestealBonus, float orbitSpeedBonus)
+    {
+        for (int i = 0; i < entries.Length; i++)
+        {
+            if (entries[i].type == type)
+            {
+                entries[i].damageReductionBonus = damageReductionBonus;
+                entries[i].lifestealBonus = lifestealBonus;
+                entries[i].orbitSpeedBonus = orbitSpeedBonus;
+                return;
+            }
+        }
+    }
+
     public SwordEntry[] GetAllEntries()
     {
         return entries;
@@ -117,7 +141,10 @@ public class SwordDataSO : ScriptableObject
                 {
                     type = entry.type,
                     maxHp = entry.maxHp,
-                    damage = entry.damage
+                    damage = entry.damage,
+                    damageReductionBonus = entry.damageReductionBonus,
+                    lifestealBonus = entry.lifestealBonus,
+                    orbitSpeedBonus = entry.orbitSpeedBonus
                 });
             }
 
@@ -150,6 +177,7 @@ public class SwordDataSO : ScriptableObject
                     foreach (var stat in saveData.stats)
                     {
                         SetStats(stat.type, stat.maxHp, stat.damage);
+                        SetBonusStats(stat.type, stat.damageReductionBonus, stat.lifestealBonus, stat.orbitSpeedBonus);
                     }
                     
                     Debug.Log($"Sword Data loaded from: {SaveFilePath}");

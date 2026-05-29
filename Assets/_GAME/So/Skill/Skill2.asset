@@ -10,24 +10,24 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 27401ba593d242a4caa84efb9c9b5df1, type: 3}
-  m_Name: Skill4
+  m_Name: Skill2
   m_EditorClassIdentifier: 
-  mainEffect: {fileID: 5091902076016651419, guid: 89b4c5e6b357ed24c9101fb3a142d09c, type: 3}
+  mainEffect: {fileID: 1994628860572505486, guid: 31d79214a228d064e80cbb78a291f3dd, type: 3}
   handEffect: {fileID: 0}
   characterEffect: {fileID: 0}
-  effectLifeTime: 8
+  effectLifeTime: 5
   damage: 500
-  cooldown: 6
-  castDuration: 2
-  shakeOnFireDuration: 0.7
-  shakeOnFireMagnitude: 1.5
-  shakeDelay: 2
+  cooldown: 2
+  castDuration: 0.5
+  shakeOnFireDuration: 0
+  shakeOnFireMagnitude: 0
+  shakeDelay: 0
   maxTargets: 1
-  damageRadius: 20
+  damageRadius: 0
   hitEffect: 2
   stunDuration: 0.2
   skillKnockbackForce: 40
   skillKnockbackDuration: 0.1
   enableSlow: 1
-  slowFactor: 0.5
+  slowFactor: 0.4
   slowDuration: 2

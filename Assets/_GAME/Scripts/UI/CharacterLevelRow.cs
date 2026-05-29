@@ -11,6 +11,7 @@ public class CharacterLevelRow : MonoBehaviour
     [SerializeField] private TMP_InputField speedInput;
     [SerializeField] private TMP_InputField bodyScaleInput;
     [SerializeField] private TMP_InputField damageReductionInput;
+    [SerializeField] private TMP_InputField orbitRotateSpeedInput;
 
     private int level;
     private SwordType swordType;
@@ -18,6 +19,7 @@ public class CharacterLevelRow : MonoBehaviour
     private float speed;
     private float bodyScale;
     private float damageReduction;
+    private float orbitRotateSpeed;
 
     public int Level => level;
     public SwordType SwordType => swordType;
@@ -25,8 +27,9 @@ public class CharacterLevelRow : MonoBehaviour
     public float Speed => speed;
     public float BodyScale => bodyScale;
     public float DamageReduction => damageReduction;
+    public float OrbitRotateSpeed => orbitRotateSpeed;
 
-    public void Initialize(int lvl, SwordType type, float dur, float spd, float scale, float dmgReduction = 0f)
+    public void Initialize(int lvl, SwordType type, float dur, float spd, float scale, float dmgReduction = 0f, float rotateSpeed = 180f)
     {
         level = lvl;
         swordType = type;
@@ -34,6 +37,7 @@ public class CharacterLevelRow : MonoBehaviour
         speed = spd;
         bodyScale = scale;
         damageReduction = dmgReduction;
+        orbitRotateSpeed = rotateSpeed;
 
         if (levelText != null)
             levelText.text = $"Level {lvl}";
@@ -76,6 +80,12 @@ public class CharacterLevelRow : MonoBehaviour
         {
             damageReductionInput.text = (dmgReduction * 100f).ToString("F1");
             damageReductionInput.onEndEdit.AddListener(OnDamageReductionChanged);
+        }
+
+        if (orbitRotateSpeedInput != null)
+        {
+            orbitRotateSpeedInput.text = rotateSpeed.ToString("F0");
+            orbitRotateSpeedInput.onEndEdit.AddListener(OnOrbitRotateSpeedChanged);
         }
     }
 
@@ -136,6 +146,14 @@ public class CharacterLevelRow : MonoBehaviour
         }
     }
 
+    private void OnOrbitRotateSpeedChanged(string value)
+    {
+        if (float.TryParse(value, out float newValue))
+            orbitRotateSpeed = newValue;
+        else
+            orbitRotateSpeedInput.text = orbitRotateSpeed.ToString("F0");
+    }
+
     private void OnDestroy()
     {
         if (swordTypeDropdown != null)
@@ -152,5 +170,8 @@ public class CharacterLevelRow : MonoBehaviour
 
         if (damageReductionInput != null)
             damageReductionInput.onEndEdit.RemoveListener(OnDamageReductionChanged);
+
+        if (orbitRotateSpeedInput != null)
+            orbitRotateSpeedInput.onEndEdit.RemoveListener(OnOrbitRotateSpeedChanged);
     }
 }

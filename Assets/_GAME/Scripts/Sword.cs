@@ -38,6 +38,11 @@ public class Sword : GameUnit
 
     private int lastDamageFrame = -1;
 
+    private float damageReductionBonus;
+    private float lifestealBonus;
+    private float orbitSpeedBonus;
+    private bool bonusApplied;
+
     private static readonly float[] searchAnglesRad;
     static Sword()
     {
@@ -67,7 +72,9 @@ public class Sword : GameUnit
         currentHp = maxHp;
         state = SwordState.Dropped;
         orbit = null;
+        bonusApplied = false;
         lastDamageFrame = -1;
+        LoadBonusFromData();
 
         TF.rotation = Quaternion.Euler(90f, Random.Range(0f, 360f), 0f);
         TF.localScale = Vector3.one;
@@ -83,6 +90,7 @@ public class Sword : GameUnit
     public void OnDespawn()
     {
         TF.DOKill();
+        RemoveBonus();
         state = SwordState.Dropped;
         orbit = null;
         currentHp = maxHp;
@@ -105,6 +113,7 @@ public class Sword : GameUnit
         damage = swordData != null ? swordData.GetDamage(type) : defaultDamage;
         currentHp = maxHp;
         if (spriteRenderer != null) spriteRenderer.color = Color.white;
+        LoadBonusFromData();
     }
 
     public bool Collect(CharacterBase collector)
@@ -137,7 +146,11 @@ public class Sword : GameUnit
         state = SwordState.Animating;
     }
 
-    public void SetOrbiting() => state = SwordState.Orbiting;
+    public void SetOrbiting()
+    {
+        state = SwordState.Orbiting;
+        ApplyBonus();
+    }
 
     public void StartFlyIn(float startAngle, float targetAngle, float startRadius, float orbitRadius, float duration)
     {
@@ -202,7 +215,7 @@ public class Sword : GameUnit
         if (flyElapsed >= flyDuration)
         {
             currentAngle = flyTargetAngle;
-            state = SwordState.Orbiting;
+            SetOrbiting();
             PlaceAt(flyTargetAngle, flyOrbitRadius);
         }
     }
@@ -266,6 +279,12 @@ public class Sword : GameUnit
                 character.OnSwordInteraction(attacker);
                 attacker?.OnLifesteal(damage);
                 attacker?.GetAudioSource()?.PlayAttack();
+                if (attacker != null)
+                {
+                    attacker.GetNegativeElementalDebuffs(out float dr, out float ls, out float os);
+                    if (dr != 0f || ls != 0f || os != 0f)
+                        character.ApplyElementalDebuff(dr, ls, os, 3f);
+                }
             }
             return;
         }
@@ -342,6 +361,7 @@ public class Sword : GameUnit
         state = SwordState.Animating;
         TF.DOKill();
 
+        RemoveBonus();
         SwordOrbit owner = orbit;
         owner.RemoveSword(this);
         orbit = null;
@@ -358,6 +378,7 @@ public class Sword : GameUnit
         state = SwordState.Animating;
         TF.DOKill();
 
+        RemoveBonus();
         SwordOrbit owner = orbit;
         owner.RemoveSword(this);
         orbit = null;
@@ -421,6 +442,41 @@ public class Sword : GameUnit
 
             ItemManager.Instance?.Register(this);
         });
+    }
+
+    private void LoadBonusFromData()
+    {
+        if (swordData == null) { damageReductionBonus = 0f; lifestealBonus = 0f; orbitSpeedBonus = 0f; return; }
+        var entry = swordData.GetEntry(swordType);
+        damageReductionBonus = entry.damageReductionBonus;
+        lifestealBonus = entry.lifestealBonus;
+        orbitSpeedBonus = entry.orbitSpeedBonus;
+    }
+
+    private void ApplyBonus()
+    {
+        if (bonusApplied || orbit == null || orbit.Owner == null) return;
+        if (!orbit.Owner.IsElementalOrbit(orbit)) return;
+        bonusApplied = true;
+        if (damageReductionBonus > 0f) orbit.Owner.AddDamageReductionBonus(damageReductionBonus);
+        if (lifestealBonus > 0f)       orbit.Owner.AddLifestealBonus(lifestealBonus);
+        if (orbitSpeedBonus > 0f)      orbit.Owner.AddOrbitSpeedBonus(orbitSpeedBonus);
+    }
+
+    private void RemoveBonus()
+    {
+        if (!bonusApplied || orbit == null || orbit.Owner == null) return;
+        bonusApplied = false;
+        if (damageReductionBonus > 0f) orbit.Owner.RemoveDamageReductionBonus(damageReductionBonus);
+        if (lifestealBonus > 0f)       orbit.Owner.RemoveLifestealBonus(lifestealBonus);
+        if (orbitSpeedBonus > 0f)      orbit.Owner.RemoveOrbitSpeedBonus(orbitSpeedBonus);
+    }
+
+    public void GetDebuffValues(out float dr, out float ls, out float os)
+    {
+        dr = damageReductionBonus < 0f ? damageReductionBonus : 0f;
+        ls = lifestealBonus < 0f ? lifestealBonus : 0f;
+        os = orbitSpeedBonus < 0f ? orbitSpeedBonus : 0f;
     }
 
     private Vector3 FindNearestOpenPosition(Vector3 center, MapManager map)

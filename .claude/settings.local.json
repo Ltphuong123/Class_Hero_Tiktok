@@ -4,7 +4,9 @@
       "Bash(dir \"C:\\\\Users\\\\Admin\\\\Desktop\\\\Backup\\\\Class_Hero_Tiktok\\\\Assets\\\\_GAME\\\\Scripts\\\\StateMachine\" /b)",
       "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Admin\\\\Desktop\\\\Backup\\\\Class_Hero_Tiktok\\\\Assets\\\\_GAME\\\\Scripts\" -Recurse -File)",
       "Bash(Select-Object FullName)",
-      "Bash(Sort-Object FullName)"
+      "Bash(Sort-Object FullName)",
+      "Bash(Get-ChildItem -Path \"D:\\\\game\\\\Class_Hero_Tiktok\\\\Assets\\\\_GAME\\\\Scripts\" -Recurse -File)",
+      "Bash(Format-Table -Property FullName, Length -AutoSize)"
     ]
   }
 }

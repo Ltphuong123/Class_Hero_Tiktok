@@ -151,7 +151,8 @@ public class CanvasSettings : MonoBehaviour
             
             if (row != null)
             {
-                row.Initialize(entry.type, entry.sprite, entry.maxHp, entry.damage);
+                row.Initialize(entry.type, entry.sprite, entry.maxHp, entry.damage,
+                    entry.damageReductionBonus, entry.lifestealBonus, entry.orbitSpeedBonus);
                 swordDataRows.Add(row);
             }
         }
@@ -174,7 +175,10 @@ public class CanvasSettings : MonoBehaviour
         foreach (var row in swordDataRows)
         {
             if (row != null)
+            {
                 swordData.SetStats(row.SwordType, row.MaxHp, row.Damage);
+                swordData.SetBonusStats(row.SwordType, row.DamageReductionBonus, row.LifestealBonus, row.OrbitSpeedBonus);
+            }
         }
 
         swordData.SaveToFile();
@@ -209,7 +213,7 @@ public class CanvasSettings : MonoBehaviour
             
             if (row != null)
             {
-                row.Initialize(level.level, level.swordType, level.duration, level.speed, level.bodyScale, level.damageReduction);
+                row.Initialize(level.level, level.swordType, level.duration, level.speed, level.bodyScale, level.damageReduction, level.orbitRotateSpeed);
                 characterLevelRows.Add(row);
             }
         }
@@ -232,7 +236,7 @@ public class CanvasSettings : MonoBehaviour
         foreach (var row in characterLevelRows)
         {
             if (row != null)
-                levelData.SetLevelData(row.Level, row.SwordType, row.Duration, row.Speed, row.BodyScale, row.DamageReduction);
+                levelData.SetLevelData(row.Level, row.SwordType, row.Duration, row.Speed, row.BodyScale, row.DamageReduction, row.OrbitRotateSpeed);
         }
 
         levelData.SaveToFile();

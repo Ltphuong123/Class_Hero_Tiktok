@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 
 [System.Serializable]
@@ -45,6 +46,13 @@ public class CharacterBase : GameUnit, IManagedUpdate
     [SerializeField] private ParticleSystem healParticle;
 
     private float lifestealCooldown = 0.5f;
+    private float activeDebuffDR = 0f;
+    private float activeDebuffLS = 0f;
+    private float activeDebuffOS = 0f;
+    private Coroutine debuffCoroutine;
+    [SerializeField] private float damageReductionBonus = 0f;
+    [SerializeField] private float lifestealBonus       = 0f;
+    [SerializeField] private float orbitSpeedBonus      = 0f;
     private float magnetRadius = 10f;
     private float magnetDuration = 5f;
     private float magnetPullSpeed = 50f;
@@ -57,6 +65,13 @@ public class CharacterBase : GameUnit, IManagedUpdate
     private float overhealThreshold          => config != null ? config.overhealThreshold : 500f;
     private int   maxSwordQueue              => config != null ? config.maxSwordQueue : 5000;
     private float lifestealPercentConfig     => config != null ? config.lifestealPercent : 0.2f;
+
+    private float EffectiveDamageReduction =>
+        Mathf.Clamp((levelData != null ? levelData.GetDamageReduction(currentLevel) : 0f) + damageReductionBonus, 0f, 0.8f);
+    private float EffectiveLifesteal =>
+        Mathf.Clamp(lifestealPercentConfig * (1f + lifestealBonus), 0f, 0.8f);
+    private float EffectiveOrbitSpeed =>
+        Mathf.Max(0f, (levelData != null ? levelData.GetOrbitRotateSpeed(currentLevel) : 180f) * (1f + orbitSpeedBonus));
 
     private float moveSpeed = 5f;
     private float knockbackForce = 12f;
@@ -97,7 +112,7 @@ public class CharacterBase : GameUnit, IManagedUpdate
     private int   killPoints;
     private int   score;
     private int   swordQueue;
-    private readonly int[] skillStacks = new int[8];
+    private readonly int[] skillStacks = new int[9];
     private bool  isTargetLocked;
     private CharacterBase lockedTarget;
     private float castTimer;
@@ -147,6 +162,7 @@ public class CharacterBase : GameUnit, IManagedUpdate
     public int   Skill6StackCount  => skillStacks[5];
     public int   Skill7StackCount  => skillStacks[6];
     public int   Skill8StackCount  => skillStacks[7];
+    public int   Skill9StackCount  => skillStacks[8];
     public int   MaxSwordQueue     => maxSwordQueue;
     public bool  IsTargetLocked    => isTargetLocked;
     public CharacterBase LockedTarget => lockedTarget;
@@ -211,7 +227,7 @@ public class CharacterBase : GameUnit, IManagedUpdate
     public bool UseSkill(CharacterBase target, int skillIndex = 0) =>
         skillController != null && skillController.TryFireSkill(target, skillIndex);
 
-    public void AddSkill1Stack(int count = 1) { if (!isDead && count > 0) skillStacks[0] += count * 3; }
+    public void AddSkill1Stack(int count = 1) { if (!isDead && count > 0) skillStacks[0] += count; }
     public void AddSkill2Stack(int count = 1) { if (!isDead && count > 0) skillStacks[1] += count; }
     public void AddSkill3Stack(int count = 1) { if (!isDead && count > 0) skillStacks[2] += count; }
     public void AddSkill4Stack(int count = 1) { if (!isDead && count > 0) skillStacks[3] += count; }
@@ -219,6 +235,7 @@ public class CharacterBase : GameUnit, IManagedUpdate
     public void AddSkill6Stack(int count = 1) { if (!isDead && count > 0) skillStacks[5] += count; }
     public void AddSkill7Stack(int count = 1) { if (!isDead && count > 0) skillStacks[6] += count; }
     public void AddSkill8Stack(int count = 1) { if (!isDead && count > 0) skillStacks[7] += count; }
+    public void AddSkill9Stack(int count = 1) { if (!isDead && count > 0) skillStacks[8] += count; }
 
     private void UpdateSkillStacks()
     {
@@ -286,6 +303,11 @@ public class CharacterBase : GameUnit, IManagedUpdate
         lockedTarget  = null;
         castTimer     = 0f;
         isInvulnerable = false;
+        damageReductionBonus = 0f;
+        lifestealBonus       = 0f;
+        orbitSpeedBonus      = 0f;
+        if (debuffCoroutine != null) { StopCoroutine(debuffCoroutine); debuffCoroutine = null; }
+        activeDebuffDR = activeDebuffLS = activeDebuffOS = 0f;
         StopAllLevelParticles();
 
         levelReserveTime = new float[levelData.GetMaxLevel() + 1];
@@ -498,6 +520,7 @@ public class CharacterBase : GameUnit, IManagedUpdate
         if (levelData == null) return;
 
         swordOrbit.SetSwordType(levelData.GetSwordType(currentLevel));
+        swordOrbit.SetRotateSpeed(EffectiveOrbitSpeed);
         moveSpeed = levelData.GetSpeed(currentLevel);
         if (moveSpeed <= 1f) moveSpeed = 2f;
         float totalScale = levelData.GetBodyScale(currentLevel) + overhealScaleBonus;
@@ -755,8 +778,7 @@ public class CharacterBase : GameUnit, IManagedUpdate
     {
         if (isDead || isShieldActive || isInvulnerable) return;
 
-        if (levelData != null)
-            damage *= 1f - levelData.GetDamageReduction(currentLevel);
+        damage *= 1f - EffectiveDamageReduction;
 
         currentHp = Mathf.Max(0f, currentHp - damage);
         infoUI?.UpdateHp(currentHp, currentMaxHp);
@@ -786,8 +808,7 @@ public class CharacterBase : GameUnit, IManagedUpdate
             }
         }
 
-        if (levelData != null)
-            damage *= 1f - levelData.GetDamageReduction(currentLevel);
+        damage *= 1f - EffectiveDamageReduction;
 
         currentHp = Mathf.Max(0f, currentHp - damage);
         infoUI?.UpdateHp(currentHp, currentMaxHp);
@@ -879,7 +900,7 @@ public class CharacterBase : GameUnit, IManagedUpdate
         float currentTime = Time.time;
         if (currentTime - lastLifestealTime < lifestealCooldown) return;
 
-        float healAmount = damageDealt * lifestealPercentConfig;
+        float healAmount = damageDealt * EffectiveLifesteal;
         if (healAmount <= 0f) return;
 
         float oldHp = currentHp;
@@ -892,6 +913,65 @@ public class CharacterBase : GameUnit, IManagedUpdate
     }
 
     public void MultiplySpeed(float multiplier) => moveSpeed *= multiplier;
+
+    public void AddDamageReductionBonus(float percent) => damageReductionBonus += percent;
+    public void RemoveDamageReductionBonus(float percent) => damageReductionBonus -= percent;
+
+    public void AddLifestealBonus(float percent) => lifestealBonus += percent;
+    public void RemoveLifestealBonus(float percent) => lifestealBonus -= percent;
+
+    public void AddOrbitSpeedBonus(float percent)
+    {
+        orbitSpeedBonus += percent;
+        swordOrbit?.SetRotateSpeed(EffectiveOrbitSpeed);
+    }
+    public void RemoveOrbitSpeedBonus(float percent)
+    {
+        orbitSpeedBonus -= percent;
+        swordOrbit?.SetRotateSpeed(EffectiveOrbitSpeed);
+    }
+
+    public void GetNegativeElementalDebuffs(out float dr, out float ls, out float os)
+    {
+        dr = 0f; ls = 0f; os = 0f;
+        kimOrbit?.SumNegativeDebuffs(ref dr, ref ls, ref os);
+        mocOrbit?.SumNegativeDebuffs(ref dr, ref ls, ref os);
+        thuyOrbit?.SumNegativeDebuffs(ref dr, ref ls, ref os);
+        hoaOrbit?.SumNegativeDebuffs(ref dr, ref ls, ref os);
+        thoOrbit?.SumNegativeDebuffs(ref dr, ref ls, ref os);
+    }
+
+    public void ApplyElementalDebuff(float dr, float ls, float os, float duration = 3f)
+    {
+        if (isDead) return;
+        if (debuffCoroutine != null)
+        {
+            StopCoroutine(debuffCoroutine);
+            damageReductionBonus -= activeDebuffDR;
+            lifestealBonus       -= activeDebuffLS;
+            orbitSpeedBonus      -= activeDebuffOS;
+            swordOrbit?.SetRotateSpeed(EffectiveOrbitSpeed);
+        }
+        activeDebuffDR = dr;
+        activeDebuffLS = ls;
+        activeDebuffOS = os;
+        damageReductionBonus += dr;
+        lifestealBonus       += ls;
+        orbitSpeedBonus      += os;
+        swordOrbit?.SetRotateSpeed(EffectiveOrbitSpeed);
+        debuffCoroutine = StartCoroutine(DebuffExpire(duration));
+    }
+
+    private IEnumerator DebuffExpire(float duration)
+    {
+        yield return new WaitForSeconds(duration);
+        damageReductionBonus -= activeDebuffDR;
+        lifestealBonus       -= activeDebuffLS;
+        orbitSpeedBonus      -= activeDebuffOS;
+        swordOrbit?.SetRotateSpeed(EffectiveOrbitSpeed);
+        activeDebuffDR = activeDebuffLS = activeDebuffOS = 0f;
+        debuffCoroutine = null;
+    }
 
     public void OnSwordInteraction(CharacterBase attacker)
     {

@@ -318,6 +318,12 @@ public class TikTokGameHandler : MonoBehaviour
                     notificationManager.ShowSkill8Notification(nickname, count);
                 break;
 
+            case TikTokActionType.UseSkill9:
+                success = characterManager.ActivateSkill9(userId, nickname, count);
+                if (success && notificationManager != null)
+                    notificationManager.ShowSkill9Notification(nickname, count);
+                break;
+
             case TikTokActionType.AddKimSword:
                 success = characterManager.AddKimSwords(userId, nickname, actionConfig.swordCount * count);
                 if (success && notificationManager != null)
