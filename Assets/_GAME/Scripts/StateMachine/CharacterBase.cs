@@ -71,7 +71,12 @@ public class CharacterBase : GameUnit, IManagedUpdate
     private float EffectiveLifesteal =>
         Mathf.Clamp(lifestealPercentConfig * (1f + lifestealBonus), 0f, 0.8f);
     private float EffectiveOrbitSpeed =>
-        Mathf.Max(0f, (levelData != null ? levelData.GetOrbitRotateSpeed(currentLevel) : 180f) * (1f + orbitSpeedBonus));
+        Mathf.Max(30f, (levelData != null ? levelData.GetOrbitRotateSpeed(currentLevel) : 180f) * (1f + orbitSpeedBonus));
+    private float EffectiveKimOrbitSpeed  => Mathf.Max(30f, config != null ? config.kimOrbitSpeed  : 180f);
+    private float EffectiveMocOrbitSpeed  => Mathf.Max(30f, config != null ? config.mocOrbitSpeed  : 180f);
+    private float EffectiveThuyOrbitSpeed => Mathf.Max(30f, config != null ? config.thuyOrbitSpeed : 180f);
+    private float EffectiveHoaOrbitSpeed  => Mathf.Max(30f, config != null ? config.hoaOrbitSpeed  : 180f);
+    private float EffectiveThoOrbitSpeed  => Mathf.Max(30f, config != null ? config.thoOrbitSpeed  : 180f);
 
     private float moveSpeed = 5f;
     private float knockbackForce = 12f;
@@ -521,6 +526,7 @@ public class CharacterBase : GameUnit, IManagedUpdate
 
         swordOrbit.SetSwordType(levelData.GetSwordType(currentLevel));
         swordOrbit.SetRotateSpeed(EffectiveOrbitSpeed);
+        ApplyAllElementalOrbitSpeeds();
         moveSpeed = levelData.GetSpeed(currentLevel);
         if (moveSpeed <= 1f) moveSpeed = 2f;
         float totalScale = levelData.GetBodyScale(currentLevel) + overhealScaleBonus;
@@ -924,11 +930,22 @@ public class CharacterBase : GameUnit, IManagedUpdate
     {
         orbitSpeedBonus += percent;
         swordOrbit?.SetRotateSpeed(EffectiveOrbitSpeed);
+        ApplyAllElementalOrbitSpeeds();
     }
     public void RemoveOrbitSpeedBonus(float percent)
     {
         orbitSpeedBonus -= percent;
         swordOrbit?.SetRotateSpeed(EffectiveOrbitSpeed);
+        ApplyAllElementalOrbitSpeeds();
+    }
+
+    private void ApplyAllElementalOrbitSpeeds()
+    {
+        kimOrbit?.SetRotateSpeed(EffectiveKimOrbitSpeed);
+        mocOrbit?.SetRotateSpeed(EffectiveMocOrbitSpeed);
+        thuyOrbit?.SetRotateSpeed(EffectiveThuyOrbitSpeed);
+        hoaOrbit?.SetRotateSpeed(EffectiveHoaOrbitSpeed);
+        thoOrbit?.SetRotateSpeed(EffectiveThoOrbitSpeed);
     }
 
     public void GetNegativeElementalDebuffs(out float dr, out float ls, out float os)
@@ -951,6 +968,7 @@ public class CharacterBase : GameUnit, IManagedUpdate
             lifestealBonus       -= activeDebuffLS;
             orbitSpeedBonus      -= activeDebuffOS;
             swordOrbit?.SetRotateSpeed(EffectiveOrbitSpeed);
+            ApplyAllElementalOrbitSpeeds();
         }
         activeDebuffDR = dr;
         activeDebuffLS = ls;
@@ -959,6 +977,7 @@ public class CharacterBase : GameUnit, IManagedUpdate
         lifestealBonus       += ls;
         orbitSpeedBonus      += os;
         swordOrbit?.SetRotateSpeed(EffectiveOrbitSpeed);
+        ApplyAllElementalOrbitSpeeds();
         debuffCoroutine = StartCoroutine(DebuffExpire(duration));
     }
 
@@ -969,6 +988,7 @@ public class CharacterBase : GameUnit, IManagedUpdate
         lifestealBonus       -= activeDebuffLS;
         orbitSpeedBonus      -= activeDebuffOS;
         swordOrbit?.SetRotateSpeed(EffectiveOrbitSpeed);
+        ApplyAllElementalOrbitSpeeds();
         activeDebuffDR = activeDebuffLS = activeDebuffOS = 0f;
         debuffCoroutine = null;
     }

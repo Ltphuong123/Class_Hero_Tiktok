@@ -112800,6 +112800,9 @@ MonoBehaviour:
   magnetParticle: {fileID: 7673567221582151386}
   shieldParticle: {fileID: 431027446657569182}
   healParticle: {fileID: 2503328282000648599}
+  damageReductionBonus: 0
+  lifestealBonus: 0
+  orbitSpeedBonus: 0
 --- !u!114 &2228071641487162856
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -112840,9 +112843,9 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 6944b508f9aafae478e421f40cf1c3c0, type: 2}
   - {fileID: 11400000, guid: 6eb1d0cbcec455b4f8ec55312e1e26f7, type: 2}
   - {fileID: 11400000, guid: 9aa5f88817650684888bd48f9470cefe, type: 2}
-  - {fileID: 11400000, guid: f5d36d5f3abea144eb68584a9ca7220b, type: 2}
-  - {fileID: 11400000, guid: f7496c20dd664484a986a3d0326cbd57, type: 2}
-  - {fileID: 11400000, guid: df0f59a4b27b07a4ea44d2f899924b96, type: 2}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   - {fileID: 11400000, guid: 1c47dc9f5ce034d47a0f62873aaca7e5, type: 2}
 --- !u!65 &4242591127253308783
 BoxCollider:

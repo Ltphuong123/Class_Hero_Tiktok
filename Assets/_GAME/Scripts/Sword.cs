@@ -37,6 +37,7 @@ public class Sword : GameUnit
     private float slideDuration, slideInvDuration, slideElapsed;
 
     private int lastDamageFrame = -1;
+    private bool isDying;
 
     private float damageReductionBonus;
     private float lifestealBonus;
@@ -74,6 +75,7 @@ public class Sword : GameUnit
         orbit = null;
         bonusApplied = false;
         lastDamageFrame = -1;
+        isDying = false;
         LoadBonusFromData();
 
         TF.rotation = Quaternion.Euler(90f, Random.Range(0f, 360f), 0f);
@@ -95,6 +97,7 @@ public class Sword : GameUnit
         orbit = null;
         currentHp = maxHp;
         lastDamageFrame = -1;
+        isDying = false;
         if (spriteRenderer != null) spriteRenderer.color = Color.white;
         ItemManager.Instance.Despawn(this);
     }
@@ -271,7 +274,10 @@ public class Sword : GameUnit
         if (character != null)
         {
             if (orbit.Owner == character) return;
-            ParticlePool.Spawn(ParticleType.SwordVsCharacter, other.ClosestPoint(TF.position));
+            ParticleType charFx = IsElementalSword
+                ? ResolveParticle(GetCollisionParticle(), ParticleType.SwordVsCharacter)
+                : ParticleType.SwordVsCharacter;
+            ParticlePool.Spawn(charFx, other.ClosestPoint(TF.position));
             CharacterBase attacker = orbit.Owner;
             if (character.SwordCount <= 45)
             {
@@ -295,7 +301,12 @@ public class Sword : GameUnit
         if (otherSword.state != SwordState.Orbiting && otherSword.state != SwordState.Sliding) return;
         if (GetInstanceID() > otherSword.GetInstanceID()) return;
 
-        ParticlePool.Spawn(ParticleType.SwordVsSword, (TF.position + otherSword.TF.position) * 0.5f);
+        ParticleType swordFx = IsElementalSword
+            ? ResolveParticle(GetCollisionParticle(), ParticleType.SwordVsSword)
+            : otherSword.IsElementalSword
+                ? ResolveParticle(otherSword.GetCollisionParticle(), ParticleType.SwordVsSword)
+                : ParticleType.SwordVsSword;
+        ParticlePool.Spawn(swordFx, (TF.position + otherSword.TF.position) * 0.5f);
 
         CharacterBase myOwner = orbit.Owner;
         CharacterBase otherOwner = otherSword.orbit.Owner;
@@ -311,11 +322,20 @@ public class Sword : GameUnit
         {
             myOwner.OnSwordToSwordKnockback(otherOwner);
             otherOwner.OnSwordToSwordKnockback(myOwner);
+
+            myOwner.GetNegativeElementalDebuffs(out float myDr, out float myLs, out float myOs);
+            if (myDr != 0f || myLs != 0f || myOs != 0f)
+                otherOwner.ApplyElementalDebuff(myDr, myLs, myOs, 3f);
+
+            otherOwner.GetNegativeElementalDebuffs(out float otherDr, out float otherLs, out float otherOs);
+            if (otherDr != 0f || otherLs != 0f || otherOs != 0f)
+                myOwner.ApplyElementalDebuff(otherDr, otherLs, otherOs, 3f);
         }
     }
 
     public void TakeDamage(float dmg, Sword attackerSword = null)
     {
+        if (isDying) return;
         if (orbit != null && orbit.Owner != null && orbit.Owner.IsShieldActive) return;
 
         // Kiếm ngũ hành chuyển damage cho kiếm thường khi còn kiếm thường
@@ -342,6 +362,7 @@ public class Sword : GameUnit
         if (currentHp <= 0f)
         {
             currentHp = 0f;
+            isDying = true;
             if (DestroyOnZeroHp) DestroySword();
             else KnockOff();
         }
@@ -432,6 +453,7 @@ public class Sword : GameUnit
         {
             state = SwordState.Dropped;
             currentHp = maxHp;
+            isDying = false;
             if (spriteRenderer != null) spriteRenderer.color = Color.white;
             SetSwordType(SwordType.kiem1);
 
@@ -478,6 +500,21 @@ public class Sword : GameUnit
         ls = lifestealBonus < 0f ? lifestealBonus : 0f;
         os = orbitSpeedBonus < 0f ? orbitSpeedBonus : 0f;
     }
+
+    private bool IsElementalSword => orbit?.Owner != null && orbit.Owner.IsElementalOrbit(orbit);
+
+    private ParticleType GetCollisionParticle() => swordType switch
+    {
+        SwordType.kiem_kim   => ParticleType.KimVsSword,
+        SwordType.kiem_moc   => ParticleType.MocVsSword,
+        SwordType.kiem_thuy  => ParticleType.ThuyVsSword,
+        SwordType.kiem10_hoa => ParticleType.HoaVsSword,
+        SwordType.kiem10_tho => ParticleType.ThoVsSword,
+        _                    => ParticleType.None
+    };
+
+    private static ParticleType ResolveParticle(ParticleType preferred, ParticleType fallback)
+        => ParticlePool.HasPool(preferred) ? preferred : fallback;
 
     private Vector3 FindNearestOpenPosition(Vector3 center, MapManager map)
     {

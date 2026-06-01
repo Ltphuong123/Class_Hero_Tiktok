@@ -116,15 +116,15 @@ public class CharacterManager : Singleton<CharacterManager>
 
     private PoolType GetRandomCharacterPoolType() => UnityEngine.Random.Range(1, 10) switch
     {
-        // 1 => PoolType.Character1,
-        // 2 => PoolType.Character2,
-        // 3 => PoolType.Character3,
-        // 4 => PoolType.Character4,
-        // 5 => PoolType.Character5,
-        // 6 => PoolType.Character6,
-        // 7 => PoolType.Character7,
-        // 8 => PoolType.Character8,
-        // 9 => PoolType.Character9,
+        1 => PoolType.Character1,
+        2 => PoolType.Character2,
+        3 => PoolType.Character3,
+        4 => PoolType.Character4,
+        5 => PoolType.Character5,
+        6 => PoolType.Character6,
+        7 => PoolType.Character7,
+        8 => PoolType.Character8,
+        9 => PoolType.Character9,
         _ => PoolType.Character1
     };
 

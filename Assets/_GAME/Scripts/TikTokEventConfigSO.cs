@@ -7,7 +7,8 @@ public enum TikTokEventType
     Like,
     Comment,
     Share,
-    Gift
+    Gift,
+    GiftById
 }
 
 public enum TikTokActionType
@@ -73,7 +74,10 @@ public class TikTokEventConfig
     
     [Tooltip("Gift: Price tối thiểu để trigger")]
     public int giftMinPrice = 10;
-    
+
+    [Tooltip("GiftById: ID của món quà cụ thể (chỉ dùng khi eventType = GiftById)")]
+    public int giftId = 0;
+
     [Header("Actions")]
     [Tooltip("Danh sách hành động khi event trigger")]
     public List<TikTokActionConfig> actions = new List<TikTokActionConfig>();
@@ -97,10 +101,15 @@ public class TikTokEventConfigSO : ScriptableObject
 
     public TikTokEventConfig GetEventConfigByCommand(string command)
     {
-        return events.Find(e => 
-            e.eventType == TikTokEventType.Comment && 
+        return events.Find(e =>
+            e.eventType == TikTokEventType.Comment &&
             e.commentCommand == command
         );
+    }
+
+    public List<TikTokEventConfig> GetEventConfigsByGiftId(int giftId)
+    {
+        return events.FindAll(e => e.eventType == TikTokEventType.GiftById && e.giftId == giftId);
     }
 
     private string GetFilePath()

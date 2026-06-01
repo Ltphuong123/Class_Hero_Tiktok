@@ -85,7 +85,7 @@ public class CharacterLeaderboardUI : MonoBehaviour
         int count = ranked.Count;
 
         if (aliveCountText != null)
-            aliveCountText.text = $"Alive: {count}";
+            aliveCountText.text = $"{count}";
 
         int rowsToCreate = count - rows.Count;
         if (rowsToCreate > 0)

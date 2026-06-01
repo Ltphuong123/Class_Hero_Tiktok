@@ -78,7 +78,7 @@ public class TikTokUdpReceiver : MonoBehaviour
                 byte[] data = _udp.Receive(ref ep);
                 string json = Encoding.UTF8.GetString(data);
 
-                if (logRaw) Debug.Log($"[UDP RAW] {json}");
+                // if (logRaw) Debug.Log($"[UDP RAW] {json}");
 
                 // ✅ parse bằng JsonUtility (Unity built-in)
                 TikEvent ev = JsonUtility.FromJson<TikEvent>(json);

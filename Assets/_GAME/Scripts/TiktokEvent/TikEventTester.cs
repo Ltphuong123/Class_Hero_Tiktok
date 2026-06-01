@@ -11,6 +11,7 @@ public class TikEventTester : MonoBehaviour
     [SerializeField] private TMP_InputField userIdInput;
     [SerializeField] private TMP_InputField nicknameInput;
     [SerializeField] private TMP_InputField giftPriceInput;
+    [SerializeField] private TMP_InputField giftIdInput;
     [SerializeField] private TMP_InputField giftDeltaInput;
     [SerializeField] private TMP_InputField commentInput;
     [SerializeField] private Button sendGiftButton;
@@ -35,6 +36,9 @@ public class TikEventTester : MonoBehaviour
         if (giftPriceInput != null)
             giftPriceInput.text = "1";
 
+        if (giftIdInput != null)
+            giftIdInput.text = "0";
+
         if (giftDeltaInput != null)
             giftDeltaInput.text = "1";
     }
@@ -50,12 +54,13 @@ public class TikEventTester : MonoBehaviour
         string userId = userIdInput != null ? userIdInput.text : "test_user";
         string nickname = nicknameInput != null ? nicknameInput.text : "TestPlayer";
         int price = giftPriceInput != null && int.TryParse(giftPriceInput.text, out int p) ? p : 1;
+        int giftId = giftIdInput != null && int.TryParse(giftIdInput.text, out int gid) ? gid : 0;
         int delta = giftDeltaInput != null && int.TryParse(giftDeltaInput.text, out int d) ? d : 1;
 
-        TikEvent tikEvent = CreateGiftEvent(userId, nickname, price, delta);
+        TikEvent tikEvent = CreateGiftEvent(userId, nickname, price, giftId, delta);
         SendEvent(tikEvent);
 
-        ShowStatus($"Sent Gift: Price={price}, Delta={delta}, Total={price * delta}", false);
+        ShowStatus($"Sent Gift: ID={giftId}, Price={price}, Delta={delta}", false);
     }
 
     private void SendTestComment()
@@ -76,7 +81,7 @@ public class TikEventTester : MonoBehaviour
         ShowStatus($"Sent Comment: {comment}", false);
     }
 
-    private TikEvent CreateGiftEvent(string userId, string nickname, int price, int delta)
+    private TikEvent CreateGiftEvent(string userId, string nickname, int price, int giftId, int delta)
     {
         TikEvent tikEvent = new TikEvent
         {
@@ -90,8 +95,8 @@ public class TikEventTester : MonoBehaviour
             },
             gift = new TikGift
             {
-                id = price,
-                name = $"Gift_{price}",
+                id = giftId,
+                name = $"Gift_{giftId}",
                 price = price
             },
             delta = delta,
@@ -140,15 +145,15 @@ public class TikEventTester : MonoBehaviour
     }
 
     // Public methods for testing from code
-    public void SendGift(int price, int delta = 1)
+    public void SendGift(int price, int delta = 1, int giftId = 0)
     {
         string userId = userIdInput != null ? userIdInput.text : "test_user";
         string nickname = nicknameInput != null ? nicknameInput.text : "TestPlayer";
 
-        TikEvent tikEvent = CreateGiftEvent(userId, nickname, price, delta);
+        TikEvent tikEvent = CreateGiftEvent(userId, nickname, price, giftId, delta);
         SendEvent(tikEvent);
 
-        ShowStatus($"Sent Gift: Price={price}, Delta={delta}", false);
+        ShowStatus($"Sent Gift: ID={giftId}, Price={price}, Delta={delta}", false);
     }
 
     public void SendComment(string comment)

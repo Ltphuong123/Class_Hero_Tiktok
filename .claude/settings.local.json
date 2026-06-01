@@ -6,7 +6,9 @@
       "Bash(Select-Object FullName)",
       "Bash(Sort-Object FullName)",
       "Bash(Get-ChildItem -Path \"D:\\\\game\\\\Class_Hero_Tiktok\\\\Assets\\\\_GAME\\\\Scripts\" -Recurse -File)",
-      "Bash(Format-Table -Property FullName, Length -AutoSize)"
+      "Bash(Format-Table -Property FullName, Length -AutoSize)",
+      "Bash(not exist *)",
+      "PowerShell(New-Item -ItemType Directory -Force \"c:\\\\Users\\\\Admin\\\\Desktop\\\\Backup\\\\Class_Hero_Tiktok\\\\Assets\\\\_GAME\\\\Editor\")"
     ]
   }
 }

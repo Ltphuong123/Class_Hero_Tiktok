@@ -110,28 +110,37 @@ public class TikTokGameHandler : MonoBehaviour
         string nickname = ev.user.nickname;
         int delta = ev.delta;
         int giftPrice = ev.gift.price;
+        int giftId = ev.gift.id;
 
-        int highestMinPrice = 0;
+        Debug.Log($"[Gift] {nickname} id={giftId}  price={giftPrice}  delta={delta}");
 
-        foreach (var config in eventConfig.events)
+
+        var idConfigs = eventConfig.GetEventConfigsByGiftId(giftId);
+        if (idConfigs != null && idConfigs.Count > 0)
         {
-            if (config.eventType != TikTokEventType.Gift) continue;
-            if (giftPrice < config.giftMinPrice) continue;
-            
-            if (config.giftMinPrice > highestMinPrice)
-            {
-                highestMinPrice = config.giftMinPrice;
-            }
+            foreach (var config in idConfigs)
+                ExecuteActions(config.actions, userId, nickname, delta);
         }
-
-        if (highestMinPrice > 0)
+        else
         {
+            // 2. Fallback: tính theo giá (tier cao nhất khớp)
+            int highestMinPrice = 0;
             foreach (var config in eventConfig.events)
             {
                 if (config.eventType != TikTokEventType.Gift) continue;
-                if (config.giftMinPrice != highestMinPrice) continue;
+                if (giftPrice < config.giftMinPrice) continue;
+                if (config.giftMinPrice > highestMinPrice)
+                    highestMinPrice = config.giftMinPrice;
+            }
 
-                ExecuteActions(config.actions, userId, nickname, delta);
+            if (highestMinPrice > 0)
+            {
+                foreach (var config in eventConfig.events)
+                {
+                    if (config.eventType != TikTokEventType.Gift) continue;
+                    if (config.giftMinPrice != highestMinPrice) continue;
+                    ExecuteActions(config.actions, userId, nickname, delta);
+                }
             }
         }
 

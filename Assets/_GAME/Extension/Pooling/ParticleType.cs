@@ -17,5 +17,11 @@ public enum ParticleType
     Meteor3 = 14,
     Meteor4 = 15,
     Meteor5 = 16,
-    Meteor6 = 17
+    Meteor6 = 17,
+
+    KimVsSword  = 18,
+    MocVsSword  = 19,
+    ThuyVsSword = 20,
+    HoaVsSword  = 21,
+    ThoVsSword  = 22,
 }

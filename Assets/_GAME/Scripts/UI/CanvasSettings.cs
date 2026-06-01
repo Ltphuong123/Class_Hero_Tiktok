@@ -57,6 +57,11 @@ public class CanvasSettings : MonoBehaviour
     [SerializeField] private TMP_InputField maxSwordCountInput;
     [SerializeField] private TMP_InputField maxSwordQueueInput;
     [SerializeField] private TMP_InputField lifestealPercentInput;
+    [SerializeField] private TMP_InputField kimOrbitSpeedInput;
+    [SerializeField] private TMP_InputField mocOrbitSpeedInput;
+    [SerializeField] private TMP_InputField thuyOrbitSpeedInput;
+    [SerializeField] private TMP_InputField hoaOrbitSpeedInput;
+    [SerializeField] private TMP_InputField thoOrbitSpeedInput;
     [SerializeField] private Button characterBaseSaveButton;
     [SerializeField] private Button characterBaseLoadButton;
     [SerializeField] private Button characterBaseResetButton;
@@ -264,7 +269,12 @@ public class CanvasSettings : MonoBehaviour
 
         if (lifestealPercentInput != null)
             lifestealPercentInput.text = characterBaseConfig.lifestealPercent.ToString();
-        
+
+        if (kimOrbitSpeedInput  != null) kimOrbitSpeedInput.text  = characterBaseConfig.kimOrbitSpeed.ToString("F0");
+        if (mocOrbitSpeedInput  != null) mocOrbitSpeedInput.text  = characterBaseConfig.mocOrbitSpeed.ToString("F0");
+        if (thuyOrbitSpeedInput != null) thuyOrbitSpeedInput.text = characterBaseConfig.thuyOrbitSpeed.ToString("F0");
+        if (hoaOrbitSpeedInput  != null) hoaOrbitSpeedInput.text  = characterBaseConfig.hoaOrbitSpeed.ToString("F0");
+        if (thoOrbitSpeedInput  != null) thoOrbitSpeedInput.text  = characterBaseConfig.thoOrbitSpeed.ToString("F0");
     }
 
     private void SaveCharacterBaseConfig()
@@ -289,6 +299,12 @@ public class CanvasSettings : MonoBehaviour
         if (lifestealPercentInput != null && float.TryParse(lifestealPercentInput.text, out float lifestealPercent))
             characterBaseConfig.lifestealPercent = lifestealPercent;
 
+        if (kimOrbitSpeedInput  != null && float.TryParse(kimOrbitSpeedInput.text,  out float kimSpd))  characterBaseConfig.kimOrbitSpeed  = Mathf.Max(30f, kimSpd);
+        if (mocOrbitSpeedInput  != null && float.TryParse(mocOrbitSpeedInput.text,  out float mocSpd))  characterBaseConfig.mocOrbitSpeed  = Mathf.Max(30f, mocSpd);
+        if (thuyOrbitSpeedInput != null && float.TryParse(thuyOrbitSpeedInput.text, out float thuySpd)) characterBaseConfig.thuyOrbitSpeed = Mathf.Max(30f, thuySpd);
+        if (hoaOrbitSpeedInput  != null && float.TryParse(hoaOrbitSpeedInput.text,  out float hoaSpd))  characterBaseConfig.hoaOrbitSpeed  = Mathf.Max(30f, hoaSpd);
+        if (thoOrbitSpeedInput  != null && float.TryParse(thoOrbitSpeedInput.text,  out float thoSpd))  characterBaseConfig.thoOrbitSpeed  = Mathf.Max(30f, thoSpd);
+
         characterBaseConfig.SaveToJson();
         Debug.Log("Character Base Config saved!");
     }
@@ -312,6 +328,11 @@ public class CanvasSettings : MonoBehaviour
         characterBaseConfig.maxSwordCount = 20;
         characterBaseConfig.maxSwordQueue = 50;
         characterBaseConfig.lifestealPercent = 0.2f;
+        characterBaseConfig.kimOrbitSpeed  = 180f;
+        characterBaseConfig.mocOrbitSpeed  = 180f;
+        characterBaseConfig.thuyOrbitSpeed = 180f;
+        characterBaseConfig.hoaOrbitSpeed  = 180f;
+        characterBaseConfig.thoOrbitSpeed  = 180f;
         LoadCharacterBaseValuesToUI();
         Debug.Log("Character Base Config reset to default!");
     }

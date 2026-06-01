@@ -115,7 +115,7 @@ public class SwordDataRow : MonoBehaviour
     {
         if (float.TryParse(value, out float newValue))
         {
-            damageReductionBonus = Mathf.Max(0f, newValue / 100f);
+            damageReductionBonus = newValue / 100f;
             damageReductionBonusInput.text = (damageReductionBonus * 100f).ToString("F1");
         }
         else
@@ -128,7 +128,7 @@ public class SwordDataRow : MonoBehaviour
     {
         if (float.TryParse(value, out float newValue))
         {
-            lifestealBonus = Mathf.Max(0f, newValue / 100f);
+            lifestealBonus = newValue / 100f;
             lifestealBonusInput.text = (lifestealBonus * 100f).ToString("F1");
         }
         else

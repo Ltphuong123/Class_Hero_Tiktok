@@ -82,6 +82,7 @@ public class TikTokEventSettingsUI : MonoBehaviour
             likeThreshold = 5,
             commentCommand = "",
             giftMinPrice = 10,
+            giftId = 0,
             actions = new List<TikTokActionConfig>()
         };
 

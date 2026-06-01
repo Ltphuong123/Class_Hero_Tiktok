@@ -25,6 +25,18 @@ public class CharacterBaseConfigSO : ScriptableObject
     [Tooltip("Tỷ lệ hút máu khi gây sát thương (0.0 - 1.0)")]
     public float lifestealPercent = 0.2f;
 
+    [Header("Elemental Orbit Speed")]
+    [Tooltip("Tốc độ quay orbit Kim (tối thiểu 30)")]
+    public float kimOrbitSpeed  = 180f;
+    [Tooltip("Tốc độ quay orbit Mộc (tối thiểu 30)")]
+    public float mocOrbitSpeed  = 180f;
+    [Tooltip("Tốc độ quay orbit Thủy (tối thiểu 30)")]
+    public float thuyOrbitSpeed = 180f;
+    [Tooltip("Tốc độ quay orbit Hỏa (tối thiểu 30)")]
+    public float hoaOrbitSpeed  = 180f;
+    [Tooltip("Tốc độ quay orbit Thổ (tối thiểu 30)")]
+    public float thoOrbitSpeed  = 180f;
+
     private static CharacterBaseConfigSO instance;
     public static CharacterBaseConfigSO Instance
     {
@@ -71,6 +83,11 @@ public class CharacterBaseConfigSO : ScriptableObject
             maxSwordCount = this.maxSwordCount,
             maxSwordQueue = this.maxSwordQueue,
             lifestealPercent = this.lifestealPercent,
+            kimOrbitSpeed  = this.kimOrbitSpeed,
+            mocOrbitSpeed  = this.mocOrbitSpeed,
+            thuyOrbitSpeed = this.thuyOrbitSpeed,
+            hoaOrbitSpeed  = this.hoaOrbitSpeed,
+            thoOrbitSpeed  = this.thoOrbitSpeed,
         };
 
         string json = JsonUtility.ToJson(data, true);
@@ -100,6 +117,11 @@ public class CharacterBaseConfigSO : ScriptableObject
             this.maxSwordCount = data.maxSwordCount;
             this.maxSwordQueue = data.maxSwordQueue;
             this.lifestealPercent = data.lifestealPercent;
+            this.kimOrbitSpeed  = data.kimOrbitSpeed  > 0f ? data.kimOrbitSpeed  : 180f;
+            this.mocOrbitSpeed  = data.mocOrbitSpeed  > 0f ? data.mocOrbitSpeed  : 180f;
+            this.thuyOrbitSpeed = data.thuyOrbitSpeed > 0f ? data.thuyOrbitSpeed : 180f;
+            this.hoaOrbitSpeed  = data.hoaOrbitSpeed  > 0f ? data.hoaOrbitSpeed  : 180f;
+            this.thoOrbitSpeed  = data.thoOrbitSpeed  > 0f ? data.thoOrbitSpeed  : 180f;
 #if UNITY_EDITOR
             UnityEditor.EditorUtility.SetDirty(this);
 #endif
@@ -121,5 +143,10 @@ public class CharacterBaseConfigSO : ScriptableObject
         public int maxSwordCount;
         public int maxSwordQueue;
         public float lifestealPercent;
+        public float kimOrbitSpeed;
+        public float mocOrbitSpeed;
+        public float thuyOrbitSpeed;
+        public float hoaOrbitSpeed;
+        public float thoOrbitSpeed;
     }
 }
