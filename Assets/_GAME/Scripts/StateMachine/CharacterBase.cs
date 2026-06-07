@@ -758,6 +758,7 @@ public class CharacterBase : GameUnit, IManagedUpdate
         levelTimer = 0f;
         UpdateLevelStats();
         PlayLevelParticle(currentLevel);
+        ShowLevelIntro(currentLevel);
     }
 
     public void SetLevel(int level)
@@ -767,9 +768,15 @@ public class CharacterBase : GameUnit, IManagedUpdate
         currentLevel = Mathf.Clamp(level, 1, levelData.GetMaxLevel());
         levelTimer = 0f;
         UpdateLevelStats();
-        if (currentLevel > oldLevel) audioSource?.PlayLevelUp();
+        if (currentLevel > oldLevel)
+        {
+            audioSource?.PlayLevelUp();
+            ShowLevelIntro(currentLevel);
+        }
         PlayLevelParticle(currentLevel);
     }
+
+    private void ShowLevelIntro(int level) { }
 
     public int GetMaxLevel() => levelData?.GetMaxLevel() ?? 1;
     public CharacterLevelDataSO GetLevelData() => levelData;

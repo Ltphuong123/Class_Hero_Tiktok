@@ -13,93 +13,111 @@ MonoBehaviour:
   m_Name: TikTokEventConfig
   m_EditorClassIdentifier: 
   events:
-  - eventType: 4
+  - eventType: 3
     likeThreshold: 5
     commentCommand: 
-    giftMinPrice: 10
+    giftMinPrice: 1
     giftId: 5655
     actions:
     - actionType: 3
       swordCount: 1
       healAmount: 5
-  - eventType: 4
+    - actionType: 2
+      swordCount: 50
+      healAmount: 5
+  - eventType: 3
     likeThreshold: 5
     commentCommand: 
-    giftMinPrice: 10
+    giftMinPrice: 2
     giftId: 18089
     actions:
     - actionType: 4
       swordCount: 1
       healAmount: 5
-  - eventType: 4
-    likeThreshold: 5
-    commentCommand: 
-    giftMinPrice: 10
-    giftId: 18134
-    actions:
-    - actionType: 5
-      swordCount: 1
-      healAmount: 5
-  - eventType: 4
-    likeThreshold: 5
-    commentCommand: 
-    giftMinPrice: 10
-    giftId: 5269
-    actions:
-    - actionType: 6
-      swordCount: 1
-      healAmount: 5
-  - eventType: 4
-    likeThreshold: 5
-    commentCommand: 
-    giftMinPrice: 10
-    giftId: 15231
-    actions:
-    - actionType: 7
-      swordCount: 1
-      healAmount: 5
-  - eventType: 4
-    likeThreshold: 5
-    commentCommand: 
-    giftMinPrice: 10
-    giftId: 15232
-    actions:
-    - actionType: 8
-      swordCount: 1
-      healAmount: 5
-  - eventType: 4
-    likeThreshold: 5
-    commentCommand: 
-    giftMinPrice: 10
-    giftId: 6064
-    actions:
-    - actionType: 9
-      swordCount: 1
-      healAmount: 5
-  - eventType: 4
-    likeThreshold: 5
-    commentCommand: 
-    giftMinPrice: 10
-    giftId: 5487
-    actions:
-    - actionType: 10
-      swordCount: 1
-      healAmount: 5
-  - eventType: 4
-    likeThreshold: 5
-    commentCommand: 
-    giftMinPrice: 10
-    giftId: 8913
-    actions:
-    - actionType: 11
+    - actionType: 17
       swordCount: 1
       healAmount: 5
   - eventType: 3
     likeThreshold: 5
     commentCommand: 
-    giftMinPrice: 1
-    giftId: 0
+    giftMinPrice: 3
+    giftId: 18134
     actions:
-    - actionType: 25
+    - actionType: 5
+      swordCount: 1
+      healAmount: 5
+    - actionType: 18
+      swordCount: 1
+      healAmount: 5
+  - eventType: 3
+    likeThreshold: 5
+    commentCommand: 
+    giftMinPrice: 4
+    giftId: 5269
+    actions:
+    - actionType: 6
+      swordCount: 1
+      healAmount: 5
+    - actionType: 19
+      swordCount: 1
+      healAmount: 5
+  - eventType: 3
+    likeThreshold: 5
+    commentCommand: 
+    giftMinPrice: 5
+    giftId: 15231
+    actions:
+    - actionType: 7
+      swordCount: 1
+      healAmount: 5
+    - actionType: 20
+      swordCount: 1
+      healAmount: 5
+  - eventType: 3
+    likeThreshold: 5
+    commentCommand: 
+    giftMinPrice: 6
+    giftId: 15232
+    actions:
+    - actionType: 8
+      swordCount: 1
+      healAmount: 5
+    - actionType: 21
+      swordCount: 1
+      healAmount: 5
+  - eventType: 3
+    likeThreshold: 5
+    commentCommand: 
+    giftMinPrice: 7
+    giftId: 6064
+    actions:
+    - actionType: 9
+      swordCount: 1
+      healAmount: 5
+    - actionType: 22
+      swordCount: 1
+      healAmount: 5
+  - eventType: 3
+    likeThreshold: 5
+    commentCommand: 
+    giftMinPrice: 8
+    giftId: 5487
+    actions:
+    - actionType: 10
+      swordCount: 1
+      healAmount: 5
+    - actionType: 23
+      swordCount: 1
+      healAmount: 5
+  - eventType: 3
+    likeThreshold: 5
+    commentCommand: 
+    giftMinPrice: 9
+    giftId: 8913
+    actions:
+    - actionType: 11
+      swordCount: 1
+      healAmount: 5
+    - actionType: 24
       swordCount: 1
       healAmount: 5

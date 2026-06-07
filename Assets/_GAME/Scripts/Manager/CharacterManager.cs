@@ -479,6 +479,7 @@ public class CharacterManager : Singleton<CharacterManager>
     {
         CharacterBase c = EnsureCharacterAlive(characterId, nickname);
         if (c == null) return false;
+        LevelIntroController.Instance?.EnqueueIntro(level, nickname);
         if (c.IsDead) { StartCoroutine(DelayedUpgradeLevel(c, level, count)); return true; }
         c.AddLevelReserveTime(level, count);
         return true;
@@ -647,5 +648,10 @@ public class CharacterManager : Singleton<CharacterManager>
         if (c == null) return false;
         c.UnlockTarget();
         return true;
+    }
+
+    public void NotifyLevelUp(string characterName, int level)
+    {
+        LevelIntroController.Instance?.EnqueueIntro(level, characterName);
     }
 }

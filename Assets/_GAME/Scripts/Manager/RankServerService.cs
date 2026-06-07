@@ -96,15 +96,15 @@ public class RankServerService : MonoBehaviour
         yield return GetPlayerRankData(BaseUrl + MonthlyPlayerPath + userId, e => monthlyEntry = e);
 
         // Log cả hai
-        if (weeklyEntry  != null && weeklyEntry.rank  > 0)
-            Debug.Log($"[RankServer] {nickname} — BXH Tuần : Hạng #{weeklyEntry.rank}  | {weeklyEntry.warPoints:N0} pts | {weeklyEntry.totalKills} kills");
-        else
-            Debug.Log($"[RankServer] {nickname} — chưa có hạng Tuần");
+        // if (weeklyEntry  != null && weeklyEntry.rank  > 0)
+        //     Debug.Log($"[RankServer] {nickname} — BXH Tuần : Hạng #{weeklyEntry.rank}  | {weeklyEntry.warPoints:N0} pts | {weeklyEntry.totalKills} kills");
+        // else
+        //     Debug.Log($"[RankServer] {nickname} — chưa có hạng Tuần");
 
-        if (monthlyEntry != null && monthlyEntry.rank > 0)
-            Debug.Log($"[RankServer] {nickname} — BXH Tháng: Hạng #{monthlyEntry.rank} | {monthlyEntry.warPoints:N0} pts | {monthlyEntry.totalKills} kills");
-        else
-            Debug.Log($"[RankServer] {nickname} — chưa có hạng Tháng");
+        // if (monthlyEntry != null && monthlyEntry.rank > 0)
+        //     Debug.Log($"[RankServer] {nickname} — BXH Tháng: Hạng #{monthlyEntry.rank} | {monthlyEntry.warPoints:N0} pts | {monthlyEntry.totalKills} kills");
+        // else
+        //     Debug.Log($"[RankServer] {nickname} — chưa có hạng Tháng");
 
         int weeklyRank    = weeklyEntry  != null ? weeklyEntry.rank      : 0;
         int weeklyPoints  = weeklyEntry  != null ? weeklyEntry.warPoints  : 0;
